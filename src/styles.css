@@ -362,7 +362,7 @@ a {
   padding-top: 96px;
   padding-bottom: 28px;
   overflow: hidden;
-  background: url('./assets/HERO_BG01.webp') center center / cover no-repeat,
+  background: url('/assets/HERO_BG01.webp') center center / cover no-repeat,
     linear-gradient(135deg, #dce8f5 0%, #e8eef8 40%, #c8d8ee 100%);
   display: flex;
   flex-direction: column;
