@@ -507,6 +507,24 @@ a {
   filter: drop-shadow(0 12px 20px rgba(0, 0, 0, .15));
 }
 
+@media (max-width: 860px) {
+  .dev-img-laptop {
+    display: none !important;
+  }
+
+  .dev-img-tablet {
+    width: 60%;
+    left: 5%;
+    bottom: 10%;
+  }
+
+  .dev-img-phone {
+    width: 45%;
+    right: 5%;
+    bottom: 10%;
+  }
+}
+
 @media (max-width: 1100px) {
   .hero-grid {
     grid-template-columns: 1fr 1fr;
@@ -860,6 +878,16 @@ a {
 
   .ph-sub-text {
     font-size: 9.5px;
+  }
+
+  .ph-center-circle span,
+  .ph-center-circle .lo-brand {
+    display: none !important;
+  }
+
+  .ph-center-circle img {
+    margin-bottom: 0 !important;
+    width: 44px !important;
   }
 
   .ph-center-circle {
@@ -1769,5 +1797,503 @@ a {
 
   .split-right {
     padding: 40px 24px;
+  }
+}
+
+/* ============================================================================
+   HAMBURGER / MOBILE NAV MENU
+   ========================================================================== */
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.nav-hamburger:hover {
+  background: var(--surface2);
+}
+.nav-hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #334155;
+  border-radius: 2px;
+  transition: all 0.25s cubic-bezier(.16,1,.3,1);
+}
+
+.nav-mobile-menu {
+  display: none;
+  position: fixed;
+  top: 80px;
+  left: 16px;
+  right: 16px;
+  background: rgba(255,255,255,0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 60px rgba(15,23,42,0.14);
+  z-index: 99;
+  padding: 20px 0 12px;
+  animation: slideDown 0.25s cubic-bezier(.16,1,.3,1);
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.nav-mobile-menu.open {
+  display: block;
+}
+.nav-mobile-menu a {
+  display: block;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #334155;
+  transition: color .15s, background .15s;
+  border-radius: 10px;
+  margin: 0 8px;
+}
+.nav-mobile-menu a:hover {
+  color: var(--blue);
+  background: var(--blue-lt);
+}
+.nav-mobile-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 16px;
+}
+.nav-mobile-actions {
+  display: flex;
+  gap: 10px;
+  padding: 8px 16px 4px;
+}
+.nav-mobile-actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+/* ============================================================================
+   TABLET (768px – 1024px)
+   ========================================================================== */
+@media (max-width: 1024px) and (min-width: 769px) {
+
+  /* — NAV — */
+  .nav {
+    width: calc(100% - 40px);
+    top: 14px;
+  }
+  .nav-links {
+    gap: 18px;
+  }
+  .nav-links a {
+    font-size: 13.5px;
+  }
+
+  /* — HERO — */
+  .hero {
+    padding-top: 100px;
+    padding-bottom: 32px;
+  }
+  .hero-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+  .hero-copy h1 {
+    font-size: clamp(28px, 3.2vw, 40px);
+  }
+  .hero-devices {
+    height: 380px;
+  }
+
+  /* — SECURITY CARD — */
+  .sec-card-hero {
+    padding: 12px 20px;
+  }
+
+  /* — PLATFORM HUB — */
+  .ph-section {
+    padding: 72px 0;
+  }
+  .ph-circle {
+    width: 120px;
+    height: 120px;
+  }
+
+  /* — BETTER OPS — */
+  .bop-section {
+    padding: 72px 0 56px;
+  }
+  .bop-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .bcard {
+    padding: 24px 18px;
+  }
+  .bcard-num {
+    font-size: 34px;
+  }
+
+  /* — EXCL SECTION — */
+  .excl-section {
+    padding: 72px 0;
+  }
+  .excl-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  /* — EYN SECTION — */
+  .eyn-section {
+    padding: 72px 0 84px;
+  }
+  .eyn-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  /* — FOOTER — */
+  .foot-grid {
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 28px;
+  }
+  .foot-grid .foot-col:last-child {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+
+  /* — LOGIN — */
+  .split-left {
+    padding: 48px 48px 40px;
+  }
+  .login-lang-switch {
+    right: 24px;
+    top: 24px;
+  }
+}
+
+/* ============================================================================
+   MOBILE (≤ 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+
+  /* — GLOBAL WRAP — */
+  .wrap {
+    padding: 0 16px;
+  }
+
+  /* — NAV — */
+  .nav {
+    width: calc(100% - 24px);
+    top: 10px;
+    padding: 0 6px;
+  }
+  .nav-inner {
+    height: 50px;
+    padding: 0 6px 0 12px;
+    gap: 10px;
+  }
+  .nav-links {
+    display: none;
+  }
+  .nav-actions {
+    display: none;
+  }
+  .nav-hamburger {
+    display: flex;
+  }
+  .logo-img {
+    height: 32px;
+  }
+
+  /* — HERO — */
+  .hero {
+    padding-top: 80px;
+    padding-bottom: 24px;
+  }
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 16px 0 24px;
+  }
+  .hero-copy {
+    padding-right: 0;
+    align-items: center;
+    text-align: center;
+  }
+  .hero-copy h1 {
+    font-size: clamp(26px, 6.5vw, 36px);
+  }
+  .hero-sub {
+    font-size: 14px;
+    max-width: 100%;
+    text-align: center;
+  }
+  .hero-btns {
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .hero-btns .btn {
+    padding: 11px 20px;
+    font-size: 14px;
+  }
+  .hero-list {
+    align-self: flex-start;
+    margin-top: 20px;
+  }
+  .hero-devices {
+    height: 240px;
+  }
+  .devices-stage {
+    max-width: 340px;
+  }
+
+  /* — SECURITY CARD — */
+  .sec-card-hero {
+    flex-direction: column;
+    text-align: center;
+    border-radius: 20px;
+    padding: 16px 20px;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .sec-card-hero .sec-text {
+    text-align: center;
+  }
+
+  /* — PLATFORM HUB — */
+  .ph-section {
+    padding: 56px 0;
+  }
+  .ph-header {
+    max-width: 100%;
+    margin-bottom: 32px;
+    padding: 0 4px;
+  }
+  .ph-header h2 {
+    font-size: clamp(26px, 6vw, 34px);
+  }
+  .ph-diagram {
+    max-width: 320px;
+    aspect-ratio: 500 / 440;
+  }
+  .ph-circle {
+    width: 88px;
+    height: 88px;
+  }
+  .ph-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .ph-label {
+    font-size: 10px;
+  }
+  .ph-sub-text {
+    font-size: 9px;
+    max-width: 100px;
+  }
+  .ph-center-circle {
+    width: 80px;
+    height: 80px;
+  }
+  .ph-center-circle span,
+  .ph-center-circle .lo-brand {
+    display: none !important;
+  }
+  .ph-center-circle img {
+    margin-bottom: 0 !important;
+    width: 40px !important;
+  }
+  .ph-center-ring--1 {
+    width: 100px;
+    height: 100px;
+  }
+  .ph-center-ring--2 {
+    width: 124px;
+    height: 124px;
+  }
+
+  /* — BETTER OPERATIONS — */
+  .bop-section {
+    padding: 56px 0 48px;
+  }
+  .bop-layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+  .bop-h2 {
+    font-size: clamp(26px, 6vw, 34px);
+  }
+  .bop-cards {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .bcard {
+    padding: 22px 20px;
+  }
+  .bcard-num {
+    font-size: 36px;
+  }
+
+  /* — EXCLUSIVELY FOR CUSTOMERS — */
+  .excl-section {
+    padding: 56px 0;
+  }
+  .excl-head {
+    max-width: 100%;
+    margin-bottom: 28px;
+  }
+  .excl-head h2 {
+    font-size: clamp(24px, 6vw, 32px);
+  }
+  .excl-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .excl-card {
+    padding: 18px 20px;
+    gap: 14px;
+  }
+  .excl-ic {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* — EVERYTHING YOU NEED — */
+  .eyn-section {
+    padding: 56px 0 72px;
+  }
+  .eyn-head {
+    margin-bottom: 28px;
+  }
+  .eyn-h2 {
+    font-size: clamp(24px, 6vw, 32px);
+  }
+  .eyn-cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .eyn-card {
+    padding: 22px 18px;
+  }
+  .eyn-ic {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 14px;
+  }
+
+  /* — FOOTER — */
+  .footer {
+    padding: 48px 0 24px;
+  }
+  .foot-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+  .foot-brand {
+    grid-column: 1 / -1;
+  }
+  .foot-brand p {
+    max-width: 100%;
+  }
+  .foot-bot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .foot-legal a {
+    margin-left: 0;
+    margin-right: 14px;
+  }
+
+  /* — LOGIN PAGE — */
+  .login-split-page {
+    grid-template-columns: 1fr;
+  }
+  .login-lang-switch {
+    top: 16px;
+    right: 16px;
+  }
+  .split-left {
+    padding: 40px 20px 32px;
+    min-height: auto;
+  }
+  .split-left-content {
+    gap: 24px;
+  }
+  .hero-text-block {
+    margin: 20px 0 16px;
+  }
+  .split-headline {
+    font-size: clamp(20px, 5vw, 26px);
+  }
+  .split-desc {
+    font-size: 13.5px;
+  }
+  .login-notices-container {
+    gap: 10px;
+    margin-bottom: 0;
+  }
+  .notice-card {
+    padding: 12px 14px;
+  }
+  .split-right {
+    padding: 32px 16px;
+    background: #f4f6f8;
+  }
+  .split-form-card {
+    max-width: 100%;
+  }
+  .form-head h2 {
+    font-size: 20px;
+  }
+}
+
+/* ============================================================================
+   SMALL MOBILE (≤ 420px)
+   ========================================================================== */
+@media (max-width: 420px) {
+
+  .hero-copy h1 {
+    font-size: 24px;
+  }
+  .hero-devices {
+    height: 200px;
+  }
+  .hero-btns {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero-btns .btn {
+    justify-content: center;
+    text-align: center;
+  }
+  .eyn-cards {
+    grid-template-columns: 1fr;
+  }
+  .foot-grid {
+    grid-template-columns: 1fr;
+  }
+  .split-left {
+    padding: 36px 16px 28px;
+  }
+  .split-right {
+    padding: 28px 12px;
+  }
+  .bop-cards {
+    gap: 10px;
   }
 }

@@ -276,7 +276,7 @@ function PlatformHub() {
             <div className="ph-center-circle">
               <img src="./assets/logo-connex.svg" alt="SE Connex" style={{ width: 52, marginBottom: 8, borderRadius: 8, display: 'block' }} onError={(e) => { e.target.style.display = 'none'; }} />
               <span className="lo-brand" style={{ color: '#fff', fontSize: 13, fontWeight: 800, letterSpacing: '.04em' }}>
-                <span style={{ color: '#f2871f' }}>SE</span> CONNEX
+                <span style={{ color: 'var(--red)' }}>SE</span> CONNEX
               </span>
             </div>
           </div>
@@ -294,6 +294,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState(
     () => localStorage.getItem('se_view') || 'landing'
   );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const root = useReveal([currentView]);
 
   const navigate = (view) => {
@@ -324,8 +325,29 @@ export default function App() {
             <button className="btn btn-nav-signin btn-sm" onClick={() => navigate('login')}>Sign In</button>
             <button className="btn btn-nav-start btn-sm" onClick={() => navigate('login')}>Get Started</button>
           </div>
+          {/* Hamburger — mobile only */}
+          <button
+            className="nav-hamburger"
+            aria-label="Toggle menu"
+            onClick={() => setMobileMenuOpen(o => !o)}
+          >
+            <span /><span /><span />
+          </button>
         </div>
       </header>
+
+      {/* ── MOBILE MENU ── */}
+      <div className={`nav-mobile-menu${mobileMenuOpen ? ' open' : ''}`} role="navigation">
+        <a href="#features" onClick={() => setMobileMenuOpen(false)}>Features</a>
+        <a href="#platform" onClick={() => setMobileMenuOpen(false)}>Solutions</a>
+        <a href="#impact" onClick={() => setMobileMenuOpen(false)}>Impact</a>
+        <a href={SE.about} target="_blank" rel="noopener" onClick={() => setMobileMenuOpen(false)}>About</a>
+        <div className="nav-mobile-divider" />
+        <div className="nav-mobile-actions">
+          <button className="btn btn-nav-signin btn-sm" onClick={() => { navigate('login'); setMobileMenuOpen(false); }}>Sign In</button>
+          <button className="btn btn-nav-start btn-sm" onClick={() => { navigate('login'); setMobileMenuOpen(false); }}>Get Started</button>
+        </div>
+      </div>
 
       {/* ── HERO SECTION WITH INTEGRATED SECURITY CARD ── */}
       <span id="top" />
