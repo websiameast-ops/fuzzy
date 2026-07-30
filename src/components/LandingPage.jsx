@@ -175,42 +175,11 @@ export default function App() {
             </div>
           </div>
 
-          {/* Right 3 devices */}
+          {/* Right single device mockup */}
           <div className="hero-devices rv" id="hero-mockup">
             <div className="devices-stage">
               <div className="scene-glow" />
-
-              {/* Phone — far left, tilted */}
-              <div className="dev dev-phone">
-                <div className="phone-frame">
-                  <div className="phone-island" />
-                  <div className="phone-screen">
-                    <img src="./assets/mobile-dashboard.png" alt="SE Connex mobile" />
-                  </div>
-                  <div className="phone-bar" />
-                </div>
-              </div>
-
-              {/* Laptop — center main */}
-              <div className="dev dev-laptop">
-                <div className="laptop-lid">
-                  <div className="laptop-cam" />
-                  <div className="laptop-screen">
-                    <img src="./assets/dashboard-light.png" alt="SE Connex desktop" />
-                  </div>
-                </div>
-                <div className="laptop-base"><div className="laptop-notch" /></div>
-              </div>
-
-              {/* Tablet — far right, tilted */}
-              <div className="dev dev-tablet">
-                <div className="tablet-frame">
-                  <div className="tablet-cam" />
-                  <div className="tablet-screen">
-                    <img src="./assets/equipment.png" alt="SE Connex tablet" />
-                  </div>
-                </div>
-              </div>
+              <img src="./assets/DEVICE.png" className="dev-img dev-img-single" alt="SE Connex devices" />
             </div>
 
             <div className="device-labels">

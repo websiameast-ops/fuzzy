@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const LOGIN_URL = 'https://connex.siameastsolutions.com/login';
+const LOGIN_URL = '#'; //https://connex.siameastsolutions.com/login
 const SE = {
   site: 'https://siameastsolutions.com/',
   about: 'https://siameastsolutions.com/about-se-3/',
@@ -165,6 +165,138 @@ function toSVG(xPct, yPct) {
   return { x: (xPct / 100) * VW, y: (yPct / 100) * VH };
 }
 
+const STARTS_WITH_TABS = [
+  {
+    id: 'pump-systems',
+    label: 'Pump Systems',
+    titleLine1: 'Connect Every Pump',
+    titleLine2: 'Optimize Performance',
+    desc: 'Monitor health, pressure, and vibration of industrial pumps in real-time to eliminate unexpected downtime and extend equipment life.',
+    image: './assets/connect_every_pump_xn.webp',
+    points: [
+      'Real-time vibration & temperature telemetry',
+      'Predictive cavitation & mechanical seal warnings',
+      'Automated flow rate & pressure optimization',
+      'Direct SiamEast service ticket dispatch',
+      'Complete maintenance history & warranty logs'
+    ]
+  },
+  {
+    id: 'solar-energy',
+    label: 'Solar & Energy',
+    titleLine1: 'Smarter Energy',
+    titleLine2: 'Clean Power Control',
+    desc: 'Track solar generation, energy storage battery systems (BESS), and grid efficiency through one unified intelligent dashboard.',
+    image: './assets/smartet_energy_xn.webp',
+    points: [
+      'Live solar inverter & panel output monitoring',
+      'Battery storage (BESS) charge status tracking',
+      'Peak shaving & energy cost optimization',
+      'Carbon reduction & ESG compliance reporting',
+      'Grid failover & microgrid load management'
+    ]
+  },
+  {
+    id: 'metering',
+    label: 'Metering',
+    titleLine1: 'Smart Metering',
+    titleLine2: 'Precision Data',
+    desc: 'Centralize electric, water, gas, and flow meter readings to track consumption patterns and detect anomalies or leaks instantly.',
+    image: './assets/easy_meter_xn.webp',
+    points: [
+      'High-precision electric (kWh) & power monitoring',
+      'Digital water & fluid flow meter integration',
+      'Gas pressure & consumption tracking',
+      'Automated utility billing & audit readiness',
+      'Instant leak & overload alert notifications'
+    ]
+  },
+  {
+    id: 'iot-device',
+    label: 'IoT Device',
+    titleLine1: 'Connect Sensors',
+    titleLine2: 'Unlock Insights',
+    desc: 'Integrate PLCs, sensors and industrial IoT devices to automate data collection and improve operational awareness.',
+    image: './assets/iot_device_xn.webp',
+    points: [
+      'Wide range of device compatibility',
+      'Industrial protocols support',
+      'Real-time data acquisition',
+      'Edge processing & filtering',
+      'Secure data transmission'
+    ]
+  },
+  {
+    id: 'service-management',
+    label: 'Service Management',
+    titleLine1: 'Manage Services',
+    titleLine2: 'Maximize Reliability',
+    desc: 'Streamline the entire service lifecycle from requests to sign-off and track every activity for full visibility and compliance.',
+    image: './assets/manage_services_xn.webp',
+    points: [
+      'Service request management',
+      'Contracts & maintenance agreements',
+      'PM schedule planning & tracking',
+      'Digital sign-off & approvals',
+      'Complete service history'
+    ]
+  }
+];
+
+function PlatformShowcase() {
+  const [activeTabId, setActiveTabId] = useState('pump-systems');
+  const activeTab = STARTS_WITH_TABS.find(t => t.id === activeTabId) || STARTS_WITH_TABS[0];
+
+  return (
+    <section className="ph-showcase-section" id="showcase">
+      <div className="wrap">
+        <div className="ph-header rv">
+          <div className="eyebrow"><span className="eyebrow-spark">✦</span> Connected Ecosystem</div>
+          <h2>Everything Starts with <span className="h-accent">Connex</span></h2>
+          <p className="ph-sub">Connect your industrial assets, energy systems and IoT devices through one intelligent platform.</p>
+
+          {/* Interactive Pill Tabs matching mockup */}
+          <div className="ph-tabs-pills">
+            {STARTS_WITH_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                className={`ph-pill-btn ${activeTabId === tab.id ? 'active' : ''}`}
+                onClick={() => setActiveTabId(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Feature Showcase Card matching mockup */}
+        <div className="starts-card rv">
+          <div className="starts-card-left">
+            <h3 className="starts-title">
+              {activeTab.titleLine1}<br />
+              <span className="starts-title-sub">{activeTab.titleLine2}</span>
+            </h3>
+            <p className="starts-desc">{activeTab.desc}</p>
+            <ul className="starts-points">
+              {activeTab.points.map((pt, idx) => (
+                <li key={idx} className="starts-point-item">
+                  <span className="starts-check-icon">✓</span>
+                  <span>{pt}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="starts-card-right">
+            <div className="starts-img-wrap">
+              <img src={activeTab.image} alt={activeTab.label} className="starts-img" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function PlatformHub() {
   const [hovered, setHovered] = useState(null);
 
@@ -172,11 +304,12 @@ function PlatformHub() {
     <section className="ph-section" id="platform">
       <div className="wrap">
         <div className="ph-header rv">
-          <div className="eyebrow"><span className="eyebrow-spark">✦</span> One Platform</div>
+          <div className="eyebrow"><span className="eyebrow-spark">✦</span> Hub Architecture</div>
           <h2>One Platform.<br /><span className="h-accent">All Operations.</span></h2>
           <p className="ph-sub">Keep every asset connected, every engineer informed, and every team aligned.</p>
         </div>
 
+        {/* Diagram below */}
         <div className="ph-diagram rv">
           {/* SVG layer — lines + animated dots */}
           <svg
@@ -323,7 +456,7 @@ export default function App() {
           </nav>
           <div className="nav-actions">
             <button className="btn btn-nav-signin btn-sm" onClick={() => navigate('login')}>Sign In</button>
-            <button className="btn btn-nav-start btn-sm" onClick={() => navigate('login')}>Get Started</button>
+            {/* <button className="btn btn-nav-start btn-sm" onClick={() => navigate('login')}>Get Started</button> */}
           </div>
           {/* Hamburger — mobile only */}
           <button
@@ -345,7 +478,7 @@ export default function App() {
         <div className="nav-mobile-divider" />
         <div className="nav-mobile-actions">
           <button className="btn btn-nav-signin btn-sm" onClick={() => { navigate('login'); setMobileMenuOpen(false); }}>Sign In</button>
-          <button className="btn btn-nav-start btn-sm" onClick={() => { navigate('login'); setMobileMenuOpen(false); }}>Get Started</button>
+          {/* <button className="btn btn-nav-start btn-sm" onClick={() => { navigate('login'); setMobileMenuOpen(false); }}>Get Started</button> */}
         </div>
       </div>
 
@@ -368,7 +501,7 @@ export default function App() {
                 <button className="btn btn-primary btn-lg" onClick={() => navigate('login')}>
                   Get Started Free <Ic d={PATHS.arrow} size={17} />
                 </button>
-                <Btn cls="btn-ghost btn-lg" href="#features">Explore Features</Btn>
+                <Btn cls="btn-ghost btn-lg" href="#features">Watch Video</Btn>
               </div>
 
               <div className="hero-list">
@@ -386,12 +519,10 @@ export default function App() {
               </div>
             </div>
 
-            {/* Right — Frameless device composition matching image */}
+            {/* Right — Single device mockup using DEVICE.png */}
             <div className="hero-devices rv" id="hero-mockup">
               <div className="devices-stage">
-                <img src="./assets/tablet_xn.webp" className="dev-img dev-img-tablet" alt="SE Connex tablet" onError={(e) => { e.target.style.display = 'none'; }} />
-                <img src="./assets/Notebook_xn.webp" className="dev-img dev-img-laptop" alt="SE Connex desktop" onError={(e) => { e.target.style.display = 'none'; }} />
-                <img src="./assets/mobile_xn.webp" className="dev-img dev-img-phone" alt="SE Connex mobile" onError={(e) => { e.target.style.display = 'none'; }} />
+                <img src="./assets/DEVICE.png" className="dev-img dev-img-single" alt="SE Connex devices" onError={(e) => { e.target.style.display = 'none'; }} />
               </div>
             </div>
 
@@ -410,7 +541,10 @@ export default function App() {
         </div>
       </section>
 
-      {/* ── ONE PLATFORM / HUB ── */}
+      {/* ── SHOWCASE CARD (CONNECTED ASSETS & CAPABILITIES) ── */}
+      <PlatformShowcase />
+
+      {/* ── ONE PLATFORM / HUB (DIAGRAM) ── */}
       <PlatformHub />
 
       {/* ── BETTER OPERATIONS SECTION ── */}
