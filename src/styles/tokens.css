@@ -1,0 +1,75 @@
+:root {
+  /* SE Connex brand tokens — blue + orange, matching the SE Connex logo mark */
+  --se-primary: #145da0;
+  --se-primary-hover: #0f4a82;
+  --se-primary-active: #0c3c69;
+  --se-primary-soft: #e8f1fb;
+  --se-accent: #f2871f;
+  --se-accent-hover: #d97313;
+  --se-accent-soft: #fef1e2;
+  --se-charcoal: #24272c;
+  --se-text: #29313d;
+  --se-text-secondary: #536071;
+  --se-text-muted: #697386;
+  --se-background: #f5f7f9;
+  --se-surface: #ffffff;
+  --se-border: #e4e8ee;
+  --se-success: #16855b;
+  --se-success-soft: #eaf7f1;
+  --se-warning: #d89016;
+  --se-warning-soft: #fff6e2;
+  --se-danger: #c9363e;
+  --se-danger-soft: #fdedef;
+  --se-info: #2878c8;
+  --se-info-soft: #ebf4fc;
+
+  /* Neutral / structural */
+  --se-grey: #6b7280;
+  --se-grey-soft: #eef1f4;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow-card: 0 1px 2px rgba(20, 30, 45, 0.05), 0 1px 6px rgba(20, 30, 45, 0.05);
+  --shadow-pop: 0 8px 30px rgba(20, 30, 45, 0.16);
+  --font-stack: 'Noto Sans Thai', 'Inter', 'Segoe UI', Arial, sans-serif;
+
+  --sidebar-w: 264px;
+  --sidebar-w-collapsed: 76px;
+  --topbar-h: 64px;
+  --content-max: 1440px;
+}
+
+/* ---------- Dark theme (elite) ---------- */
+[data-theme='dark'] {
+  --se-primary: #4d9be0;
+  --se-primary-hover: #6cb0ea;
+  --se-primary-active: #a8d0f2;
+  --se-primary-soft: #12314e;
+  --se-accent: #f79433;
+  --se-accent-hover: #ffa64d;
+  --se-accent-soft: #3a2410;
+  --se-charcoal: #0d1117;
+  --se-text: #e7ecf3;
+  --se-text-secondary: #a7b2c2;
+  --se-text-muted: #7c8798;
+  --se-background: #0b0f16;
+  --se-surface: #131a24;
+  --se-border: #232d3b;
+  --se-success: #34c98c;
+  --se-success-soft: #0d2b20;
+  --se-warning: #f2b135;
+  --se-warning-soft: #33270e;
+  --se-danger: #f0616a;
+  --se-danger-soft: #3a1519;
+  --se-info: #58a6ff;
+  --se-info-soft: #10263e;
+  --se-grey: #8a94a5;
+  --se-grey-soft: #1a222e;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 8px rgba(0, 0, 0, 0.35);
+  --shadow-pop: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+html { color-scheme: light; }
+html[data-theme='dark'] { color-scheme: dark; }
+body, .card, .btn, input, select, textarea {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
