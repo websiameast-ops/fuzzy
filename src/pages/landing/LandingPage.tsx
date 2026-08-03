@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ContactWidget } from '@/components/landing/ContactWidget';
 import { CookieConsentBanner } from '@/components/landing/CookieConsentBanner';
+import { getAssetUrl } from '@/utils/assets';
 import '@/styles/landing.css';
 
 const SE = {
@@ -66,11 +67,11 @@ const VW = 500, VH = 380, CX = 250, CY = 190;
 function toSVG(xPct: number, yPct: number) { return { x: (xPct / 100) * VW, y: (yPct / 100) * VH }; }
 
 const STARTS_WITH_TABS = [
-  { id: 'pump-systems', label: 'Pump Systems', titleLine1: 'Connect Every Pump', titleLine2: 'Optimize Performance', desc: 'Monitor health, pressure, and vibration of industrial pumps in real-time to eliminate unexpected downtime and extend equipment life.', image: '/assets/connect_every_pump_xn.webp', points: ['Real-time vibration & temperature telemetry', 'Predictive cavitation & mechanical seal warnings', 'Automated flow rate & pressure optimization', 'Direct SiamEast service ticket dispatch', 'Complete maintenance history & warranty logs'] },
-  { id: 'solar-energy', label: 'Solar & Energy', titleLine1: 'Smarter Energy', titleLine2: 'Clean Power Control', desc: 'Track solar generation, energy storage battery systems (BESS), and grid efficiency through one unified intelligent dashboard.', image: '/assets/smartet_energy_xn.webp', points: ['Live solar inverter & panel output monitoring', 'Battery storage (BESS) charge status tracking', 'Peak shaving & energy cost optimization', 'Carbon reduction & ESG compliance reporting', 'Grid failover & microgrid load management'] },
-  { id: 'metering', label: 'Metering', titleLine1: 'Smart Metering', titleLine2: 'Precision Data', desc: 'Centralize electric, water, gas, and flow meter readings to track consumption patterns and detect anomalies or leaks instantly.', image: '/assets/easy_meter_xn.webp', points: ['High-precision electric (kWh) & power monitoring', 'Digital water & fluid flow meter integration', 'Gas pressure & consumption tracking', 'Automated utility billing & audit readiness', 'Instant leak & overload alert notifications'] },
-  { id: 'iot-device', label: 'IoT Device', titleLine1: 'Connect Sensors', titleLine2: 'Unlock Insights', desc: 'Integrate PLCs, sensors and industrial IoT devices to automate data collection and improve operational awareness.', image: '/assets/iot_device_xn.webp', points: ['Wide range of device compatibility', 'Industrial protocols support', 'Real-time data acquisition', 'Edge processing & filtering', 'Secure data transmission'] },
-  { id: 'service-management', label: 'Service Management', titleLine1: 'Manage Services', titleLine2: 'Maximize Reliability', desc: 'Streamline the entire service lifecycle from requests to sign-off and track every activity for full visibility and compliance.', image: '/assets/manage_services_xn.webp', points: ['Service request management', 'Contracts & maintenance agreements', 'PM schedule planning & tracking', 'Digital sign-off & approvals', 'Complete service history'] },
+  { id: 'pump-systems', label: 'Pump Systems', titleLine1: 'Connect Every Pump', titleLine2: 'Optimize Performance', desc: 'Monitor health, pressure, and vibration of industrial pumps in real-time to eliminate unexpected downtime and extend equipment life.', image: getAssetUrl('assets/connect_every_pump_xn.webp'), points: ['Real-time vibration & temperature telemetry', 'Predictive cavitation & mechanical seal warnings', 'Automated flow rate & pressure optimization', 'Direct SiamEast service ticket dispatch', 'Complete maintenance history & warranty logs'] },
+  { id: 'solar-energy', label: 'Solar & Energy', titleLine1: 'Smarter Energy', titleLine2: 'Clean Power Control', desc: 'Track solar generation, energy storage battery systems (BESS), and grid efficiency through one unified intelligent dashboard.', image: getAssetUrl('assets/smartet_energy_xn.webp'), points: ['Live solar inverter & panel output monitoring', 'Battery storage (BESS) charge status tracking', 'Peak shaving & energy cost optimization', 'Carbon reduction & ESG compliance reporting', 'Grid failover & microgrid load management'] },
+  { id: 'metering', label: 'Metering', titleLine1: 'Smart Metering', titleLine2: 'Precision Data', desc: 'Centralize electric, water, gas, and flow meter readings to track consumption patterns and detect anomalies or leaks instantly.', image: getAssetUrl('assets/easy_meter_xn.webp'), points: ['High-precision electric (kWh) & power monitoring', 'Digital water & fluid flow meter integration', 'Gas pressure & consumption tracking', 'Automated utility billing & audit readiness', 'Instant leak & overload alert notifications'] },
+  { id: 'iot-device', label: 'IoT Device', titleLine1: 'Connect Sensors', titleLine2: 'Unlock Insights', desc: 'Integrate PLCs, sensors and industrial IoT devices to automate data collection and improve operational awareness.', image: getAssetUrl('assets/iot_device_xn.webp'), points: ['Wide range of device compatibility', 'Industrial protocols support', 'Real-time data acquisition', 'Edge processing & filtering', 'Secure data transmission'] },
+  { id: 'service-management', label: 'Service Management', titleLine1: 'Manage Services', titleLine2: 'Maximize Reliability', desc: 'Streamline the entire service lifecycle from requests to sign-off and track every activity for full visibility and compliance.', image: getAssetUrl('assets/manage_services_xn.webp'), points: ['Service request management', 'Contracts & maintenance agreements', 'PM schedule planning & tracking', 'Digital sign-off & approvals', 'Complete service history'] },
 ];
 
 function PlatformShowcase() {
@@ -162,7 +163,7 @@ function PlatformHub() {
             <div className="ph-center-ring ph-center-ring--2" />
             <div className="ph-center-ring ph-center-ring--1" />
             <div className="ph-center-circle">
-              <img src="/assets/logo-connex.svg" alt="SE Connex" style={{ width: 52, marginBottom: 8, borderRadius: 8, display: 'block' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <img src={getAssetUrl('assets/logo-connex.svg')} alt="SE Connex" style={{ width: 52, marginBottom: 8, borderRadius: 8, display: 'block' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               <span className="lo-brand" style={{ color: '#fff', fontSize: 13, fontWeight: 800, letterSpacing: '.04em' }}>
                 <span style={{ color: 'var(--red)' }}>SE</span> CONNEX
               </span>
@@ -200,7 +201,7 @@ export function LandingPage() {
       <header className="nav">
         <div className="nav-inner">
           <a className="logo" href="#top">
-            <img src="/assets/logo-connex.svg" alt="SE Connex" className="logo-img" />
+            <img src={getAssetUrl('assets/logo-connex.svg')} alt="SE Connex" className="logo-img" />
           </a>
           <nav className="nav-links">
             <a href="#features">Features</a>
@@ -265,7 +266,7 @@ export function LandingPage() {
             </div>
             <div className="hero-devices rv" id="hero-mockup">
               <div className="devices-stage">
-                <img src="/assets/DEVICE.png" className="dev-img dev-img-single" alt="SE Connex devices" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <img src={getAssetUrl('assets/DEVICE.png')} className="dev-img dev-img-single" alt="SE Connex devices" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               </div>
             </div>
           </div>
@@ -374,7 +375,7 @@ export function LandingPage() {
         <div className="wrap">
           <div className="foot-grid">
             <div className="foot-brand">
-              <img src="/assets/logo-connex.svg" alt="SE Connex" style={{ width: 52, height: 52, borderRadius: 10, marginBottom: 10, display: 'block' }} />
+              <img src={getAssetUrl('assets/logo-connex.svg')} alt="SE Connex" style={{ width: 52, height: 52, borderRadius: 10, marginBottom: 10, display: 'block' }} />
               <span className="lo-brand"><span className="lo-se">SE</span> CONNEX</span>
               <span className="lo-tag">SiamEast Solutions PCL</span>
               <p>Helping modern industrial plants work smarter, stay connected, and maximize efficiency.</p>
@@ -419,7 +420,7 @@ export function LandingPage() {
               </svg>
             </button>
             <div className="video-modal-player">
-              <video src="/assets/0_coming_sooon_txt.mp4" controls autoPlay playsInline loop className="video-modal-real-mp4" />
+              <video src={getAssetUrl('assets/0_coming_sooon_txt.mp4')} controls autoPlay playsInline loop className="video-modal-real-mp4" />
             </div>
           </div>
         </div>
