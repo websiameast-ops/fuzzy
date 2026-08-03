@@ -88,7 +88,7 @@ export default function Login({ onBackToLanding }) {
         <div className="split-left-content">
           {/* Logo Pill */}
           <div className="brand-logo-pill" onClick={onBackToLanding} title="Back to Home">
-            <img src="./assets/logo-connex.svg" alt="SE Connex" style={{ height: 40, width: 40, borderRadius: 8, display: 'block', flexShrink: 0 }} />
+            <img src="/assets/logo-connex.svg" alt="SE Connex" style={{ height: 40, width: 40, borderRadius: 8, display: 'block', flexShrink: 0 }} />
             <div className="pill-text">
               <span className="brand-name"><span className="lo-se">SE</span> Connex</span>
               <span className="brand-sub">SIAMEAST SOLUTIONS PCL</span>

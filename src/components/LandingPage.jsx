@@ -22,7 +22,7 @@ const FEATURES_LIST = [
     title: 'My Equipment & Asset Inventory',
     subtitle: 'ระบบจัดการและติดตามทะเบียนเครื่องจักร อุปกรณ์ SiamEast ทั้งหมดในที่เดียว',
     desc: 'Access your complete asset registry across all factory sites. Monitor operational states, warranty timelines, and initiate service requests instantly for any equipment.',
-    img: './assets/equipment.png',
+    img: '/assets/equipment.png',
     points: ['Centralized equipment catalog & warranty tracking', 'Filter by site, operating state, and brand categories', '1-Tap direct problem reporting per machine'],
     stat: '100%', statLabel: 'Asset Transparency',
   },
@@ -32,7 +32,7 @@ const FEATURES_LIST = [
     title: 'My Sites — Interactive Location Map',
     subtitle: 'แผนที่รวมที่ตั้งสาขา โรงงาน และสถานะสุขภาพเครื่องจักรรวมแบบเรียลไทม์',
     desc: 'Schematic map view of all your industrial plant sites. Colour-coded live health indicators give instant visibility into site alarms, open tickets, and active assets.',
-    img: './assets/factory-map.png',
+    img: '/assets/factory-map.png',
     points: ['Schematic geographic view with health color-coding', 'Instant drill-down into site open tickets & active alarms', 'Multi-site overview for plant managers and executives'],
     stat: 'Live', statLabel: 'Site Health Status',
   },
@@ -42,7 +42,7 @@ const FEATURES_LIST = [
     title: 'Service Requests & Ticket Tracker',
     subtitle: 'ระบบแจ้งซ่อมและติดตามสถานะงานบริการ SiamEast แบบเรียลไทม์',
     desc: 'Submit new service tickets, track technician resolution progress, monitor priority levels, and compare completion timelines against planned schedules.',
-    img: './assets/live-monitoring-dark.png',
+    img: '/assets/live-monitoring-dark.png',
     points: ['Real-time service ticket lifecycle status tracking', 'Urgency and priority categorization for fast response', 'Direct channel to SiamEast specialized engineering support'],
     stat: '< 24h', statLabel: 'Avg Response Time',
   },
@@ -52,7 +52,7 @@ const FEATURES_LIST = [
     title: 'Contracts & Maintenance Agreements',
     subtitle: 'บริหารจัดการสัญญาบริการ MA, O&M และสิทธิ์รับประกันเครื่องจักร',
     desc: 'Complete overview of active Maintenance Agreements, Operation & Maintenance, and equipment monitoring coverage with automated expiration alerts.',
-    img: './assets/materials.png',
+    img: '/assets/materials.png',
     points: ['Clear tracking of terms, remaining days, and visit counts', 'Automated proactive renewal alerts before expiration', 'Full coverage map of protected assets & equipment'],
     stat: 'Active', statLabel: 'SLA Protection',
   },
@@ -62,7 +62,7 @@ const FEATURES_LIST = [
     title: 'PM Schedule & Preventive Maintenance',
     subtitle: 'ปฏิทินวางแผนเข้าบำรุงรักษาเชิงป้องกันและการยืนยันนัดหมาย',
     desc: 'Interactive calendar for upcoming PM visits by SiamEast engineer teams. Review scope of work, confirm appointments, and access completed service inspection reports.',
-    img: './assets/dashboard-dark.png',
+    img: '/assets/dashboard-dark.png',
     points: ['Interactive monthly calendar & upcoming visit timeline', 'Preparation checklists & engineer team details', 'Instant access to digital service reports & sign-offs'],
     stat: 'Zero', statLabel: 'Unplanned Downtime',
   },
@@ -179,7 +179,7 @@ export default function App() {
           <div className="hero-devices rv" id="hero-mockup">
             <div className="devices-stage">
               <div className="scene-glow" />
-              <img src="./assets/DEVICE.png" className="dev-img dev-img-single" alt="SE Connex devices" />
+              <img src="/assets/DEVICE.png" className="dev-img dev-img-single" alt="SE Connex devices" />
             </div>
 
             <div className="device-labels">

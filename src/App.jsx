@@ -22,7 +22,7 @@ const FEATURES_LIST = [
     title: 'My Equipment & Asset Inventory',
     subtitle: 'ระบบจัดการและติดตามทะเบียนเครื่องจักร อุปกรณ์ SiamEast ทั้งหมดในที่เดียว',
     desc: 'Access your complete asset registry across all factory sites. Monitor operational states, warranty timelines, and initiate service requests instantly for any equipment.',
-    img: './assets/equipment.png',
+    img: '/assets/equipment.png',
     points: ['Centralized equipment catalog & warranty tracking', 'Filter by site, operating state, and brand categories', '1-Tap direct problem reporting per machine'],
     stat: '100%', statLabel: 'Asset Transparency',
   },
@@ -32,7 +32,7 @@ const FEATURES_LIST = [
     title: 'My Sites — Interactive Location Map',
     subtitle: 'แผนที่รวมที่ตั้งสาขา โรงงาน และสถานะสุขภาพเครื่องจักรรวมแบบเรียลไทม์',
     desc: 'Schematic map view of all your industrial plant sites. Colour-coded live health indicators give instant visibility into site alarms, open tickets, and active assets.',
-    img: './assets/factory-map.png',
+    img: '/assets/factory-map.png',
     points: ['Schematic geographic view with health color-coding', 'Instant drill-down into site open tickets & active alarms', 'Multi-site overview for plant managers and executives'],
     stat: 'Live', statLabel: 'Site Health Status',
   },
@@ -42,7 +42,7 @@ const FEATURES_LIST = [
     title: 'Service Requests & Ticket Tracker',
     subtitle: 'ระบบแจ้งซ่อมและติดตามสถานะงานบริการ SiamEast แบบเรียลไทม์',
     desc: 'Submit new service tickets, track technician resolution progress, monitor priority levels, and compare completion timelines against planned schedules.',
-    img: './assets/live-monitoring-dark.png',
+    img: '/assets/live-monitoring-dark.png',
     points: ['Real-time service ticket lifecycle status tracking', 'Urgency and priority categorization for fast response', 'Direct channel to SiamEast specialized engineering support'],
     stat: '< 24h', statLabel: 'Avg Response Time',
   },
@@ -52,7 +52,7 @@ const FEATURES_LIST = [
     title: 'Contracts & Maintenance Agreements',
     subtitle: 'บริหารจัดการสัญญาบริการ MA, O&M และสิทธิ์รับประกันเครื่องจักร',
     desc: 'Complete overview of active Maintenance Agreements, Operation & Maintenance, and equipment monitoring coverage with automated expiration alerts.',
-    img: './assets/materials.png',
+    img: '/assets/materials.png',
     points: ['Clear tracking of terms, remaining days, and visit counts', 'Automated proactive renewal alerts before expiration', 'Full coverage map of protected assets & equipment'],
     stat: 'Active', statLabel: 'SLA Protection',
   },
@@ -62,7 +62,7 @@ const FEATURES_LIST = [
     title: 'PM Schedule & Preventive Maintenance',
     subtitle: 'ปฏิทินวางแผนเข้าบำรุงรักษาเชิงป้องกันและการยืนยันนัดหมาย',
     desc: 'Interactive calendar for upcoming PM visits by SiamEast engineer teams. Review scope of work, confirm appointments, and access completed service inspection reports.',
-    img: './assets/dashboard-dark.png',
+    img: '/assets/dashboard-dark.png',
     points: ['Interactive monthly calendar & upcoming visit timeline', 'Preparation checklists & engineer team details', 'Instant access to digital service reports & sign-offs'],
     stat: 'Zero', statLabel: 'Unplanned Downtime',
   },
@@ -172,7 +172,7 @@ const STARTS_WITH_TABS = [
     titleLine1: 'Connect Every Pump',
     titleLine2: 'Optimize Performance',
     desc: 'Monitor health, pressure, and vibration of industrial pumps in real-time to eliminate unexpected downtime and extend equipment life.',
-    image: './assets/connect_every_pump_xn.webp',
+    image: '/assets/connect_every_pump_xn.webp',
     points: [
       'Real-time vibration & temperature telemetry',
       'Predictive cavitation & mechanical seal warnings',
@@ -187,7 +187,7 @@ const STARTS_WITH_TABS = [
     titleLine1: 'Smarter Energy',
     titleLine2: 'Clean Power Control',
     desc: 'Track solar generation, energy storage battery systems (BESS), and grid efficiency through one unified intelligent dashboard.',
-    image: './assets/smartet_energy_xn.webp',
+    image: '/assets/smartet_energy_xn.webp',
     points: [
       'Live solar inverter & panel output monitoring',
       'Battery storage (BESS) charge status tracking',
@@ -202,7 +202,7 @@ const STARTS_WITH_TABS = [
     titleLine1: 'Smart Metering',
     titleLine2: 'Precision Data',
     desc: 'Centralize electric, water, gas, and flow meter readings to track consumption patterns and detect anomalies or leaks instantly.',
-    image: './assets/easy_meter_xn.webp',
+    image: '/assets/easy_meter_xn.webp',
     points: [
       'High-precision electric (kWh) & power monitoring',
       'Digital water & fluid flow meter integration',
@@ -217,7 +217,7 @@ const STARTS_WITH_TABS = [
     titleLine1: 'Connect Sensors',
     titleLine2: 'Unlock Insights',
     desc: 'Integrate PLCs, sensors and industrial IoT devices to automate data collection and improve operational awareness.',
-    image: './assets/iot_device_xn.webp',
+    image: '/assets/iot_device_xn.webp',
     points: [
       'Wide range of device compatibility',
       'Industrial protocols support',
@@ -232,7 +232,7 @@ const STARTS_WITH_TABS = [
     titleLine1: 'Manage Services',
     titleLine2: 'Maximize Reliability',
     desc: 'Streamline the entire service lifecycle from requests to sign-off and track every activity for full visibility and compliance.',
-    image: './assets/manage_services_xn.webp',
+    image: '/assets/manage_services_xn.webp',
     points: [
       'Service request management',
       'Contracts & maintenance agreements',
@@ -407,7 +407,7 @@ function PlatformHub() {
             <div className="ph-center-ring ph-center-ring--2" />
             <div className="ph-center-ring ph-center-ring--1" />
             <div className="ph-center-circle">
-              <img src="./assets/logo-connex.svg" alt="SE Connex" style={{ width: 52, marginBottom: 8, borderRadius: 8, display: 'block' }} onError={(e) => { e.target.style.display = 'none'; }} />
+              <img src="/assets/logo-connex.svg" alt="SE Connex" style={{ width: 52, marginBottom: 8, borderRadius: 8, display: 'block' }} onError={(e) => { e.target.style.display = 'none'; }} />
               <span className="lo-brand" style={{ color: '#fff', fontSize: 13, fontWeight: 800, letterSpacing: '.04em' }}>
                 <span style={{ color: 'var(--red)' }}>SE</span> CONNEX
               </span>
@@ -446,7 +446,7 @@ export default function App() {
       <header className="nav">
         <div className="nav-inner">
           <a className="logo" href="#top">
-            <img src="./assets/logo-connex.svg" alt="SE Connex" className="logo-img" />
+            <img src="/assets/logo-connex.svg" alt="SE Connex" className="logo-img" />
           </a>
           <nav className="nav-links">
             <a href="#features">Features</a>
@@ -522,7 +522,7 @@ export default function App() {
             {/* Right — Single device mockup using DEVICE.png */}
             <div className="hero-devices rv" id="hero-mockup">
               <div className="devices-stage">
-                <img src="./assets/DEVICE.png" className="dev-img dev-img-single" alt="SE Connex devices" onError={(e) => { e.target.style.display = 'none'; }} />
+                <img src="/assets/DEVICE.png" className="dev-img dev-img-single" alt="SE Connex devices" onError={(e) => { e.target.style.display = 'none'; }} />
               </div>
             </div>
 
@@ -664,7 +664,7 @@ export default function App() {
         <div className="wrap">
           <div className="foot-grid">
             <div className="foot-brand">
-              <img src="./assets/logo-connex.svg" alt="SE Connex" style={{ width: 52, height: 52, borderRadius: 10, marginBottom: 10, display: 'block' }} />
+              <img src="/assets/logo-connex.svg" alt="SE Connex" style={{ width: 52, height: 52, borderRadius: 10, marginBottom: 10, display: 'block' }} />
               <span className="lo-brand"><span className="lo-se">SE</span> CONNEX</span>
               <span className="lo-tag">SiamEast Solutions PCL</span>
               <p>Helping modern industrial plants work smarter, stay connected, and maximize efficiency.</p>
