@@ -294,6 +294,7 @@ export interface NewsArticle {
   date: string;
   readMins: number;
   featured?: boolean;
+  imageUrl?: string;
   content: string[];
 }
 

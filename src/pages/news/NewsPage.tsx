@@ -11,8 +11,11 @@ import {
   Megaphone,
   Newspaper,
   Package,
+  Search,
+  Star,
   Tag,
   Wrench,
+  X,
   Calendar,
 } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
@@ -55,7 +58,9 @@ export function NewsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [heroIndex, setHeroIndex] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(9);
 
+  const base = import.meta.env.BASE_URL;
   const heroItems = useMemo(() => [
     {
       id: 'NW-2026-014',
@@ -65,6 +70,7 @@ export function NewsPage() {
         ? 'ปั๊มแนวตั้งหลายสเตจรุ่นใหม่ มีประสิทธิภาพสูงขึ้น ควบคุมได้ฉลาดขึ้น และมีค่าใช้จ่ายตลอดอายุการใช้งานต่ำลง'
         : 'The next generation of intelligent vertical multistage pumps. Higher efficiency, smarter control, lower life cycle cost.',
       bg: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0369a1 100%)',
+      imageUrl: `${base}assets/Hero_Banner_xn.png`,
     },
     {
       id: 'NW-2026-016',
@@ -76,6 +82,9 @@ export function NewsPage() {
       bg: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)',
     },
   ], [lang]);
+
+  // IDs of articles featured in the hero carousel
+  const heroIds = useMemo(() => new Set(heroItems.map((h) => h.id)), [heroItems]);
 
   const filtered = useMemo(() => {
     let result = mockNews.filter((n) => {
@@ -90,66 +99,85 @@ export function NewsPage() {
     return result;
   }, [q, cat, sortOrder]);
 
-  const sidebarArticles = useMemo(() => [
-    {
-      id: 'NW-2026-016',
-      tag: 'PROMOTION',
-      title: lang === 'th' ? 'PM PACKAGE PROMOTION' : 'PM PACKAGE PROMOTION',
-      sub: lang === 'th' ? 'แพ็กเกจบำรุงรักษาตามระยะ ราคาสุดพิเศษสำหรับคุณ' : 'Special price maintenance package tailored for you',
-      bg: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
-    },
-    {
-      id: 'NW-2026-020',
-      tag: 'CLEARANCE',
-      title: lang === 'th' ? 'LOCTITE CLEARANCE' : 'LOCTITE CLEARANCE',
-      sub: lang === 'th' ? 'สินค้าเกรดอุตสาหกรรมราคาพิเศษ ลดสูงสุด 50%' : 'Industrial grade items special price up to 50% OFF',
-      bg: 'linear-gradient(135deg, #991b1b 0%, #ef4444 100%)',
-    },
-    {
-      id: 'NW-2026-012',
-      tag: 'ENERGY',
-      title: lang === 'th' ? 'BEO PROGRAM' : 'BEO PROGRAM',
-      sub: lang === 'th' ? 'Boost Energy Optimization ลดค่าใช้จ่ายด้านพลังงาน สร้างโรงงานอยู่อย่างยั่งยืน' : 'Boost Energy Optimization & Reduce plant operating costs',
-      bg: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)',
-    },
-    {
-      id: 'NW-2026-018',
-      tag: 'PERFORMANCE',
-      title: lang === 'th' ? 'FIRE PUMP TEST PERFORMANCE' : 'FIRE PUMP TEST PERFORMANCE',
-      sub: lang === 'th' ? 'มั่นใจในระบบดับเพลิง พร้อมใช้งานในทุกสถานการณ์' : 'Ensure fire protection system reliability in all situations',
-      bg: 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 100%)',
-    },
-  ], [lang]);
+  const displayedArticles = useMemo(() => {
+    return filtered.slice(0, visibleCount);
+  }, [filtered, visibleCount]);
+
+  const sidebarArticles = useMemo(() => {
+    const picks = [
+      { id: 'NW-2026-016', bg: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)' },
+      { id: 'NW-2026-021', bg: 'linear-gradient(135deg, #991b1b 0%, #ef4444 100%)' },
+      { id: 'NW-2026-012', bg: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)' },
+      { id: 'NW-2026-018', bg: 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 100%)' },
+    ];
+    return picks.map(({ id, bg }) => {
+      const art = mockNews.find((n) => n.id === id);
+      return {
+        id,
+        bg,
+        imageUrl: art?.imageUrl,
+        tag: (art?.category ?? '').toUpperCase(),
+        title: art ? (lang === 'th' ? art.titleTh : art.title) : id,
+        sub: art?.summary ?? '',
+      };
+    });
+  }, [lang]);
 
   const currentHero = heroItems[heroIndex % heroItems.length];
 
   return (
     <div>
       {/* Header */}
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: 20 }}>
         <div>
           <h1 className="page-title">{t('News & Offers', 'ข่าวสารและข้อเสนอ')}</h1>
           <p className="page-sub">{t('Updates, promotions and maintenance know-how from SiamEast Solutions.', 'ข่าว โปรโมชั่น และความรู้งานซ่อมบำรุงจากสยามอีสท์ โซลูชั่น')}</p>
         </div>
         <div className="page-actions">
-          <SearchBox value={q} onChange={setQ} placeholder={t('Search articles…', 'ค้นหาบทความ…')} />
+          <SearchBox
+            value={q}
+            onChange={(val) => { setQ(val); setVisibleCount(9); }}
+            placeholder={t('Search articles…', 'ค้นหาบทความ…')}
+          />
         </div>
       </div>
 
       {/* Main 2-Column Layout matching Mockup 03 */}
       <div className="news-layout">
         {/* Left Column: Hero, Toolbar, News items */}
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {/* Top Hero Banner / Feature Carousel */}
-          <div className="news-hero" style={{ background: currentHero.bg }}>
-            <span className="news-hero-badge">{currentHero.badge}</span>
-            <h2 className="news-hero-title">{currentHero.title}</h2>
-            <p className="news-hero-sub">{currentHero.desc}</p>
-            <Link to={`/portal/news/${currentHero.id}`} className="news-hero-btn">
-              {t('Learn More', 'เรียนรู้เพิ่มเติม')} <ArrowRight size={15} />
-            </Link>
+          <div
+            className="news-hero"
+            style={{ background: currentHero.bg }}
+          >
+            {/* Background image — keyed so it fades on slide change */}
+            {currentHero.imageUrl && (
+              <img
+                key={`img-${heroIndex}`}
+                src={currentHero.imageUrl}
+                alt=""
+                aria-hidden
+                className="news-hero-img"
+                style={{
+                  position: 'absolute', inset: 0, width: '100%', height: '100%',
+                  objectFit: 'cover', objectPosition: 'center',
+                  zIndex: 0,
+                }}
+              />
+            )}
 
-            <div className="news-hero-dots">
+            {/* Text content — keyed so it slides in on change */}
+            <div key={heroIndex} className="news-hero-content">
+              <span className="news-hero-badge">{currentHero.badge}</span>
+              <h2 className="news-hero-title">{currentHero.title}</h2>
+              <p className="news-hero-sub">{currentHero.desc}</p>
+              <Link to={`/portal/news/${currentHero.id}`} className="news-hero-btn">
+                {t('Learn More', 'เรียนรู้เพิ่มเติม')} <ArrowRight size={15} />
+              </Link>
+            </div>
+
+            <div className="news-hero-dots" style={{ zIndex: 2 }}>
               {heroItems.map((_, idx) => (
                 <button
                   key={idx}
@@ -161,14 +189,14 @@ export function NewsPage() {
             </div>
           </div>
 
-          {/* Filter & View Toolbar */}
+          {/* Filter & View Toolbar with Integrated Search */}
           <div className="news-toolbar">
             <div className="news-chips">
               {CATS.map((c) => (
                 <button
                   key={c.key}
                   className={`news-chip ${cat === c.key ? 'active' : ''}`}
-                  onClick={() => setCat(c.key)}
+                  onClick={() => { setCat(c.key); setVisibleCount(9); }}
                 >
                   {lang === 'th' ? c.th : c.en}
                 </button>
@@ -215,7 +243,7 @@ export function NewsPage() {
               title={t('No articles match your search', 'ไม่พบบทความที่ตรงกับการค้นหา')}
               body={t('Try a different keyword or category.', 'ลองใช้คำค้นหรือหมวดหมู่อื่น')}
               action={
-                <button className="btn btn-outline btn-sm" onClick={() => { setQ(''); setCat('all'); }}>
+                <button className="btn btn-outline btn-sm" onClick={() => { setQ(''); setCat('all'); setVisibleCount(9); }}>
                   {t('Clear filters', 'ล้างตัวกรอง')}
                 </button>
               }
@@ -223,14 +251,24 @@ export function NewsPage() {
           ) : viewMode === 'grid' ? (
             /* Cards Grid */
             <div className="news-grid">
-              {filtered.map((n) => {
+              {displayedArticles.map((n) => {
                 const style = CAT_STYLE[n.category] || CAT_STYLE.company;
                 const Icon = style.icon;
                 return (
                   <Link key={n.id} to={`/portal/news/${n.id}`} className="news-card">
-                    {/* Placeholder color header icon */}
+                    {/* Placeholder color header icon or auto-focus cover image */}
                     <div className="news-card-thumb" style={{ background: style.bg }}>
-                      <Icon size={38} strokeWidth={1.4} />
+                      {n.imageUrl ? (
+                        <img src={`${base}${n.imageUrl.replace(/^\//, '')}`} alt={lang === 'th' ? n.titleTh : n.title} className="cover-img" />
+                      ) : (
+                        <Icon size={38} strokeWidth={1.4} />
+                      )}
+                      {heroIds.has(n.id) && (
+                        <span className="news-featured-badge">
+                          <Star size={10} fill="currentColor" />
+                          {t('Featured', 'แนะนำ')}
+                        </span>
+                      )}
                     </div>
                     <div className="news-card-body">
                       <div className="news-card-header">
@@ -250,20 +288,17 @@ export function NewsPage() {
           ) : (
             /* Compact List View */
             <div className="card" style={{ padding: '4px 4px', marginBottom: 20 }}>
-              {filtered.map((n) => {
+              {displayedArticles.map((n) => {
                 const style = CAT_STYLE[n.category] || CAT_STYLE.company;
                 const Icon = style.icon;
                 return (
                   <Link key={n.id} to={`/portal/news/${n.id}`} className="news-row">
-                    <span
-                      aria-hidden
-                      style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        width: 40, minWidth: 40, height: 40, borderRadius: 10,
-                        background: style.bg, color: '#fff',
-                      }}
-                    >
-                      <Icon size={18} strokeWidth={1.6} />
+                    <span className="news-row-thumb" style={{ background: style.bg }} aria-hidden>
+                      {n.imageUrl ? (
+                        <img src={`${base}${n.imageUrl.replace(/^\//, '')}`} alt={lang === 'th' ? n.titleTh : n.title} className="cover-img" />
+                      ) : (
+                        <Icon size={20} strokeWidth={1.6} style={{ color: '#fff' }} />
+                      )}
                     </span>
                     <span style={{ minWidth: 0, flex: 1 }}>
                       <span className="fw-600" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -279,9 +314,13 @@ export function NewsPage() {
           )}
 
           {/* Load More Button */}
-          {filtered.length > 0 && (
+          {filtered.length > visibleCount && (
             <div style={{ textAlign: 'center', marginTop: 12, marginBottom: 24 }}>
-              <button className="btn btn-ghost btn-sm" style={{ padding: '8px 24px' }}>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ padding: '8px 24px' }}
+                onClick={() => setVisibleCount((prev) => prev + 9)}
+              >
                 {t('Load More', 'โหลดเพิ่มเติม')} <ChevronDown size={15} />
               </button>
             </div>
@@ -289,19 +328,32 @@ export function NewsPage() {
         </div>
 
         {/* Right Sidebar: Renamed from Campaign to 'บทความที่น่าสนใจ' / 'Featured Articles' */}
-        <div className="news-sidebar">
-          <h3 className="news-sidebar-title">{t('Interesting Articles', 'บทความที่น่าสนใจ')}</h3>
+        <div className="news-sidebar-wrap">
+          <div className="news-sidebar">
+            <h3 className="news-sidebar-title">{t('Interesting Articles', 'บทความที่น่าสนใจ')}</h3>
 
-          {sidebarArticles.map((item) => (
-            <Link key={item.id} to={`/portal/news/${item.id}`} className="sidebar-card" style={{ background: item.bg }}>
-              <div className="sidebar-card-tag">{item.tag}</div>
-              <h4 className="sidebar-card-title">{item.title}</h4>
-              <p className="sidebar-card-sub">{item.sub}</p>
-              <div className="sidebar-card-btn">
-                {t('Learn More', 'กดเข้าไปอ่านต่อ')} <ArrowRight size={13} />
-              </div>
-            </Link>
-          ))}
+            {sidebarArticles.map((item) => (
+              <Link key={item.id} to={`/portal/news/${item.id}`} className="sidebar-card" style={{ background: item.bg }}>
+                {item.imageUrl && (
+                  <img
+                    src={`${base}${item.imageUrl.replace(/^\//, '')}`}
+                    alt=""
+                    aria-hidden
+                    className="cover-img"
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', zIndex: 0 }}
+                  />
+                )}
+                <div style={{ position: 'relative', zIndex: 2 }}>
+                  <div className="sidebar-card-tag">{item.tag}</div>
+                  <h4 className="sidebar-card-title">{item.title}</h4>
+                  <p className="sidebar-card-sub">{item.sub}</p>
+                  <div className="sidebar-card-btn">
+                    {t('Learn More', 'กดเข้าไปอ่านต่อ')} <ArrowRight size={13} />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -314,6 +366,22 @@ export function NewsDetailPage() {
   const { company } = useCompany();
   const navigate = useNavigate();
   const article = id ? getArticle(id) : undefined;
+
+  const [sidebarArticles] = useState(() => {
+    const pool = mockNews.filter((n) => n.id !== id);
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 4).map((art) => {
+      const catStyle = CAT_STYLE[art.category] || CAT_STYLE.company;
+      return {
+        id: art.id,
+        bg: catStyle.bg,
+        imageUrl: art.imageUrl,
+        tag: art.category.toUpperCase(),
+        title: lang === 'th' ? art.titleTh : art.title,
+        sub: art.summary,
+      };
+    });
+  });
 
   if (!article) {
     return (
@@ -328,65 +396,108 @@ export function NewsDetailPage() {
 
   const related = mockNews.filter((n) => n.id !== article.id && n.category === article.category).slice(0, 2);
   const more = related.length ? related : mockNews.filter((n) => n.id !== article.id).slice(0, 2);
-  const Icon = CAT_STYLE[article.category].icon;
+  const Icon = CAT_STYLE[article.category]?.icon || Newspaper;
+  const style = CAT_STYLE[article.category] || CAT_STYLE.company;
 
   return (
-    <div style={{ maxWidth: 860 }}>
-      <button className="btn btn-ghost btn-sm" onClick={() => navigate('/portal/news')} style={{ marginBottom: 12, marginLeft: -8 }}>
+    <div>
+      <button className="btn btn-ghost btn-sm" onClick={() => navigate('/portal/news')} style={{ marginBottom: 16, marginLeft: -8 }}>
         <ArrowLeft size={16} aria-hidden />
         {t('All news', 'ข่าวทั้งหมด')}
       </button>
 
-      <div className="card" style={{ overflow: 'hidden', marginBottom: 18 }}>
-        <div className="news-thumb" style={{ background: CAT_STYLE[article.category].bg, height: 200 }} aria-hidden>
-          <Icon size={56} strokeWidth={1.2} />
-        </div>
-        <div style={{ padding: '22px 24px 26px' }}>
-          <div className="flex" style={{ gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-            <span className="badge t-grey">{catLabel(article.category, lang)}</span>
-            <span className="muted small">{fmtDate(article.date, lang)} · {article.readMins} {t('min read', 'นาที')}</span>
-          </div>
-          <h1 style={{ margin: '0 0 6px', fontSize: 24 }}>{lang === 'th' ? article.titleTh : article.title}</h1>
-          <p className="muted" style={{ marginTop: 0 }}>{article.summary}</p>
-          {article.content.map((p, i) => (
-            <p key={i} style={{ lineHeight: 1.7 }}>{p}</p>
-          ))}
-        </div>
-      </div>
-
-      <div className="card" style={{ padding: 18, marginBottom: 18 }}>
-        <div className="between" style={{ flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <div className="fw-600">{t('Want to act on this?', 'สนใจเรื่องนี้อยู่ใช่ไหม?')}</div>
-            <div className="muted small">{t('Your account manager can scope it for your sites.', 'ผู้จัดการฝ่ายลูกค้าของคุณช่วยประเมินสำหรับไซต์ของคุณได้')}</div>
-          </div>
-          <Link to="/portal/requests/new" className="btn btn-primary">
-            {t('Contact SE / request service', 'ติดต่อ SE / ขอรับบริการ')}
-            <ArrowRight size={16} aria-hidden />
-          </Link>
-        </div>
-        <div style={{ marginTop: 14 }}>
-          <ContactSECard
-            name={company.accountManager.name}
-            role={lang === 'th' ? company.accountManager.roleTh : company.accountManager.role}
-            phone={company.accountManager.phone}
-            email={company.accountManager.email}
-            line={company.accountManager.line}
-          />
-        </div>
-      </div>
-
-      <h3>{t('Related articles', 'บทความที่เกี่ยวข้อง')}</h3>
-      <div className="grid-2">
-        {more.map((n) => (
-          <Link key={n.id} to={`/portal/news/${n.id}`} className="card" style={{ padding: 16, textDecoration: 'none', color: 'inherit' }}>
-            <div className="flex" style={{ gap: 8, marginBottom: 6 }}>
-              <span className="badge t-grey">{catLabel(n.category, lang)}</span>
-              <span className="muted small">{fmtDate(n.date, lang)}</span>
+      {/* Main 2-Column Layout matching Example Design */}
+      <div className="news-layout">
+        {/* Left Main Column: Article Content */}
+        <div>
+          <div className="card" style={{ overflow: 'hidden', marginBottom: 20 }}>
+            {/* Banner Thumbnail matching modern dark/gradient image look */}
+            <div className="news-thumb" style={{ background: style.bg, height: 260, overflow: 'hidden', position: 'relative' }} aria-hidden>
+              {article.imageUrl ? (
+                <img src={`${import.meta.env.BASE_URL}${article.imageUrl.replace(/^\//, '')}`} alt={lang === 'th' ? article.titleTh : article.title} className="cover-img" />
+              ) : (
+                <Icon size={72} strokeWidth={1.2} />
+              )}
             </div>
-            <div className="fw-600">{lang === 'th' ? n.titleTh : n.title}</div>
-          </Link>
-        ))}
+
+            <div style={{ padding: '28px 32px 32px' }}>
+              <div className="flex" style={{ gap: 10, marginBottom: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+                <span className="badge t-grey" style={{ background: 'var(--se-grey-soft)', padding: '4px 10px', borderRadius: 4, fontWeight: 700 }}>
+                  {catLabel(article.category, lang)}
+                </span>
+                <span className="muted small" style={{ fontSize: 13 }}>
+                  {fmtDate(article.date, lang)} · {article.readMins} {t('min read', 'นาที')}
+                </span>
+              </div>
+
+              <h1 style={{ margin: '0 0 14px', fontSize: 24, fontWeight: 800, lineHeight: 1.3 }}>
+                {lang === 'th' ? article.titleTh : article.title}
+              </h1>
+
+              <p className="muted" style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 20, fontWeight: 500 }}>
+                {article.summary}
+              </p>
+
+              <div style={{ borderTop: '1px solid var(--se-border)', paddingTop: 18, marginTop: 18 }}>
+                {article.content.map((p, i) => (
+                  <p key={i} style={{ lineHeight: 1.75, fontSize: 14, color: 'var(--se-text)', marginBottom: 14 }}>
+                    {p}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+
+
+
+          {/* Related Articles Section */}
+          <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 14 }}>
+            {t('Related articles', 'บทความที่เกี่ยวข้อง')}
+          </h3>
+          <div className="grid-2" style={{ marginBottom: 24 }}>
+            {more.map((n) => {
+              const relStyle = CAT_STYLE[n.category] || CAT_STYLE.company;
+              return (
+                <Link key={n.id} to={`/portal/news/${n.id}`} className="card" style={{ padding: 18, textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="flex" style={{ gap: 8, alignItems: 'center' }}>
+                    <span className="badge t-grey" style={{ fontSize: 11 }}>{catLabel(n.category, lang)}</span>
+                    <span className="muted small">{fmtDate(n.date, lang)}</span>
+                  </div>
+                  <div className="fw-600" style={{ fontSize: 14, lineHeight: 1.35 }}>{lang === 'th' ? n.titleTh : n.title}</div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right Sidebar: 'บทความที่น่าสนใจ' / 'Interesting Articles' */}
+        <div className="news-sidebar-wrap">
+          <div className="news-sidebar">
+            <h3 className="news-sidebar-title">{t('Interesting Articles', 'บทความที่น่าสนใจ')}</h3>
+
+            {sidebarArticles.map((item) => (
+              <Link key={item.id} to={`/portal/news/${item.id}`} className="sidebar-card" style={{ background: item.bg }}>
+                {item.imageUrl && (
+                  <img
+                    src={`${import.meta.env.BASE_URL}${item.imageUrl.replace(/^\//, '')}`}
+                    alt=""
+                    aria-hidden
+                    className="cover-img"
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', zIndex: 0 }}
+                  />
+                )}
+                <div style={{ position: 'relative', zIndex: 2 }}>
+                  <div className="sidebar-card-tag">{item.tag}</div>
+                  <h4 className="sidebar-card-title">{item.title}</h4>
+                  <p className="sidebar-card-sub">{item.sub}</p>
+                  <div className="sidebar-card-btn">
+                    {t('Learn More', 'Learn More')} <ArrowRight size={13} />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

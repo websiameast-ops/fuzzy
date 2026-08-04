@@ -11,6 +11,7 @@ export const mockNews: NewsArticle[] = [
     date: '2026-07-08',
     readMins: 4,
     featured: true,
+    imageUrl: '/assets/Hero_Banner_xn.png',
     content: [
       'Most rotating-equipment breakdowns give weeks of notice before they stop production. The problem is that the signals are easy to dismiss individually — a little more noise here, a slightly warmer housing there. Together, they tell a clear story.',
       '1. Rising vibration. A healthy pump has a stable vibration signature. When overall velocity trends upward — especially past 4.5 mm/s RMS on a mid-size pump — bearing wear is the most common cause. Envelope analysis can identify the exact defect frequency long before it is audible.',
@@ -30,6 +31,7 @@ export const mockNews: NewsArticle[] = [
       'Book a preventive-maintenance package covering three or more assets before 31 August 2026 and receive 15% off labour, plus a free vibration baseline for every rotating asset in the package.',
     date: '2026-07-01',
     readMins: 2,
+    imageUrl: '/assets/Hero_Banner_xn.png',
     content: [
       'From now until 31 August 2026, SE customers can book a preventive-maintenance package covering three or more assets at a 15% labour discount.',
       'Every rotating asset included in the package also receives a complimentary vibration baseline measurement — the single most valuable data point for future condition monitoring.',
@@ -46,6 +48,7 @@ export const mockNews: NewsArticle[] = [
       'The next generation of the SE industrial monitoring gateway adds on-device alarm logic, faster sampling and direct push notifications to LINE OA — so your team hears about an abnormal condition in seconds.',
     date: '2026-06-18',
     readMins: 3,
+    imageUrl: '/assets/Hero_Banner_xn.png',
     content: [
       'SE Industrial Intelligence has released version 2 of its monitoring gateway, now available for new installations and as an upgrade for existing V1 customers.',
       'The headline change is edge alarm logic: limits and rate-of-change rules now run on the gateway itself, cutting alarm latency from minutes to seconds even when the uplink is congested.',
@@ -63,6 +66,7 @@ export const mockNews: NewsArticle[] = [
       'A transparent look at the methodology behind the Energy & Carbon page: what is measured, what is estimated, and what it takes to turn energy savings into a verifiable carbon claim.',
     date: '2026-06-02',
     readMins: 5,
+    imageUrl: '/assets/Hero_Banner_xn.png',
     content: [
       'The Energy & Carbon page in SE Connex summarises the energy your connected assets consume and estimates the emissions avoided through solar generation and efficiency work. This article explains exactly how those numbers are produced.',
       'Measured values come from revenue-grade meters and inverter telemetry collected by SE gateways. These carry the “Measured” label and are the strongest basis for any claim.',
@@ -80,6 +84,7 @@ export const mockNews: NewsArticle[] = [
       'A larger workshop, dedicated pump test bay and expanded parts inventory bring faster turnaround for customers across the Eastern Seaboard.',
     date: '2026-05-20',
     readMins: 3,
+    imageUrl: '/assets/Hero_Banner_xn.png',
     content: [
       'SiamEast Solutions PCL has opened its expanded service centre in Rayong, tripling workshop floor space and adding a dedicated pump performance test bay rated to 400 m³/h.',
       'The expansion shortens overhaul turnaround for pumps and valves serving customers across the Eastern Seaboard industrial area, and increases on-hand inventory of high-rotation spare parts.',
@@ -96,6 +101,7 @@ export const mockNews: NewsArticle[] = [
       'PM visits go faster and safer when the site is ready. This short checklist — access, isolation, safety, representative — is the same one built into the PM Schedule page.',
     date: '2026-04-22',
     readMins: 3,
+    imageUrl: '/assets/Hero_Banner_xn.png',
     content: [
       'A well-prepared site can cut an hour or more from a preventive-maintenance visit. Fifteen minutes of preparation the day before is usually all it takes.',
       'Access: confirm gate passes and contractor registration for the SE team, and reserve parking near the equipment where possible.',
@@ -114,6 +120,7 @@ export const mockNews: NewsArticle[] = [
       'Book any spare-parts order in August and add a complimentary vibration baseline survey (worth ฿6,500) for the same asset — the data that makes future condition monitoring possible.',
     date: '2026-07-15',
     readMins: 2,
+    imageUrl: '/assets/Hero_Banner_xn.png',
     content: [
       'Throughout August 2026, every spare-parts order placed through SE Connex qualifies for a free vibration baseline survey on the asset being serviced — normally ฿6,500.',
       'A baseline captured while a machine is healthy is the reference every future measurement is compared against. Without it, condition monitoring starts blind.',
@@ -129,6 +136,7 @@ export const mockNews: NewsArticle[] = [
       'Switch a consumables line to Vendor-Managed Inventory before 30 September and SE waives the management fee for the first three months, including automatic reorder points.',
     date: '2026-07-11',
     readMins: 2,
+    imageUrl: '/assets/Hero_Banner_xn.png',
     content: [
       'Vendor-Managed Inventory keeps your critical consumables above their reorder point automatically, so a production line never waits on a ฿300 seal kit.',
       'Onboard any consumables line before 30 September 2026 and SE waives the VMI management fee for the first three months, including reorder-point setup and monthly stock reporting.',
@@ -144,6 +152,7 @@ export const mockNews: NewsArticle[] = [
       'Trade in any first-generation monitoring gateway and receive 25% off the SE V2 edge device, with on-device alarms and LINE push notifications included.',
     date: '2026-07-04',
     readMins: 2,
+    imageUrl: '/assets/Hero_Banner_xn.png',
     content: [
       'The SE monitoring gateway V2 moves alarm logic onto the device itself, so a critical trip reaches your team in seconds rather than waiting on a cloud round-trip.',
       'Until 30 September 2026, trade in any first-generation SE gateway for 25% off the V2 unit. LINE push notifications and faster sampling are included at no extra charge.',
@@ -159,6 +168,7 @@ export const mockNews: NewsArticle[] = [
       'SE Connex customers now earn 2% service credit on every completed and signed-off job this quarter — redeemable against future PM packages or parts.',
     date: '2026-06-25',
     readMins: 2,
+    imageUrl: '/assets/Hero_Banner_xn.png',
     content: [
       'From Q3 2026, every job you complete and sign off in SE Connex earns 2% of its value back as service credit.',
       'Credits accrue automatically once you approve a service report, and can be redeemed against future PM packages, spare parts or monitoring subscriptions.',

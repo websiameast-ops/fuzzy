@@ -27,17 +27,36 @@ interface AuthCtx {
 const Ctx = createContext<AuthCtx | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const [user, setUser] = useState<SessionUser | null>(() => {
+    try {
+      const saved = localStorage.getItem('se_user_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const login = useCallback((email: string, password: string) => {
     if (email.trim().toLowerCase() === 'demo@seconnex.co.th' && password === 'demo123') {
       setUser(DEMO_USER);
+      try {
+        localStorage.setItem('se_user_session', JSON.stringify(DEMO_USER));
+      } catch {
+        // ignore storage quota errors if any
+      }
       return { ok: true };
     }
     return { ok: false, error: 'invalid' };
   }, []);
 
-  const logout = useCallback(() => setUser(null), []);
+  const logout = useCallback(() => {
+    setUser(null);
+    try {
+      localStorage.removeItem('se_user_session');
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const value = useMemo(() => ({ user, login, logout }), [user, login, logout]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
