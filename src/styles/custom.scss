@@ -374,10 +374,11 @@
   }
 
   .news-hero-dots {
-    left: auto;
-    right: 24px;
+    left: 50%;
+    right: auto;
     bottom: 20px;
-    transform: none;
+    transform: translateX(-50%);
+    display: flex;
     align-items: center;
   }
 
