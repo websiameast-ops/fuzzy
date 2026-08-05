@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   ChevronDown,
   Grid,
   Leaf,
@@ -31,7 +33,6 @@ const CATS: { key: NewsCategory | 'all' | 'event' | 'service'; en: string; th: s
   { key: 'products', en: 'Product', th: 'ผลิตภัณฑ์' },
   { key: 'promotions', en: 'Promotion', th: 'โปรโมชั่น' },
   { key: 'tips', en: 'Knowledge', th: 'ความรู้' },
-  { key: 'event', en: 'Event', th: 'กิจกรรม' },
   { key: 'service', en: 'Service', th: 'บริการ' },
 ];
 
@@ -59,6 +60,14 @@ export function NewsPage() {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [heroIndex, setHeroIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(9);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % 2);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const base = import.meta.env.BASE_URL;
   const heroItems = useMemo(() => [
@@ -133,13 +142,6 @@ export function NewsPage() {
           <h1 className="page-title">{t('News & Offers', 'ข่าวสารและข้อเสนอ')}</h1>
           <p className="page-sub">{t('Updates, promotions and maintenance know-how from SiamEast Solutions.', 'ข่าว โปรโมชั่น และความรู้งานซ่อมบำรุงจากสยามอีสท์ โซลูชั่น')}</p>
         </div>
-        <div className="page-actions">
-          <SearchBox
-            value={q}
-            onChange={(val) => { setQ(val); setVisibleCount(9); }}
-            placeholder={t('Search articles…', 'ค้นหาบทความ…')}
-          />
-        </div>
       </div>
 
       {/* Main 2-Column Layout matching Mockup 03 */}
@@ -177,6 +179,7 @@ export function NewsPage() {
               </Link>
             </div>
 
+            {/* Dots (Original Location) */}
             <div className="news-hero-dots" style={{ zIndex: 2 }}>
               {heroItems.map((_, idx) => (
                 <button
@@ -204,6 +207,61 @@ export function NewsPage() {
             </div>
 
             <div className="news-controls-right">
+              {/* Expandable Search (right-aligned, expands to the left without pushing select/view controls) */}
+              <div
+                style={{ position: 'relative', display: 'flex', alignItems: 'center', height: 32, width: 24 }}
+                onMouseEnter={() => setSearchOpen(true)}
+                onMouseLeave={() => { if (!q) setSearchOpen(false); }}
+              >
+                <div
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    borderBottom: searchOpen || q ? '1px solid var(--se-primary)' : '1px solid transparent',
+                    paddingBottom: 2,
+                    transition: 'border-color 0.2s ease',
+                    background: searchOpen || q ? 'var(--se-surface)' : 'transparent',
+                    zIndex: 5,
+                  }}
+                >
+                  <span
+                    style={{ display: 'flex', color: (searchOpen || q ? 'var(--se-primary)' : 'var(--se-text-muted)') as string, flex: '0 0 auto', cursor: 'pointer' }}
+                    onClick={() => setSearchOpen(true)}
+                    title={t('Search articles…', 'ค้นหาบทความ…')}
+                  >
+                    <Search size={16} />
+                  </span>
+                  <input
+                    type="text"
+                    value={q}
+                    onChange={(e) => { setQ(e.target.value); setVisibleCount(9); }}
+                    placeholder={t('Search articles…', 'ค้นหาบทความ…')}
+                    onFocus={() => setSearchOpen(true)}
+                    onBlur={() => { if (!q) setSearchOpen(false); }}
+                    style={{
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      color: 'var(--se-text)',
+                      fontSize: 13.5,
+                      width: searchOpen || q ? 140 : 0,
+                      opacity: searchOpen || q ? 1 : 0,
+                      padding: '2px 0',
+                      transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease',
+                      overflow: 'hidden',
+                    }}
+                  />
+                  {q && (
+                    <button onClick={() => { setQ(''); setSearchOpen(false); }} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2, display: 'flex', color: 'var(--se-text-muted)' }}>
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <select
                 className="news-sort-select"
                 value={sortOrder}
@@ -348,7 +406,7 @@ export function NewsPage() {
                   <h4 className="sidebar-card-title">{item.title}</h4>
                   <p className="sidebar-card-sub">{item.sub}</p>
                   <div className="sidebar-card-btn">
-                    {t('Learn More', 'กดเข้าไปอ่านต่อ')} <ArrowRight size={13} />
+                    {t('Learn More', 'อ่านต่อ')} <ArrowRight size={13} />
                   </div>
                 </div>
               </Link>

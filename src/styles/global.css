@@ -3054,7 +3054,7 @@ select.invalid {
   color: #fff;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   min-height: 280px;
   padding: 28px;
   box-shadow: var(--shadow-card);
