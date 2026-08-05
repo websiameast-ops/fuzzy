@@ -137,6 +137,68 @@ button {
   gap: 12px;
 }
 
+.news-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: var(--se-text);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 6px;
+  text-decoration: none;
+  width: fit-content;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.news-hero-btn:hover {
+  background: #f3f4f6;
+  color: var(--se-text);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.news-hero-dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.news-hero-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.4);
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.news-hero-dot.active {
+  width: 24px;
+  background: #fff;
+}
+
+/* News Controls Filter & View Toolbar */
+.news-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  background: var(--se-surface);
+  border: 1px solid var(--se-border);
+  border-radius: var(--radius);
+}
+
 .wrap {
   flex-wrap: wrap;
 }
@@ -3131,46 +3193,6 @@ select.invalid {
   font-weight: 700;
   padding: 8px 18px;
   border-radius: 6px;
-  text-decoration: none;
-  width: fit-content;
-  transition: background 0.2s, transform 0.2s;
-}
-
-.news-hero-btn:hover {
-  background: #f3f4f6;
-  color: var(--se-text);
-  text-decoration: none;
-  transform: translateY(-1px);
-}
-
-.news-hero-dots {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-}
-
-.news-hero-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.4);
-  transition: all 0.2s;
-  cursor: pointer;
-  border: none;
-  padding: 0;
-}
-
-.news-hero-dot.active {
-  width: 24px;
-  background: #fff;
-}
-
-/* News Controls Filter & View Toolbar */
-.news-toolbar {
-  display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
