@@ -111,6 +111,7 @@ export interface Asset {
   supplier: string;
   division: string;
   condition: string;
+  image?: string;
   specs: { label: string; value: string }[];
   documents: AssetDocument[];
   events: AssetTimelineEvent[];

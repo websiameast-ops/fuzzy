@@ -52,6 +52,11 @@ function catLabel(key: string, lang: 'en' | 'th') {
   return lang === 'th' ? c.th : c.en;
 }
 
+function formatTitle(str: string, maxLen = 120): string {
+  if (!str) return '';
+  return str.length > maxLen ? `${str.slice(0, maxLen)}...` : str;
+}
+
 export function NewsPage() {
   const { lang, t } = useLang();
   const [q, setQ] = useState('');
@@ -168,11 +173,10 @@ export function NewsPage() {
                 }}
               />
             )}
-
             {/* Text content — keyed so it slides in on change */}
             <div key={heroIndex} className="news-hero-content">
               <span className="news-hero-badge">{currentHero.badge}</span>
-              <h2 className="news-hero-title">{currentHero.title}</h2>
+              <h2 className="news-hero-title">{formatTitle(currentHero.title)}</h2>
               <p className="news-hero-sub">{currentHero.desc}</p>
               <Link to={`/portal/news/${currentHero.id}`} className="news-hero-btn">
                 {t('Learn More', 'เรียนรู้เพิ่มเติม')} <ArrowRight size={15} />
@@ -331,9 +335,12 @@ export function NewsPage() {
                     <div className="news-card-body">
                       <div className="news-card-header">
                         <span className="news-card-cat">{lang === 'th' ? style.labelTh : style.labelEn}</span>
-                        <span className="news-card-date">{fmtDate(n.date, lang)}</span>
+                        <span className="news-card-date">
+                          <Calendar size={12} style={{ marginRight: 4, verticalAlign: -1 }} />
+                          {fmtDate(n.date, lang)}
+                        </span>
                       </div>
-                      <h4 className="news-card-title">{lang === 'th' ? n.titleTh : n.title}</h4>
+                      <h4 className="news-card-title">{formatTitle(lang === 'th' ? n.titleTh : n.title)}</h4>
                       <p className="news-card-desc">{n.summary}</p>
                       <span className="news-card-link">
                         {t('Read More', 'อ่านต่อ')} <ArrowRight size={13} />
@@ -362,7 +369,11 @@ export function NewsPage() {
                       <span className="fw-600" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {lang === 'th' ? n.titleTh : n.title}
                       </span>
-                      <span className="muted small">{lang === 'th' ? style.labelTh : style.labelEn} · {fmtDate(n.date, lang)} · {n.readMins} {t('min', 'นาที')}</span>
+                      <span className="muted small">
+                        {lang === 'th' ? style.labelTh : style.labelEn} ·{' '}
+                        <Calendar size={12} style={{ marginRight: 4, verticalAlign: -1 }} />
+                        {fmtDate(n.date, lang)}
+                      </span>
                     </span>
                     <ArrowRight size={15} aria-hidden style={{ color: 'var(--se-text-muted)', flex: '0 0 auto' }} />
                   </Link>
@@ -388,7 +399,7 @@ export function NewsPage() {
         {/* Right Sidebar: Renamed from Campaign to 'บทความที่น่าสนใจ' / 'Featured Articles' */}
         <div className="news-sidebar-wrap">
           <div className="news-sidebar">
-            <h3 className="news-sidebar-title">{t('Interesting Articles', 'บทความที่น่าสนใจ')}</h3>
+            <h3 className="news-sidebar-title">{t('Services & Promotions', 'บริการและโปรโมชั่นพิเศษ')}</h3>
 
             {sidebarArticles.map((item) => (
               <Link key={item.id} to={`/portal/news/${item.id}`} className="sidebar-card" style={{ background: item.bg }}>
@@ -401,10 +412,12 @@ export function NewsPage() {
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', zIndex: 0 }}
                   />
                 )}
-                <div style={{ position: 'relative', zIndex: 2 }}>
-                  <div className="sidebar-card-tag">{item.tag}</div>
-                  <h4 className="sidebar-card-title">{item.title}</h4>
-                  <p className="sidebar-card-sub">{item.sub}</p>
+                <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                  <div>
+                    <div className="sidebar-card-tag">{item.tag}</div>
+                    <h4 className="sidebar-card-title">{formatTitle(item.title)}</h4>
+                    <p className="sidebar-card-sub">{item.sub}</p>
+                  </div>
                   <div className="sidebar-card-btn">
                     {t('Learn More', 'อ่านต่อ')} <ArrowRight size={13} />
                   </div>
@@ -441,6 +454,14 @@ export function NewsDetailPage() {
     });
   });
 
+  const [relatedIndex, setRelatedIndex] = useState(0);
+
+  const relatedPool = useMemo(() => {
+    if (!article) return [];
+    const sameCat = mockNews.filter((n) => n.id !== article.id && n.category === article.category);
+    return sameCat.length >= 3 ? sameCat : mockNews.filter((n) => n.id !== article.id);
+  }, [article]);
+
   if (!article) {
     return (
       <EmptyState
@@ -452,8 +473,8 @@ export function NewsDetailPage() {
     );
   }
 
-  const related = mockNews.filter((n) => n.id !== article.id && n.category === article.category).slice(0, 2);
-  const more = related.length ? related : mockNews.filter((n) => n.id !== article.id).slice(0, 2);
+  const visibleRelated = relatedPool.slice(relatedIndex, relatedIndex + 3);
+  const maxIndex = Math.max(0, relatedPool.length - 3);
   const Icon = CAT_STYLE[article.category]?.icon || Newspaper;
   const style = CAT_STYLE[article.category] || CAT_STYLE.company;
 
@@ -484,7 +505,8 @@ export function NewsDetailPage() {
                   {catLabel(article.category, lang)}
                 </span>
                 <span className="muted small" style={{ fontSize: 13 }}>
-                  {fmtDate(article.date, lang)} · {article.readMins} {t('min read', 'นาที')}
+                  <Calendar size={13} style={{ marginRight: 4, verticalAlign: -1 }} />
+                  {fmtDate(article.date, lang)}
                 </span>
               </div>
 
@@ -509,29 +531,55 @@ export function NewsDetailPage() {
 
 
           {/* Related Articles Section */}
-          <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 14 }}>
-            {t('Related articles', 'บทความที่เกี่ยวข้อง')}
-          </h3>
-          <div className="grid-2" style={{ marginBottom: 24 }}>
-            {more.map((n) => {
-              const relStyle = CAT_STYLE[n.category] || CAT_STYLE.company;
-              return (
-                <Link key={n.id} to={`/portal/news/${n.id}`} className="card" style={{ padding: 18, textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div className="flex" style={{ gap: 8, alignItems: 'center' }}>
-                    <span className="badge t-grey" style={{ fontSize: 11 }}>{catLabel(n.category, lang)}</span>
-                    <span className="muted small">{fmtDate(n.date, lang)}</span>
-                  </div>
-                  <div className="fw-600" style={{ fontSize: 14, lineHeight: 1.35 }}>{lang === 'th' ? n.titleTh : n.title}</div>
-                </Link>
-              );
-            })}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 800 }}>
+              {t('Related articles', 'บทความที่เกี่ยวข้อง')}
+            </h3>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                className="related-nav-btn"
+                onClick={() => setRelatedIndex((prev) => Math.max(0, prev - 1))}
+                disabled={relatedIndex === 0}
+                aria-label={t('Previous', 'ก่อนหน้า')}
+                title={t('Previous', 'ก่อนหน้า')}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                className="related-nav-btn"
+                onClick={() => setRelatedIndex((prev) => Math.min(maxIndex, prev + 1))}
+                disabled={relatedIndex >= maxIndex}
+                aria-label={t('Next', 'ถัดไป')}
+                title={t('Next', 'ถัดไป')}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+          <div className="grid-3" style={{ marginBottom: 24 }}>
+            {visibleRelated.map((n) => (
+              <Link
+                key={n.id}
+                to={`/portal/news/${n.id}`}
+                className="related-clean-card"
+              >
+                <div className="related-clean-header">
+                  <span className="related-clean-badge">{catLabel(n.category, lang)}</span>
+                  <span className="related-clean-date">
+                    <Calendar size={12} style={{ marginRight: 4, verticalAlign: -1 }} />
+                    {fmtDate(n.date, lang)}
+                  </span>
+                </div>
+                <h4 className="related-clean-title">{formatTitle(lang === 'th' ? n.titleTh : n.title)}</h4>
+              </Link>
+            ))}
           </div>
         </div>
 
         {/* Right Sidebar: 'บทความที่น่าสนใจ' / 'Interesting Articles' */}
         <div className="news-sidebar-wrap">
           <div className="news-sidebar">
-            <h3 className="news-sidebar-title">{t('Interesting Articles', 'บทความที่น่าสนใจ')}</h3>
+            <h3 className="news-sidebar-title">{t('Services & Promotions', 'บริการและโปรโมชั่นพิเศษ')}</h3>
 
             {sidebarArticles.map((item) => (
               <Link key={item.id} to={`/portal/news/${item.id}`} className="sidebar-card" style={{ background: item.bg }}>
@@ -544,12 +592,14 @@ export function NewsDetailPage() {
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', zIndex: 0 }}
                   />
                 )}
-                <div style={{ position: 'relative', zIndex: 2 }}>
-                  <div className="sidebar-card-tag">{item.tag}</div>
-                  <h4 className="sidebar-card-title">{item.title}</h4>
-                  <p className="sidebar-card-sub">{item.sub}</p>
+                <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                  <div>
+                    <div className="sidebar-card-tag">{item.tag}</div>
+                    <h4 className="sidebar-card-title">{formatTitle(item.title)}</h4>
+                    <p className="sidebar-card-sub">{item.sub}</p>
+                  </div>
                   <div className="sidebar-card-btn">
-                    {t('Learn More', 'Learn More')} <ArrowRight size={13} />
+                    {t('Learn More', 'อ่านต่อ')} <ArrowRight size={13} />
                   </div>
                 </div>
               </Link>

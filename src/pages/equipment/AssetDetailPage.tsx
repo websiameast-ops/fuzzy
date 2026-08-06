@@ -93,9 +93,15 @@ export function AssetDetailPage() {
       {/* Header card */}
       <div className="card" style={{ padding: 18, marginBottom: 16 }}>
         <div className="asset-head">
-          <div className="asset-thumb light" style={{ width: 120, height: 100, borderRadius: 12, flex: '0 0 auto' }} aria-hidden>
-            <Package size={38} strokeWidth={1.2} />
-          </div>
+          {asset.image ? (
+            <div className="asset-thumb-photo" aria-hidden>
+              <img src={asset.image} alt="" />
+            </div>
+          ) : (
+            <div className="asset-thumb light" style={{ width: 120, height: 100, borderRadius: 12, flex: '0 0 auto' }} aria-hidden>
+              <Package size={38} strokeWidth={1.2} />
+            </div>
+          )}
           <div style={{ minWidth: 0, flex: 1 }}>
             <h1 className="page-title" style={{ marginBottom: 2 }}>{asset.name}</h1>
             <div className="muted small" style={{ marginBottom: 8 }}>

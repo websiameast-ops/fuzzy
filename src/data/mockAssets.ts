@@ -1,4 +1,19 @@
 import type { Asset, AssetDocument, AssetTimelineEvent } from '@/types';
+import { getAssetUrl } from '@/utils/assets';
+
+/* Map an asset category to a product photo (served from /public/assets). */
+const CATEGORY_IMAGE: Record<string, string> = {
+  'Pump': getAssetUrl('assets/connect_every_pump_xn.webp'),
+  'Metering & Instrumentation': getAssetUrl('assets/easy_meter_xn.webp'),
+  'Monitoring & IoT': getAssetUrl('assets/iot_device_xn.webp'),
+  'Solar & Energy': getAssetUrl('assets/smartet_energy_xn.webp'),
+  'Valve': getAssetUrl('assets/manage_services_xn.webp'),
+};
+
+function withImage(a: Asset): Asset {
+  if (a.image || !CATEGORY_IMAGE[a.category]) return a;
+  return { ...a, image: CATEGORY_IMAGE[a.category] };
+}
 
 function docs(name: string, extra: AssetDocument[] = []): AssetDocument[] {
   return [
@@ -766,9 +781,12 @@ export const mockAssets: Asset[] = [
 ];
 
 export function getAsset(id: string): Asset | undefined {
-  return mockAssets.find((a) => a.id === id);
+  const asset = mockAssets.find((a) => a.id === id);
+  return asset ? withImage(asset) : undefined;
 }
 
 export function assetsFor(customerCode: string): Asset[] {
-  return mockAssets.filter((a) => a.customerCode === customerCode);
+  return mockAssets
+    .filter((a) => a.customerCode === customerCode)
+    .map(withImage);
 }

@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import L from 'leaflet';
 import { AlertTriangle, ArrowLeft, ClipboardList, Gauge, Leaf, MapPin, Package, Wrench, Zap } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -10,14 +11,29 @@ import { computeSiteHealth, SITE_STATUS_LABEL, type SiteHealth } from '@/utils/s
 import { num } from '@/utils/format';
 import type { Site } from '@/types';
 
-/** Rough scatter positions so pins don't overlap — purely schematic, not geo-accurate. */
-const PIN_POSITIONS = [
-  { left: '22%', top: '30%' },
-  { left: '58%', top: '20%' },
-  { left: '40%', top: '58%' },
-  { left: '72%', top: '52%' },
-  { left: '18%', top: '68%' },
-];
+/**
+ * Real-ish coordinates (lat, lng) on a free, keyless OpenStreetMap base map.
+ * All sample sites sit in the eastern seaboard / EEC zone of Thailand
+ * (Bangkok–Chachoengsao–Chonburi–Rayong), so the map auto-fits that zone
+ * rather than a schematic scatter.
+ */
+const SITE_COORDS: Record<string, [number, number]> = {
+  'S-RY': [12.6819, 101.1488], // Rayong Factory — อ.เมืองระยอง
+  'S-BN': [13.6609, 100.6267], // Bangna Warehouse — ถ.บางนา-ตราด กม.4
+  'S-CB': [13.3611, 100.9847], // Chonburi Utility Building — อ.เมืองชลบุรี
+  'S-CS': [13.6904, 101.0780], // Chachoengsao Pump Station — อ.เมืองฉะเชิงเทรา
+  'S-MTP': [12.6647, 101.1430], // Map Ta Phut Utility Site — นิคมมาบตาพุด
+};
+
+/**
+ * Thailand focus — the initial camera frame (whole country) before fitBounds
+ * zooms into the customer's installation zone.
+ */
+const THAILAND_CENTER: [number, number] = [14.15, 100.75];
+const THAILAND_ZOOM = 6;
+
+/** Same basename the router uses, so popup links survive sub-path deploys. */
+const APP_BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 function healthColor(status: SiteHealth['status']) {
   if (status === 'alarm') return 'var(--se-danger)';
@@ -76,6 +92,10 @@ export function SitesMapPage() {
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState('');
 
+  const mapElRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<Record<string, L.Marker>>({});
+
   const assets = useMemo(() => assetsFor(customerCode), [customerCode]);
   const healths = useMemo(
     () => company.sites.map((s) => computeSiteHealth(s.id, assets, requests, pmVisits)),
@@ -95,16 +115,117 @@ export function SitesMapPage() {
   const selectedSite = selectedId ? company.sites.find((s) => s.id === selectedId) : undefined;
   const selectedHealth = selectedSite ? healths.find((h) => h.siteId === selectedSite.id) : undefined;
 
-  const selectSite = (id: string) => {
-    const next = new URLSearchParams(params);
-    next.set('site', id);
-    setParams(next, { replace: true });
-  };
-  const clearSelection = () => {
-    const next = new URLSearchParams(params);
-    next.delete('site');
-    setParams(next, { replace: true });
-  };
+  const selectSite = useCallback((id: string) => {
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('site', id);
+        return next;
+      },
+      { replace: true },
+    );
+  }, [setParams]);
+  const clearSelection = useCallback(() => {
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('site');
+        return next;
+      },
+      { replace: true },
+    );
+  }, [setParams]);
+
+  // Initialise the free OpenStreetMap (Leaflet) map once.
+  useEffect(() => {
+    if (!mapElRef.current || mapRef.current) return;
+    const map = L.map(mapElRef.current, {
+      center: THAILAND_CENTER,
+      zoom: THAILAND_ZOOM,
+      minZoom: 6,
+      maxZoom: 18,
+      zoomControl: true,
+      scrollWheelZoom: true,
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+    // Keep the SPA panel above the map controls.
+    map.setView(THAILAND_CENTER, THAILAND_ZOOM);
+    mapRef.current = map;
+    setTimeout(() => map.invalidateSize(), 0);
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      markersRef.current = {};
+    };
+  }, []);
+
+  // Sync site markers + health styling, then fit the customer's zone.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !company.sites.length) return;
+
+    Object.values(markersRef.current).forEach((m) => m.remove());
+    markersRef.current = {};
+
+    const bounds = L.latLngBounds([]);
+    company.sites.forEach((s) => {
+      const coord = SITE_COORDS[s.id];
+      if (!coord) return;
+      const health = healths.find((h) => h.siteId === s.id);
+      const color = health ? healthColor(health.status) : 'var(--se-muted)';
+      const name = lang === 'th' ? s.nameTh : s.name;
+      const label = `${s.id} · ${health ? `${health.health}%` : '—'}`;
+      const selected = selectedId === s.id;
+
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="site-marker${selected ? ' selected' : ''}" style="--pin:${color}" aria-hidden="true"><span></span></div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+        tooltipAnchor: [0, -16],
+      });
+
+      const marker = L.marker(coord, { icon, title: name, riseOnHover: true });
+      marker
+        .bindTooltip(
+          `<strong>${name}</strong><div class="map-tip-sub">${label}</div>`,
+          { direction: 'top', offset: [0, -14], opacity: 1, permanent: false },
+        )
+        .bindPopup(
+          `<div class="map-popup">
+             <div class="map-popup-title">${name}</div>
+             <div class="map-popup-sub">${s.id} · ${health ? SITE_STATUS_LABEL[health.status].en : '—'}</div>
+             <div class="map-popup-health">${health ? `${health.health}% · ${health.assetsCount} assets` : '—'}</div>
+             <a class="map-popup-btn" href="${APP_BASE}/portal/map/${s.id}">${lang === 'th' ? 'ดูรายละเอียดไซต์' : 'View full site detail'}</a>
+           </div>`,
+          { closeButton: true, offset: [0, -10] },
+        )
+        .on('click', () => selectSite(s.id));
+      marker.addTo(map);
+      markersRef.current[s.id] = marker;
+      bounds.extend(coord);
+    });
+
+    if (bounds.isValid()) {
+      // Focus on Thailand first, then frame the installation zone (eastern seaboard).
+      map.setView(THAILAND_CENTER, THAILAND_ZOOM);
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 10, animate: true });
+    }
+    setTimeout(() => map.invalidateSize(), 0);
+  }, [company.sites, healths, lang, selectedId, selectSite]);
+
+  // Re-open the panel + popup when a site is targeted from the table/search.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (selectedId && markersRef.current[selectedId]) {
+      markersRef.current[selectedId].openPopup();
+    }
+  }, [selectedId]);
 
   return (
     <div>
@@ -112,7 +233,7 @@ export function SitesMapPage() {
         <div>
           <h1 className="page-title">{t('My Sites — Map', 'ไซต์ของฉัน — แผนที่')}</h1>
           <p className="page-sub">
-            {t('A schematic view of your installations, colour-coded by live health.', 'ภาพรวมเชิงแผนผังของไซต์ติดตั้งของคุณ แสดงสีตามสถานะสุขภาพระบบ')}
+            {t('Your installations on a live OpenStreetMap, colour-coded by health across the eastern Thailand zone.', 'ไซต์ติดตั้งของคุณบนแผนที่ OpenStreetMap แบบสด ระบายสีตามสถานะสุขภาพในโซนภาคตะวันออกของไทย')}
           </p>
         </div>
         <div className="page-actions">
@@ -162,41 +283,30 @@ export function SitesMapPage() {
         </div>
       )}
 
-      <div className={selectedSite ? 'grid-2' : ''} style={{ alignItems: 'start' }}>
-        <div className="card map-schematic" style={{ padding: 0 }}>
-          <div className="map-legend">
-            {(['normal', 'warning', 'alarm'] as const).map((s) => (
-              <span key={s} className="flex" style={{ gap: 6 }}>
-                <span className="legend-dot" style={{ background: healthColor(s) }} aria-hidden />
-                <span className="small">{lang === 'th' ? SITE_STATUS_LABEL[s].th : SITE_STATUS_LABEL[s].en}</span>
-              </span>
-            ))}
-          </div>
-          <div className="map-canvas">
-            {company.sites.map((s, i) => {
-              const h = healths.find((x) => x.siteId === s.id)!;
-              const pos = PIN_POSITIONS[i % PIN_POSITIONS.length]!;
-              return (
-                <button
-                  key={s.id}
-                  className={`map-pin ${selectedId === s.id ? 'selected' : ''}`}
-                  style={{ left: pos.left, top: pos.top, ['--pin-color' as string]: healthColor(h.status) }}
-                  onClick={() => selectSite(s.id)}
-                  aria-pressed={selectedId === s.id}
-                  title={lang === 'th' ? s.nameTh : s.name}
-                >
-                  <MapPin size={22} aria-hidden />
-                  <span className="map-pin-label">{lang === 'th' ? s.nameTh : s.name}</span>
-                </button>
-              );
-            })}
-          </div>
+      <div className="card map-card" style={{ padding: 0 }}>
+        <div className="map-legend">
+          <span className="flex" style={{ gap: 6 }}>
+            <MapPin size={15} className="muted" aria-hidden />
+            <span className="small fw-600">
+              {t('Installation zone — eastern Thailand', 'โซนการติดตั้ง — ภาคตะวันออกของไทย')}
+            </span>
+          </span>
+          <span className="legend-sep" aria-hidden />
+          {(['normal', 'warning', 'alarm'] as const).map((s) => (
+            <span key={s} className="flex" style={{ gap: 6 }}>
+              <span className="legend-dot" style={{ background: healthColor(s) }} aria-hidden />
+              <span className="small">{lang === 'th' ? SITE_STATUS_LABEL[s].th : SITE_STATUS_LABEL[s].en}</span>
+            </span>
+          ))}
         </div>
-
-        {selectedSite && selectedHealth && (
-          <Site360Panel site={selectedSite} health={selectedHealth} onClose={clearSelection} />
-        )}
+        <div ref={mapElRef} className="map-leaflet" role="region" aria-label={t('Interactive site map', 'แผนที่ไซต์แบบโต้ตอบ')} />
       </div>
+
+      {selectedSite && selectedHealth && (
+        <div style={{ marginTop: 16 }}>
+          <Site360Panel site={selectedSite} health={selectedHealth} onClose={clearSelection} />
+        </div>
+      )}
 
       <h3 style={{ margin: '20px 0 10px' }}>{t('All sites', 'ไซต์ทั้งหมด')}</h3>
       <div className="card table-to-cards" style={{ overflow: 'hidden' }}>
