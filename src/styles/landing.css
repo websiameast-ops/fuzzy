@@ -33,8 +33,8 @@
   --g-y: #fbbc04;
   --g-g: #34a853;
 
-  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Thai", sans-serif;
-  --font-h: "Sora", "Inter", -apple-system, sans-serif;
+  --font: "Noto Sans Thai", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-h: "Sora", "Noto Sans Thai", "Inter", -apple-system, sans-serif;
   --rp: 100px;
   --rc: 20px;
   --rs: 12px;
@@ -322,12 +322,88 @@ a {
   border: 1px solid #cbd5e1;
   background: rgba(255, 255, 255, 0.8);
   border-radius: var(--rp);
+  /* keep width stable across TH/EN so layout doesn't shift */
+  min-width: 118px;
+  justify-content: center;
+  text-align: center;
 }
 
 .nav .btn-nav-signin:hover {
   border-color: var(--blue);
   color: var(--blue);
   background: #fff;
+}
+
+/* ── Weglot-inspired 3D Flip Switch (Pure React & CSS) ── */
+.wg-lang-flip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;               /* match .btn-nav-signin (btn-sm) height */
+  padding: 0 14px;
+  box-sizing: border-box;
+  border-radius: var(--rp);
+  border: 1.5px solid #cbd5e1; /* same border weight as .btn */
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--tx-2);
+  cursor: pointer;
+  perspective: 400px;
+  transition: all .2s cubic-bezier(.16, 1, .3, 1);
+  overflow: hidden;
+  user-select: none;
+}
+
+.wg-lang-flip:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(26, 115, 232, 0.14);
+}
+
+.wg-lang-globe {
+  transition: transform 0.4s ease;
+  flex-shrink: 0;
+}
+
+.wg-lang-flip:hover .wg-lang-globe {
+  transform: rotate(30deg);
+}
+
+.wg-lang-track {
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr;
+  height: 16px;
+  width: 20px;
+  align-items: center;
+  justify-items: center;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.wg-lang-text {
+  grid-area: 1 / 1;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  line-height: 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.wg-lang-th {
+  transform: rotateX(0deg) translateZ(8px);
+}
+
+.wg-lang-en {
+  transform: rotateX(-180deg) translateZ(8px);
+}
+
+.wg-lang-flip.is-en .wg-lang-track {
+  transform: rotateX(180deg);
 }
 
 .nav .btn-nav-start {
@@ -710,7 +786,7 @@ a {
   border-radius: 50px;
   padding: 8px 18px;
   font-size: 13.5px;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: var(--font); /* Noto Sans Thai + fallback, matches rest of landing */
   font-weight: 600;
   letter-spacing: 0.01em;
   border: 1.5px solid #b2cbe8;

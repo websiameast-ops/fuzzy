@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Building2, ChevronDown, HelpCircle, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun, User, LogOut, Settings } from 'lucide-react';
+import { Bell, Building2, ChevronDown, Globe, HelpCircle, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun, User, LogOut, Settings } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -28,6 +28,22 @@ function useOutsideClose(open: boolean, onClose: () => void) {
     };
   }, [open, onClose]);
   return ref;
+}
+
+function LangToggle({ lang, setLang, label }: { lang: 'th' | 'en'; setLang: (l: 'th' | 'en') => void; label: string }) {
+  const next = lang === 'th' ? 'EN' : 'TH';
+  return (
+    <button
+      className="lang-globe-btn btn btn-ghost btn-sm"
+      onClick={() => setLang(lang === 'th' ? 'en' : 'th')}
+      aria-label={label}
+      title={`Switch to ${next}`}
+    >
+      <Globe size={14} aria-hidden />
+      <span className="lang-globe-current">{lang.toUpperCase()}</span>
+      <span className="lang-globe-next" aria-hidden>→ {next}</span>
+    </button>
+  );
 }
 
 export function TopHeader({
@@ -117,15 +133,9 @@ export function TopHeader({
             )}
           </div>
 
-          {/* Language */}
-          <div className="seg" role="group" aria-label={t('Language', 'ภาษา')}>
-            <button className={lang === 'th' ? 'active' : ''} onClick={() => setLang('th')} aria-pressed={lang === 'th'}>
-              TH
-            </button>
-            <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')} aria-pressed={lang === 'en'}>
-              EN
-            </button>
-          </div>
+          {/* Language — sliding pill toggle */}
+          <LangToggle lang={lang} setLang={setLang} label={t('Language', 'ภาษา')} />
+
 
           {/* Notifications */}
           <button

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Globe } from 'lucide-react';
 import { ContactWidget } from '@/components/landing/ContactWidget';
 import { CookieConsentBanner } from '@/components/landing/CookieConsentBanner';
 import { getAssetUrl } from '@/utils/assets';
@@ -17,6 +18,92 @@ const SE = {
   email: 'info@siameastsolutions.com',
   phone: '+66633935088',
 };
+
+// ponytail: flat object per lang, add react-i18next if locale count grows > 2
+const T = {
+  en: {
+    navFeatures: 'Features', navSolutions: 'Solutions', navImpact: 'Impact', navAbout: 'About',
+    signIn: 'Sign In',
+    h1a: 'Everything', h1b: 'Connected.', h1c: 'Work Simplified.',
+    heroSub: 'SE Connex is the exclusive platform for customers who purchase with SiamEast Solutions PCL. Manage your SE assets, access value-added services, and stay connected — anytime, anywhere.',
+    getStarted: 'Get Started Free', watchVideo: 'Watch Video',
+    feat1: 'Easy to Report', feat2: 'Real-time Monitoring', feat3: 'PM/CM Management', feat4: 'All Information In One Place',
+    secCard: 'Build for Security. Backed by SE.',
+    secCardSub: 'Your data and assets are protected with enterprise-grade security and trusted by SiamEast Solutions PCL.',
+    learnSecurity: 'Learn Security',
+    ecosystemEye: 'Connected Ecosystem', ecosystemH2a: 'Everything Starts with', ecosystemSub: 'Connect your industrial assets, energy systems and IoT devices through one intelligent platform.',
+    hubEye: 'Hub Architecture', hubH2a: 'One Platform.', hubH2b: 'All Operations.', hubSub: 'Keep every asset connected, every engineer informed, and every team aligned.',
+    bopH2a: 'Better Operations.', bopH2b: 'Stronger Results.',
+    bopLabel: 'BUILD TO DELIVER IMPACT',
+    bopDesc: 'SE Connex empowers teams to minimize downtime, increase efficiency, and drive overall plant performance.',
+    bcard1Num: '400', bcard1Title: 'Assets Managed', bcard1Desc: 'All your SE equipment fully covered — from utility to heavy processes.',
+    bcard2Num: '30%', bcard2Title: 'Expected Efficiency Gain', bcard2Desc: 'Work order processing speed and proactive maintenance response times.',
+    bcard3Num: 'Live', bcard3NumSub: 'Monitoring', bcard3Title: '& Energy Tracking', bcard3Desc: 'Track energy usage so your time leads to more informed decisions.',
+    exclH2a: 'Exclusively for', exclCust: 'Customers', exclH2b: 'Who Purchase with', exclSE: 'SE',
+    exclSub: 'SE Connex is available only to customers who purchase products and solutions from SiamEast Solutions PCL.',
+    excl1Title: 'Verified SE Assets Only', excl1Desc: 'Access is limited to your verified SE assets.',
+    excl2Title: 'Value-Added Services', excl2Desc: 'Enjoy exclusive benefits and priority support.',
+    excl3Title: 'Free for SE Customers', excl3Desc: 'A thank you from SE for choosing us.',
+    excl4Title: 'Ongoing Innovation', excl4Desc: 'Continuous improvements to serve you better.',
+    eynEye: 'EXPLORE THE PLATFORM', eynH2a: 'Everything You Need.', eynH2b: 'In One Place.',
+    eyn1Title: 'Asset Management', eyn1Desc: 'All your equipment registry and state in one place.',
+    eyn2Title: 'Issue Reporting', eyn2Desc: 'Report issues directly to the engineering support team.',
+    eyn3Title: 'PM/CM Management', eyn3Desc: 'Track schedule and confirm preventive and corrective maintenance.',
+    eyn4Title: 'Service & Support', eyn4Desc: 'Direct channel to engineering support for fast response.',
+    footBrand: 'Helping modern industrial plants work smarter, stay connected, and maximize efficiency.',
+    footProduct: 'Product', footPortal: 'Portal Sign In',
+    footResources: 'Resources', footCatalog: 'Products Catalog', footESG: 'ESG & Sustainability', footIR: 'Investor Relations',
+    footCompany: 'Company', footAbout: 'About SiamEast', footContact: 'Contact Us',
+    footRights: 'All rights reserved.', footPrivacy: 'Privacy Policy', footTerms: 'Terms of Service',
+    hubCentralize: 'Centralize', hubCentralizeSub: 'All your asset data always updated in real-time',
+    hubCollaborate: 'Collaborate', hubCollaborateSub: 'Assign and manage tasks across your team',
+    hubTrack: 'Track', hubTrackSub: 'Monitor asset health and performance metrics',
+    hubResolve: 'Resolve', hubResolveSub: 'Automated alerts and instant problem resolution',
+    tabPump: 'Pump Systems', tabSolar: 'Solar & Energy', tabMeter: 'Metering', tabIoT: 'IoT Device', tabService: 'Service Management',
+  },
+  th: {
+    navFeatures: 'ฟีเจอร์', navSolutions: 'โซลูชัน', navImpact: 'ผลลัพธ์', navAbout: 'เกี่ยวกับเรา',
+    signIn: 'เข้าสู่ระบบ',
+    h1a: 'ทุกอย่าง', h1b: 'เชื่อมต่อกัน', h1c: 'งานง่ายขึ้น.',
+    heroSub: 'SE Connex คือแพลตฟอร์มสำหรับลูกค้า SiamEast Solutions PCL โดยเฉพาะ จัดการสินทรัพย์ SE เข้าถึงบริการมูลค่าเพิ่ม และติดตามสถานะได้ทุกที่ทุกเวลา',
+    getStarted: 'เริ่มต้นใช้งานฟรี', watchVideo: 'ดูวิดีโอ',
+    feat1: 'รายงานง่าย', feat2: 'ติดตามแบบเรียลไทม์', feat3: 'จัดการ PM/CM', feat4: 'ข้อมูลครบในที่เดียว',
+    secCard: 'ออกแบบมาเพื่อความปลอดภัย รับรองโดย SE',
+    secCardSub: 'ข้อมูลและสินทรัพย์ของคุณได้รับการคุ้มครองด้วยความปลอดภัยระดับองค์กร โดย SiamEast Solutions PCL',
+    learnSecurity: 'เรียนรู้เรื่องความปลอดภัย',
+    ecosystemEye: 'ระบบนิเวศที่เชื่อมต่อกัน', ecosystemH2a: 'ทุกอย่างเริ่มต้นที่', ecosystemSub: 'เชื่อมต่อสินทรัพย์อุตสาหกรรม ระบบพลังงาน และอุปกรณ์ IoT ผ่านแพลตฟอร์มอัจฉริยะเดียว',
+    hubEye: 'สถาปัตยกรรม Hub', hubH2a: 'แพลตฟอร์มเดียว', hubH2b: 'ครบทุกการดำเนินงาน', hubSub: 'เชื่อมสินทรัพย์ทุกชิ้น แจ้งวิศวกรทุกคน และประสานทุกทีม',
+    bopH2a: 'การดำเนินงานที่ดีขึ้น', bopH2b: 'ผลลัพธ์ที่แข็งแกร่งกว่า',
+    bopLabel: 'สร้างมาเพื่อส่งมอบผลลัพธ์',
+    bopDesc: 'SE Connex ช่วยให้ทีมลดการหยุดทำงาน เพิ่มประสิทธิภาพ และขับเคลื่อนผลการดำเนินงานโรงงาน',
+    bcard1Num: '400', bcard1Title: 'สินทรัพย์ที่จัดการ', bcard1Desc: 'ครอบคลุมอุปกรณ์ SE ของคุณทั้งหมด ตั้งแต่สาธารณูปโภคถึงกระบวนการหนัก',
+    bcard2Num: '30%', bcard2Title: 'ประสิทธิภาพที่คาดหวัง', bcard2Desc: 'ความเร็วในการประมวลผลใบสั่งงานและเวลาตอบสนองการบำรุงรักษาเชิงรุก',
+    bcard3Num: 'Live', bcard3NumSub: 'ติดตาม', bcard3Title: 'และการติดตามพลังงาน', bcard3Desc: 'ติดตามการใช้พลังงานเพื่อการตัดสินใจที่ชาญฉลาดยิ่งขึ้น',
+    exclH2a: 'สำหรับ', exclCust: 'ลูกค้า', exclH2b: 'ที่ซื้อสินค้ากับ', exclSE: 'SE',
+    exclSub: 'SE Connex พร้อมใช้งานสำหรับลูกค้าที่ซื้อผลิตภัณฑ์และโซลูชันจาก SiamEast Solutions PCL เท่านั้น',
+    excl1Title: 'เฉพาะสินทรัพย์ SE ที่ยืนยันแล้ว', excl1Desc: 'การเข้าถึงจำกัดเฉพาะสินทรัพย์ SE ที่ยืนยันของคุณ',
+    excl2Title: 'บริการมูลค่าเพิ่ม', excl2Desc: 'รับสิทธิประโยชน์พิเศษและการสนับสนุนลำดับความสำคัญ',
+    excl3Title: 'ฟรีสำหรับลูกค้า SE', excl3Desc: 'คำขอบคุณจาก SE ที่เลือกใช้เรา',
+    excl4Title: 'นวัตกรรมต่อเนื่อง', excl4Desc: 'การปรับปรุงอย่างต่อเนื่องเพื่อให้บริการคุณได้ดียิ่งขึ้น',
+    eynEye: 'สำรวจแพลตฟอร์ม', eynH2a: 'ทุกสิ่งที่คุณต้องการ', eynH2b: 'ในที่เดียว',
+    eyn1Title: 'การจัดการสินทรัพย์', eyn1Desc: 'ทะเบียนอุปกรณ์และสถานะทั้งหมดในที่เดียว',
+    eyn2Title: 'รายงานปัญหา', eyn2Desc: 'รายงานปัญหาโดยตรงถึงทีมสนับสนุนวิศวกรรม',
+    eyn3Title: 'จัดการ PM/CM', eyn3Desc: 'ติดตามตารางและยืนยันการบำรุงรักษาเชิงป้องกันและแก้ไข',
+    eyn4Title: 'บริการและสนับสนุน', eyn4Desc: 'ช่องทางตรงถึงทีมสนับสนุนวิศวกรรมสำหรับการตอบสนองที่รวดเร็ว',
+    footBrand: 'ช่วยให้โรงงานอุตสาหกรรมสมัยใหม่ทำงานอัจฉริยะขึ้น เชื่อมต่อกัน และเพิ่มประสิทธิภาพสูงสุด',
+    footProduct: 'ผลิตภัณฑ์', footPortal: 'เข้าสู่ระบบพอร์ทัล',
+    footResources: 'ทรัพยากร', footCatalog: 'แคตาล็อกผลิตภัณฑ์', footESG: 'ESG และความยั่งยืน', footIR: 'นักลงทุนสัมพันธ์',
+    footCompany: 'บริษัท', footAbout: 'เกี่ยวกับ SiamEast', footContact: 'ติดต่อเรา',
+    footRights: 'สงวนลิขสิทธิ์', footPrivacy: 'นโยบายความเป็นส่วนตัว', footTerms: 'เงื่อนไขการใช้บริการ',
+    hubCentralize: 'รวมศูนย์ข้อมูล', hubCentralizeSub: 'ข้อมูลสินทรัพย์ทั้งหมดอัปเดตแบบเรียลไทม์เสมอ',
+    hubCollaborate: 'ทำงานร่วมกัน', hubCollaborateSub: 'มอบหมายและจัดการงานทั่วทั้งทีม',
+    hubTrack: 'ติดตาม', hubTrackSub: 'ตรวจสอบสุขภาพและตัวชี้วัดประสิทธิภาพของสินทรัพย์',
+    hubResolve: 'แก้ไขปัญหา', hubResolveSub: 'แจ้งเตือนอัตโนมัติและแก้ไขปัญหาทันที',
+    tabPump: 'ระบบปั๊ม', tabSolar: 'พลังงานแสงอาทิตย์', tabMeter: 'มิเตอร์', tabIoT: 'อุปกรณ์ IoT', tabService: 'การจัดการบริการ',
+  },
+} as const;
+type Lang = keyof typeof T;
+type Tx = typeof T['en'];
 
 const PATHS = {
   arrow: 'M5 12h14M13 6l6 6-6 6',
@@ -57,35 +144,40 @@ function useReveal(deps: unknown[] = []) {
   return ref;
 }
 
-const HUB_NODES = [
-  { key: 'centralize', label: 'Centralize', sub: 'All your asset data always updated in real-time', color: '#1a73e8', bg: '#e8f0fe', icon: PATHS.db, x: 22, y: 24 },
-  { key: 'collaborate', label: 'Collaborate', sub: 'Assign and manage tasks across your team', color: '#f2871f', bg: '#fff3e6', icon: PATHS.users, x: 78, y: 24 },
-  { key: 'track', label: 'Track', sub: 'Monitor asset health and performance metrics', color: '#34a853', bg: 'rgba(52,168,83,.12)', icon: PATHS.bar, x: 22, y: 76 },
-  { key: 'resolve', label: 'Resolve', sub: 'Automated alerts and instant problem resolution', color: '#7c3aed', bg: 'rgba(139,92,246,.12)', icon: PATHS.zap, x: 78, y: 76 },
-];
+function getHubNodes(t: Tx) {
+  return [
+    { key: 'centralize', label: t.hubCentralize, sub: t.hubCentralizeSub, color: '#1a73e8', bg: '#e8f0fe', icon: PATHS.db, x: 22, y: 24 },
+    { key: 'collaborate', label: t.hubCollaborate, sub: t.hubCollaborateSub, color: '#f2871f', bg: '#fff3e6', icon: PATHS.users, x: 78, y: 24 },
+    { key: 'track', label: t.hubTrack, sub: t.hubTrackSub, color: '#34a853', bg: 'rgba(52,168,83,.12)', icon: PATHS.bar, x: 22, y: 76 },
+    { key: 'resolve', label: t.hubResolve, sub: t.hubResolveSub, color: '#7c3aed', bg: 'rgba(139,92,246,.12)', icon: PATHS.zap, x: 78, y: 76 },
+  ];
+}
 const VW = 500, VH = 380, CX = 250, CY = 190;
 function toSVG(xPct: number, yPct: number) { return { x: (xPct / 100) * VW, y: (yPct / 100) * VH }; }
 
-const STARTS_WITH_TABS = [
-  { id: 'pump-systems', label: 'Pump Systems', titleLine1: 'Connect Every Pump', titleLine2: 'Optimize Performance', desc: 'Monitor health, pressure, and vibration of industrial pumps in real-time to eliminate unexpected downtime and extend equipment life.', image: getAssetUrl('assets/connect_every_pump_xn.webp'), points: ['Real-time vibration & temperature telemetry', 'Predictive cavitation & mechanical seal warnings', 'Automated flow rate & pressure optimization', 'Direct SiamEast service ticket dispatch', 'Complete maintenance history & warranty logs'] },
-  { id: 'solar-energy', label: 'Solar & Energy', titleLine1: 'Smarter Energy', titleLine2: 'Clean Power Control', desc: 'Track solar generation, energy storage battery systems (BESS), and grid efficiency through one unified intelligent dashboard.', image: getAssetUrl('assets/smartet_energy_xn.webp'), points: ['Live solar inverter & panel output monitoring', 'Battery storage (BESS) charge status tracking', 'Peak shaving & energy cost optimization', 'Carbon reduction & ESG compliance reporting', 'Grid failover & microgrid load management'] },
-  { id: 'metering', label: 'Metering', titleLine1: 'Smart Metering', titleLine2: 'Precision Data', desc: 'Centralize electric, water, gas, and flow meter readings to track consumption patterns and detect anomalies or leaks instantly.', image: getAssetUrl('assets/easy_meter_xn.webp'), points: ['High-precision electric (kWh) & power monitoring', 'Digital water & fluid flow meter integration', 'Gas pressure & consumption tracking', 'Automated utility billing & audit readiness', 'Instant leak & overload alert notifications'] },
-  { id: 'iot-device', label: 'IoT Device', titleLine1: 'Connect Sensors', titleLine2: 'Unlock Insights', desc: 'Integrate PLCs, sensors and industrial IoT devices to automate data collection and improve operational awareness.', image: getAssetUrl('assets/iot_device_xn.webp'), points: ['Wide range of device compatibility', 'Industrial protocols support', 'Real-time data acquisition', 'Edge processing & filtering', 'Secure data transmission'] },
-  { id: 'service-management', label: 'Service Management', titleLine1: 'Manage Services', titleLine2: 'Maximize Reliability', desc: 'Streamline the entire service lifecycle from requests to sign-off and track every activity for full visibility and compliance.', image: getAssetUrl('assets/manage_services_xn.webp'), points: ['Service request management', 'Contracts & maintenance agreements', 'PM schedule planning & tracking', 'Digital sign-off & approvals', 'Complete service history'] },
-];
+function getStartsWithTabs(t: Tx) {
+  return [
+    { id: 'pump-systems', label: t.tabPump, titleLine1: 'Connect Every Pump', titleLine2: 'Optimize Performance', desc: 'Monitor health, pressure, and vibration of industrial pumps in real-time to eliminate unexpected downtime and extend equipment life.', image: getAssetUrl('assets/connect_every_pump_xn.webp'), points: ['Real-time vibration & temperature telemetry', 'Predictive cavitation & mechanical seal warnings', 'Automated flow rate & pressure optimization', 'Direct SiamEast service ticket dispatch', 'Complete maintenance history & warranty logs'] },
+    { id: 'solar-energy', label: t.tabSolar, titleLine1: 'Smarter Energy', titleLine2: 'Clean Power Control', desc: 'Track solar generation, energy storage battery systems (BESS), and grid efficiency through one unified intelligent dashboard.', image: getAssetUrl('assets/smartet_energy_xn.webp'), points: ['Live solar inverter & panel output monitoring', 'Battery storage (BESS) charge status tracking', 'Peak shaving & energy cost optimization', 'Carbon reduction & ESG compliance reporting', 'Grid failover & microgrid load management'] },
+    { id: 'metering', label: t.tabMeter, titleLine1: 'Smart Metering', titleLine2: 'Precision Data', desc: 'Centralize electric, water, gas, and flow meter readings to track consumption patterns and detect anomalies or leaks instantly.', image: getAssetUrl('assets/easy_meter_xn.webp'), points: ['High-precision electric (kWh) & power monitoring', 'Digital water & fluid flow meter integration', 'Gas pressure & consumption tracking', 'Automated utility billing & audit readiness', 'Instant leak & overload alert notifications'] },
+    { id: 'iot-device', label: t.tabIoT, titleLine1: 'Connect Sensors', titleLine2: 'Unlock Insights', desc: 'Integrate PLCs, sensors and industrial IoT devices to automate data collection and improve operational awareness.', image: getAssetUrl('assets/iot_device_xn.webp'), points: ['Wide range of device compatibility', 'Industrial protocols support', 'Real-time data acquisition', 'Edge processing & filtering', 'Secure data transmission'] },
+    { id: 'service-management', label: t.tabService, titleLine1: 'Manage Services', titleLine2: 'Maximize Reliability', desc: 'Streamline the entire service lifecycle from requests to sign-off and track every activity for full visibility and compliance.', image: getAssetUrl('assets/manage_services_xn.webp'), points: ['Service request management', 'Contracts & maintenance agreements', 'PM schedule planning & tracking', 'Digital sign-off & approvals', 'Complete service history'] },
+  ];
+}
 
-function PlatformShowcase() {
+function PlatformShowcase({ t }: { t: Tx }) {
+  const tabs = getStartsWithTabs(t);
   const [activeTabId, setActiveTabId] = useState('pump-systems');
-  const activeTab = STARTS_WITH_TABS.find((t) => t.id === activeTabId) || STARTS_WITH_TABS[0];
+  const activeTab = tabs.find((tab) => tab.id === activeTabId) || tabs[0];
   return (
     <section className="ph-showcase-section" id="showcase">
       <div className="wrap">
         <div className="ph-header rv">
-          <div className="eyebrow"><span className="eyebrow-spark">✦</span> Connected Ecosystem</div>
-          <h2>Everything Starts with <span className="h-accent">Connex</span></h2>
-          <p className="ph-sub">Connect your industrial assets, energy systems and IoT devices through one intelligent platform.</p>
+          <div className="eyebrow"><span className="eyebrow-spark">✦</span> {t.ecosystemEye}</div>
+          <h2>{t.ecosystemH2a} <span className="h-accent">Connex</span></h2>
+          <p className="ph-sub">{t.ecosystemSub}</p>
           <div className="ph-tabs-pills">
-            {STARTS_WITH_TABS.map((tab) => (
+            {tabs.map((tab) => (
               <button key={tab.id} className={`ph-pill-btn ${activeTabId === tab.id ? 'active' : ''}`} onClick={() => setActiveTabId(tab.id)}>{tab.label}</button>
             ))}
           </div>
@@ -111,15 +203,16 @@ function PlatformShowcase() {
   );
 }
 
-function PlatformHub() {
+function PlatformHub({ t }: { t: Tx }) {
+  const hubNodes = getHubNodes(t);
   const [hovered, setHovered] = useState<string | null>(null);
   return (
     <section className="ph-section" id="platform">
       <div className="wrap">
         <div className="ph-header rv">
-          <div className="eyebrow"><span className="eyebrow-spark">✦</span> Hub Architecture</div>
-          <h2>One Platform.<br /><span className="h-accent">All Operations.</span></h2>
-          <p className="ph-sub">Keep every asset connected, every engineer informed, and every team aligned.</p>
+          <div className="eyebrow"><span className="eyebrow-spark">✦</span> {t.hubEye}</div>
+          <h2>{t.hubH2a}<br /><span className="h-accent">{t.hubH2b}</span></h2>
+          <p className="ph-sub">{t.hubSub}</p>
         </div>
         <div className="ph-diagram rv">
           <svg className="ph-svg" viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="xMidYMid meet" aria-hidden>
@@ -130,12 +223,12 @@ function PlatformHub() {
               </radialGradient>
             </defs>
             <circle cx={CX} cy={CY} r="80" fill="url(#glow-center)" />
-            {HUB_NODES.map((n) => {
+            {hubNodes.map((n) => {
               const p = toSVG(n.x, n.y);
               const isActive = hovered === n.key;
               return <line key={n.key} x1={p.x} y1={p.y} x2={CX} y2={CY} stroke={isActive ? n.color : '#d0d5dd'} strokeWidth={isActive ? 2 : 1.5} strokeDasharray="6 4" style={{ transition: 'stroke .25s, stroke-width .25s' }} />;
             })}
-            {HUB_NODES.map((n, i) => {
+            {hubNodes.map((n, i) => {
               const p = toSVG(n.x, n.y);
               return (
                 <circle key={n.key} r="4.5" fill={n.color} opacity="0.85">
@@ -145,12 +238,12 @@ function PlatformHub() {
                 </circle>
               );
             })}
-            {HUB_NODES.map((n) => {
+            {hubNodes.map((n) => {
               const p = toSVG(n.x, n.y);
               return <path key={n.key} id={`ph-path-${n.key}`} d={`M${p.x},${p.y} L${CX},${CY}`} fill="none" />;
             })}
           </svg>
-          {HUB_NODES.map((n) => (
+          {hubNodes.map((n) => (
             <div key={n.key} className={`ph-node${hovered === n.key ? ' ph-node--active' : ''}`} style={{ left: `${n.x}%`, top: `${n.y}%` }} onMouseEnter={() => setHovered(n.key)} onMouseLeave={() => setHovered(null)}>
               <div className="ph-circle" style={{ borderColor: hovered === n.key ? n.color : undefined, boxShadow: hovered === n.key ? `0 0 0 4px ${n.color}20, 0 12px 32px rgba(16,24,40,.14)` : undefined }}>
                 <div className="ph-icon" style={{ background: n.bg, color: n.color }}><Ic d={n.icon} size={24} sw={2.2} /></div>
@@ -179,6 +272,8 @@ export function LandingPage() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [lang, setLang] = useState<Lang>('th');
+  const t = T[lang];
   const root = useReveal([]);
 
   useEffect(() => {
@@ -193,6 +288,7 @@ export function LandingPage() {
   }, [videoModalOpen]);
 
   const goLogin = () => navigate('/login');
+  const toggleLang = () => setLang((l) => l === 'en' ? 'th' : 'en');
 
   return (
     <div ref={root} className="se-landing">
@@ -204,13 +300,25 @@ export function LandingPage() {
             <img src={getAssetUrl('assets/logo-connex.svg')} alt="SE Connex" className="logo-img" />
           </a>
           <nav className="nav-links">
-            <a href="#features">Features</a>
-            <a href="#platform">Solutions</a>
-            <a href="#impact">Impact</a>
-            <a href={SE.about} target="_blank" rel="noopener">About</a>
+            <a href="#features">{t.navFeatures}</a>
+            <a href="#platform">{t.navSolutions}</a>
+            <a href="#impact">{t.navImpact}</a>
+            <a href={SE.about} target="_blank" rel="noopener">{t.navAbout}</a>
           </nav>
           <div className="nav-actions">
-            <button className="btn btn-nav-signin btn-sm" onClick={goLogin}>Sign In</button>
+            <button
+              type="button"
+              className={`wg-lang-flip ${lang === 'en' ? 'is-en' : 'is-th'}`}
+              onClick={toggleLang}
+              aria-label={lang === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย'}
+            >
+              <Globe size={15} strokeWidth={2} className="wg-lang-globe" />
+              <div className="wg-lang-track">
+                <span className="wg-lang-text wg-lang-th">TH</span>
+                <span className="wg-lang-text wg-lang-en">EN</span>
+              </div>
+            </button>
+            <button className="btn btn-nav-signin btn-sm" onClick={goLogin}>{t.signIn}</button>
           </div>
           <button className="nav-hamburger" aria-label="Toggle menu" onClick={() => setMobileMenuOpen((o) => !o)}>
             <span /><span /><span />
@@ -220,13 +328,25 @@ export function LandingPage() {
 
       {/* ── MOBILE MENU ── */}
       <div className={`nav-mobile-menu${mobileMenuOpen ? ' open' : ''}`} role="navigation">
-        <a href="#features" onClick={() => setMobileMenuOpen(false)}>Features</a>
-        <a href="#platform" onClick={() => setMobileMenuOpen(false)}>Solutions</a>
-        <a href="#impact" onClick={() => setMobileMenuOpen(false)}>Impact</a>
-        <a href={SE.about} target="_blank" rel="noopener" onClick={() => setMobileMenuOpen(false)}>About</a>
+        <a href="#features" onClick={() => setMobileMenuOpen(false)}>{t.navFeatures}</a>
+        <a href="#platform" onClick={() => setMobileMenuOpen(false)}>{t.navSolutions}</a>
+        <a href="#impact" onClick={() => setMobileMenuOpen(false)}>{t.navImpact}</a>
+        <a href={SE.about} target="_blank" rel="noopener" onClick={() => setMobileMenuOpen(false)}>{t.navAbout}</a>
         <div className="nav-mobile-divider" />
         <div className="nav-mobile-actions">
-          <button className="btn btn-nav-signin btn-sm" onClick={() => { goLogin(); setMobileMenuOpen(false); }}>Sign In</button>
+          <button
+            type="button"
+            className={`wg-lang-flip ${lang === 'en' ? 'is-en' : 'is-th'}`}
+            onClick={() => { toggleLang(); setMobileMenuOpen(false); }}
+            aria-label={lang === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย'}
+          >
+            <Globe size={15} strokeWidth={2} className="wg-lang-globe" />
+            <div className="wg-lang-track">
+              <span className="wg-lang-text wg-lang-th">TH</span>
+              <span className="wg-lang-text wg-lang-en">EN</span>
+            </div>
+          </button>
+          <button className="btn btn-nav-signin btn-sm" onClick={() => { goLogin(); setMobileMenuOpen(false); }}>{t.signIn}</button>
         </div>
       </div>
 
@@ -236,30 +356,26 @@ export function LandingPage() {
         <div className="wrap">
           <div className="hero-grid">
             <div className="hero-copy rv">
-              <h1>Everything<br />Connected.<br /><span className="h1-accent">Work Simplified.</span></h1>
-              <p className="hero-sub">
-                SE Connex is the exclusive platform for customers who purchase
-                with SiamEast Solutions PCL. Manage your SE assets, access
-                value-added services, and stay connected — anytime, anywhere.
-              </p>
+              <h1>{t.h1a}<br />{t.h1b}<br /><span className="h1-accent">{t.h1c}</span></h1>
+              <p className="hero-sub">{t.heroSub}</p>
               <div className="hero-btns">
                 <button className="btn btn-primary btn-lg" onClick={goLogin}>
-                  Get Started Free <Ic d={PATHS.arrow} size={17} />
+                  {t.getStarted} <Ic d={PATHS.arrow} size={17} />
                 </button>
                 <button className="btn btn-ghost btn-lg" onClick={() => setVideoModalOpen(true)}>
-                  <Ic d={PATHS.play} size={17} /> Watch Video
+                  <Ic d={PATHS.play} size={17} /> {t.watchVideo}
                 </button>
               </div>
               <div className="hero-list">
                 {([
-                  [PATHS.send, 'Easy to Report'],
-                  [PATHS.activity, 'Real-time Monitoring'],
-                  [PATHS.clipboard, 'PM/CM Management'],
-                  [PATHS.layers, 'All Information In One Place'],
-                ] as [string, string][]).map(([d, t]) => (
-                  <div className="hlist-item" key={t}>
+                  [PATHS.send, t.feat1],
+                  [PATHS.activity, t.feat2],
+                  [PATHS.clipboard, t.feat3],
+                  [PATHS.layers, t.feat4],
+                ] as [string, string][]).map(([d, label]) => (
+                  <div className="hlist-item" key={label}>
                     <span className="hlist-ic"><Ic d={d} size={18} /></span>
-                    <span>{t}</span>
+                    <span>{label}</span>
                   </div>
                 ))}
               </div>
@@ -273,48 +389,48 @@ export function LandingPage() {
           <div className="sec-card-hero rv">
             <div className="sec-icon"><Ic d={PATHS.shield} size={28} /></div>
             <div className="sec-text">
-              <strong>Build for Security. Backed by SE.</strong><br />
-              <span><small>Your data and assets are protected with enterprise-grade security and trusted by SiamEast Solutions PCL.</small></span>
+              <strong>{t.secCard}</strong><br />
+              <span><small>{t.secCardSub}</small></span>
             </div>
-            <button className="btn btn-sec-learn btn-sm" onClick={goLogin}>Learn Security</button>
+            <button className="btn btn-sec-learn btn-sm" onClick={goLogin}>{t.learnSecurity}</button>
           </div>
         </div>
       </section>
 
-      <PlatformShowcase />
-      <PlatformHub />
+      <PlatformShowcase t={t} />
+      <PlatformHub t={t} />
 
       {/* ── BETTER OPERATIONS ── */}
       <section className="bop-section" id="features">
         <div className="wrap">
           <div className="bop-layout rv">
             <div className="bop-left">
-              <h2 className="bop-h2">Better Operations.<br /><span className="bop-accent">Stronger Results.</span></h2>
+              <h2 className="bop-h2">{t.bopH2a}<br /><span className="bop-accent">{t.bopH2b}</span></h2>
             </div>
             <div className="bop-right">
-              <div className="btd-label">BUILD TO DELIVER IMPACT</div>
-              <p className="btd-desc">SE Connex empowers teams to minimize downtime, increase efficiency, and drive overall plant performance.</p>
+              <div className="btd-label">{t.bopLabel}</div>
+              <p className="btd-desc">{t.bopDesc}</p>
             </div>
           </div>
           <div className="bop-cards rv">
             <div className="bcard">
               <div className="bcard-ic" style={{ background: '#e8f0fe', color: '#1a73e8' }}><Ic d={PATHS.layers} size={22} /></div>
-              <div className="bcard-num">400</div>
-              <div className="bcard-title">Assets Managed</div>
-              <p>All your SE equipment fully covered — from utility to heavy processes.</p>
+              <div className="bcard-num">{t.bcard1Num}</div>
+              <div className="bcard-title">{t.bcard1Title}</div>
+              <p>{t.bcard1Desc}</p>
             </div>
             <div className="bcard">
               <div className="bcard-ic" style={{ background: '#fff3e6', color: '#f2871f' }}><Ic d={PATHS.bar} size={22} /></div>
-              <div className="bcard-num">30%</div>
-              <div className="bcard-title">Expected Efficiency Gain</div>
-              <p>Work order processing speed and proactive maintenance response times.</p>
+              <div className="bcard-num">{t.bcard2Num}</div>
+              <div className="bcard-title">{t.bcard2Title}</div>
+              <p>{t.bcard2Desc}</p>
             </div>
             <div className="bcard bcard-live">
               <div className="bcard-badge">NEW</div>
               <div className="bcard-ic" style={{ background: 'rgba(52,168,83,.12)', color: '#34a853' }}><Ic d={PATHS.activity} size={22} /></div>
-              <div className="bcard-num">Live <span className="bcard-num-sub">Monitoring</span></div>
-              <div className="bcard-title">&amp; Energy Tracking</div>
-              <p>Track energy usage so your time leads to more informed decisions.</p>
+              <div className="bcard-num">{t.bcard3Num} <span className="bcard-num-sub">{t.bcard3NumSub}</span></div>
+              <div className="bcard-title">{t.bcard3Title}</div>
+              <p>{t.bcard3Desc}</p>
             </div>
           </div>
         </div>
@@ -324,15 +440,15 @@ export function LandingPage() {
       <section className="excl-section">
         <div className="wrap">
           <div className="excl-head rv">
-            <h2>Exclusively for <span className="excl-cust">Customers</span><br />Who Purchase with <span className="excl-se">SE</span></h2>
-            <p>SE Connex is available only to customers who purchase products and solutions from SiamEast Solutions PCL.</p>
+            <h2>{t.exclH2a} <span className="excl-cust">{t.exclCust}</span><br />{t.exclH2b} <span className="excl-se">{t.exclSE}</span></h2>
+            <p>{t.exclSub}</p>
           </div>
           <div className="excl-cards rv">
             {[
-              [PATHS.shield, 'Verified SE Assets Only', 'Access is limited to your verified SE assets.'],
-              [PATHS.zap, 'Value-Added Services', 'Enjoy exclusive benefits and priority support.'],
-              [PATHS.users, 'Free for SE Customers', 'A thank you from SE for choosing us.'],
-              [PATHS.activity, 'Ongoing Innovation', 'Continuous improvements to serve you better.'],
+              [PATHS.shield, t.excl1Title, t.excl1Desc],
+              [PATHS.zap, t.excl2Title, t.excl2Desc],
+              [PATHS.users, t.excl3Title, t.excl3Desc],
+              [PATHS.activity, t.excl4Title, t.excl4Desc],
             ].map(([d, title, desc]) => (
               <div className="excl-card" key={title as string}>
                 <div className="excl-ic"><Ic d={d as string} size={24} /></div>
@@ -350,15 +466,15 @@ export function LandingPage() {
       <section className="eyn-section" id="impact">
         <div className="wrap">
           <div className="eyn-head rv">
-            <div className="eyebrow-sm">EXPLORE THE PLATFORM</div>
-            <h2 className="eyn-h2">Everything You Need.<br />In One Place.</h2>
+            <div className="eyebrow-sm">{t.eynEye}</div>
+            <h2 className="eyn-h2">{t.eynH2a}<br />{t.eynH2b}</h2>
           </div>
           <div className="eyn-cards rv">
             {[
-              [PATHS.layers, 'Asset Management', 'All your equipment registry and state in one place.'],
-              [PATHS.send, 'Issue Reporting', 'Report issues directly to the engineering support team.'],
-              [PATHS.clipboard, 'PM/CM Management', 'Track schedule and confirm preventive and corrective maintenance.'],
-              [PATHS.shield, 'Service & Support', 'Direct channel to engineering support for fast response.'],
+              [PATHS.layers, t.eyn1Title, t.eyn1Desc],
+              [PATHS.send, t.eyn2Title, t.eyn2Desc],
+              [PATHS.clipboard, t.eyn3Title, t.eyn3Desc],
+              [PATHS.shield, t.eyn4Title, t.eyn4Desc],
             ].map(([d, title, desc]) => (
               <div className="eyn-card" key={title as string}>
                 <div className="eyn-ic"><Ic d={d as string} size={28} /></div>
@@ -378,33 +494,33 @@ export function LandingPage() {
               <img src={getAssetUrl('assets/logo-connex.svg')} alt="SE Connex" style={{ width: 52, height: 52, borderRadius: 10, marginBottom: 10, display: 'block' }} />
               <span className="lo-brand"><span className="lo-se">SE</span> CONNEX</span>
               <span className="lo-tag">SiamEast Solutions PCL</span>
-              <p>Helping modern industrial plants work smarter, stay connected, and maximize efficiency.</p>
+              <p>{t.footBrand}</p>
             </div>
             <div className="foot-col">
-              <h4>Product</h4>
-              <a href="#features">Features</a>
-              <a href="#platform">Solutions</a>
-              <a href="#impact">Impact</a>
-              <button className="btn-link" onClick={goLogin}>Portal Sign In</button>
+              <h4>{t.footProduct}</h4>
+              <a href="#features">{t.navFeatures}</a>
+              <a href="#platform">{t.navSolutions}</a>
+              <a href="#impact">{t.navImpact}</a>
+              <button className="btn-link" onClick={goLogin}>{t.footPortal}</button>
             </div>
             <div className="foot-col">
-              <h4>Resources</h4>
-              <a href={SE.products} target="_blank" rel="noopener">Products Catalog</a>
-              <a href={SE.esg} target="_blank" rel="noopener">ESG &amp; Sustainability</a>
-              <a href={SE.ir} target="_blank" rel="noopener">Investor Relations</a>
+              <h4>{t.footResources}</h4>
+              <a href={SE.products} target="_blank" rel="noopener">{t.footCatalog}</a>
+              <a href={SE.esg} target="_blank" rel="noopener">{t.footESG}</a>
+              <a href={SE.ir} target="_blank" rel="noopener">{t.footIR}</a>
             </div>
             <div className="foot-col">
-              <h4>Company</h4>
-              <a href={SE.about} target="_blank" rel="noopener">About SiamEast</a>
-              <a href={SE.contact} target="_blank" rel="noopener">Contact Us</a>
+              <h4>{t.footCompany}</h4>
+              <a href={SE.about} target="_blank" rel="noopener">{t.footAbout}</a>
+              <a href={SE.contact} target="_blank" rel="noopener">{t.footContact}</a>
               <a href="tel:+66633935088">+66 63 393 5088</a>
             </div>
           </div>
           <div className="foot-bot">
-            <p>© {new Date().getFullYear()} SiamEast Solutions PCL. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} SiamEast Solutions PCL. {t.footRights}</p>
             <div className="foot-legal">
-              <a href={SE.privacy} target="_blank" rel="noopener">Privacy Policy</a>
-              <a href={SE.terms} target="_blank" rel="noopener">Terms of Service</a>
+              <a href={SE.privacy} target="_blank" rel="noopener">{t.footPrivacy}</a>
+              <a href={SE.terms} target="_blank" rel="noopener">{t.footTerms}</a>
             </div>
           </div>
         </div>
@@ -431,3 +547,4 @@ export function LandingPage() {
     </div>
   );
 }
+

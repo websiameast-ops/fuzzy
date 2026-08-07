@@ -384,16 +384,16 @@ export function NewsPage() {
 
           {/* Load More Button */}
           {filtered.length > visibleCount && (
-            <div style={{ textAlign: 'center', marginTop: 12, marginBottom: 24 }}>
+            <div style={{ textAlign: 'center', marginTop: 20, marginBottom: 28 }}>
               <button
-                className="btn btn-ghost btn-sm"
-                style={{ padding: '8px 24px' }}
+                className="btn-load-more"
                 onClick={() => setVisibleCount((prev) => prev + 9)}
               >
                 {t('Load More', 'โหลดเพิ่มเติม')} <ChevronDown size={15} />
               </button>
             </div>
           )}
+
         </div>
 
         {/* Right Sidebar: Renamed from Campaign to 'บทความที่น่าสนใจ' / 'Featured Articles' */}
