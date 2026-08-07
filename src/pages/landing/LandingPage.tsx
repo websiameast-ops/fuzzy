@@ -60,6 +60,31 @@ const T = {
     hubTrack: 'Track', hubTrackSub: 'Monitor asset health and performance metrics',
     hubResolve: 'Resolve', hubResolveSub: 'Automated alerts and instant problem resolution',
     tabPump: 'Pump Systems', tabSolar: 'Solar & Energy', tabMeter: 'Metering', tabIoT: 'IoT Device', tabService: 'Service Management',
+    pumpTitle1: 'Connect Every Pump', pumpTitle2: 'Optimize Performance',
+    pumpDesc: 'Monitor health, pressure, and vibration of industrial pumps in real-time to eliminate unexpected downtime and extend equipment life.',
+    pumpP1: 'Real-time vibration & temperature telemetry', pumpP2: 'Predictive cavitation & mechanical seal warnings',
+    pumpP3: 'Automated flow rate & pressure optimization', pumpP4: 'Direct SiamEast service ticket dispatch',
+    pumpP5: 'Complete maintenance history & warranty logs',
+    solarTitle1: 'Smarter Energy', solarTitle2: 'Clean Power Control',
+    solarDesc: 'Track solar generation, energy storage battery systems (BESS), and grid efficiency through one unified intelligent dashboard.',
+    solarP1: 'Live solar inverter & panel output monitoring', solarP2: 'Battery storage (BESS) charge status tracking',
+    solarP3: 'Peak shaving & energy cost optimization', solarP4: 'Carbon reduction & ESG compliance reporting',
+    solarP5: 'Grid failover & microgrid load management',
+    meterTitle1: 'Smart Metering', meterTitle2: 'Precision Data',
+    meterDesc: 'Centralize electric, water, gas, and flow meter readings to track consumption patterns and detect anomalies or leaks instantly.',
+    meterP1: 'High-precision electric (kWh) & power monitoring', meterP2: 'Digital water & fluid flow meter integration',
+    meterP3: 'Gas pressure & consumption tracking', meterP4: 'Automated utility billing & audit readiness',
+    meterP5: 'Instant leak & overload alert notifications',
+    iotTitle1: 'Connect Sensors', iotTitle2: 'Unlock Insights',
+    iotDesc: 'Integrate PLCs, sensors and industrial IoT devices to automate data collection and improve operational awareness.',
+    iotP1: 'Wide range of device compatibility', iotP2: 'Industrial protocols support',
+    iotP3: 'Real-time data acquisition', iotP4: 'Edge processing & filtering',
+    iotP5: 'Secure data transmission',
+    svcTitle1: 'Manage Services', svcTitle2: 'Maximize Reliability',
+    svcDesc: 'Streamline the entire service lifecycle from requests to sign-off and track every activity for full visibility and compliance.',
+    svcP1: 'Service request management', svcP2: 'Contracts & maintenance agreements',
+    svcP3: 'PM schedule planning & tracking', svcP4: 'Digital sign-off & approvals',
+    svcP5: 'Complete service history',
   },
   th: {
     navFeatures: 'ฟีเจอร์', navSolutions: 'โซลูชัน', navImpact: 'ผลลัพธ์', navAbout: 'เกี่ยวกับเรา',
@@ -100,6 +125,31 @@ const T = {
     hubTrack: 'ติดตาม', hubTrackSub: 'ตรวจสอบสุขภาพและตัวชี้วัดประสิทธิภาพของสินทรัพย์',
     hubResolve: 'แก้ไขปัญหา', hubResolveSub: 'แจ้งเตือนอัตโนมัติและแก้ไขปัญหาทันที',
     tabPump: 'ระบบปั๊ม', tabSolar: 'พลังงานแสงอาทิตย์', tabMeter: 'มิเตอร์', tabIoT: 'อุปกรณ์ IoT', tabService: 'การจัดการบริการ',
+    pumpTitle1: 'เชื่อมต่อทุกปั๊ม', pumpTitle2: 'เพิ่มประสิทธิภาพสูงสุด',
+    pumpDesc: 'ตรวจสอบสุขภาพ แรงดัน และการสั่นสะเทือนของปั๊มอุตสาหกรรมแบบเรียลไทม์ เพื่อขจัดการหยุดทำงานที่ไม่คาดคิดและยืดอายุการใช้งานของอุปกรณ์',
+    pumpP1: 'เทเลเมทรีการสั่นสะเทือนและอุณหภูมิแบบเรียลไทม์', pumpP2: 'คำเตือนคาวิเทชันและซีลเชิงกลเชิงคาดการณ์',
+    pumpP3: 'การปรับอัตราการไหลและแรงดันอัตโนมัติ', pumpP4: 'ส่งใบแจ้งงานบริการ SiamEast โดยตรง',
+    pumpP5: 'ประวัติการบำรุงรักษาครบถ้วนและบันทึกการรับประกัน',
+    solarTitle1: 'พลังงานอัจฉริยะ', solarTitle2: 'ควบคุมพลังงานสะอาด',
+    solarDesc: 'ติดตามการผลิตพลังงานแสงอาทิตย์ ระบบแบตเตอรี่เก็บพลังงาน (BESS) และประสิทธิภาพของระบบไฟฟ้าผ่านแดชบอร์ดอัจฉริยะเดียว',
+    solarP1: 'ตรวจสอบการผลิตของอินเวอร์เตอร์และแผงโซลาร์แบบเรียลไทม์', solarP2: 'ติดตามสถานะการชาร์จของแบตเตอรี่ (BESS)',
+    solarP3: 'การลดการใช้พลังงานช่วงพีคและปรับต้นทุนพลังงานให้เหมาะสม', solarP4: 'รายงานการลดคาร์บอนและการปฏิบัติตาม ESG',
+    solarP5: 'การสลับกริดและการจัดการโหลดไมโครกริด',
+    meterTitle1: 'มิเตอร์อัจฉริยะ', meterTitle2: 'ข้อมูลแม่นยำ',
+    meterDesc: 'รวมค่ามิเตอร์ไฟฟ้า น้ำ ก๊าซ และการไหลไว้ในที่เดียว เพื่อติดตามรูปแบบการใช้งานและตรวจจับความผิดปกติหรือการรั่วไหลได้ทันที',
+    meterP1: 'ตรวจสอบไฟฟ้า (kWh) และกำลังไฟฟ้าความแม่นยำสูง', meterP2: 'เชื่อมต่อมิเตอร์น้ำและการไหลแบบดิจิทัล',
+    meterP3: 'ติดตามแรงดันและการใช้ก๊าซ', meterP4: 'การเรียกเก็บค่าสาธารณูปโภคอัตโนมัติและพร้อมตรวจสอบ',
+    meterP5: 'แจ้งเตือนการรั่วไหลและการโหลดเกินทันที',
+    iotTitle1: 'เชื่อมต่อเซนเซอร์', iotTitle2: 'ปลดล็อกข้อมูลเชิงลึก',
+    iotDesc: 'เชื่อมต่อ PLC เซนเซอร์ และอุปกรณ์ IoT อุตสาหกรรม เพื่อเก็บข้อมูลอัตโนมัติและเพิ่มความตระหนักในการดำเนินงาน',
+    iotP1: 'รองรับอุปกรณ์หลากหลายประเภท', iotP2: 'รองรับโปรโตคอลอุตสาหกรรม',
+    iotP3: 'การเก็บข้อมูลแบบเรียลไทม์', iotP4: 'การประมวลผลและกรองข้อมูลที่ Edge',
+    iotP5: 'การส่งข้อมูลอย่างปลอดภัย',
+    svcTitle1: 'จัดการบริการ', svcTitle2: 'เพิ่มความน่าเชื่อถือสูงสุด',
+    svcDesc: 'จัดการวงจรบริการทั้งหมดตั้งแต่คำขอจนถึงการลงนาม และติดตามทุกกิจกรรมเพื่อความโปร่งใสและการปฏิบัติตามข้อกำหนด',
+    svcP1: 'การจัดการคำขอบริการ', svcP2: 'สัญญาและข้อตกลงการบำรุงรักษา',
+    svcP3: 'การวางแผนและติดตามตาราง PM', svcP4: 'การลงนามและอนุมัติแบบดิจิทัล',
+    svcP5: 'ประวัติบริการครบถ้วน',
   },
 } as const;
 type Lang = keyof typeof T;
@@ -157,11 +207,11 @@ function toSVG(xPct: number, yPct: number) { return { x: (xPct / 100) * VW, y: (
 
 function getStartsWithTabs(t: Tx) {
   return [
-    { id: 'pump-systems', label: t.tabPump, titleLine1: 'Connect Every Pump', titleLine2: 'Optimize Performance', desc: 'Monitor health, pressure, and vibration of industrial pumps in real-time to eliminate unexpected downtime and extend equipment life.', image: getAssetUrl('assets/connect_every_pump_xn.webp'), points: ['Real-time vibration & temperature telemetry', 'Predictive cavitation & mechanical seal warnings', 'Automated flow rate & pressure optimization', 'Direct SiamEast service ticket dispatch', 'Complete maintenance history & warranty logs'] },
-    { id: 'solar-energy', label: t.tabSolar, titleLine1: 'Smarter Energy', titleLine2: 'Clean Power Control', desc: 'Track solar generation, energy storage battery systems (BESS), and grid efficiency through one unified intelligent dashboard.', image: getAssetUrl('assets/smartet_energy_xn.webp'), points: ['Live solar inverter & panel output monitoring', 'Battery storage (BESS) charge status tracking', 'Peak shaving & energy cost optimization', 'Carbon reduction & ESG compliance reporting', 'Grid failover & microgrid load management'] },
-    { id: 'metering', label: t.tabMeter, titleLine1: 'Smart Metering', titleLine2: 'Precision Data', desc: 'Centralize electric, water, gas, and flow meter readings to track consumption patterns and detect anomalies or leaks instantly.', image: getAssetUrl('assets/easy_meter_xn.webp'), points: ['High-precision electric (kWh) & power monitoring', 'Digital water & fluid flow meter integration', 'Gas pressure & consumption tracking', 'Automated utility billing & audit readiness', 'Instant leak & overload alert notifications'] },
-    { id: 'iot-device', label: t.tabIoT, titleLine1: 'Connect Sensors', titleLine2: 'Unlock Insights', desc: 'Integrate PLCs, sensors and industrial IoT devices to automate data collection and improve operational awareness.', image: getAssetUrl('assets/iot_device_xn.webp'), points: ['Wide range of device compatibility', 'Industrial protocols support', 'Real-time data acquisition', 'Edge processing & filtering', 'Secure data transmission'] },
-    { id: 'service-management', label: t.tabService, titleLine1: 'Manage Services', titleLine2: 'Maximize Reliability', desc: 'Streamline the entire service lifecycle from requests to sign-off and track every activity for full visibility and compliance.', image: getAssetUrl('assets/manage_services_xn.webp'), points: ['Service request management', 'Contracts & maintenance agreements', 'PM schedule planning & tracking', 'Digital sign-off & approvals', 'Complete service history'] },
+    { id: 'pump-systems', label: t.tabPump, titleLine1: t.pumpTitle1, titleLine2: t.pumpTitle2, desc: t.pumpDesc, image: getAssetUrl('assets/connect_every_pump_xn.webp'), points: [t.pumpP1, t.pumpP2, t.pumpP3, t.pumpP4, t.pumpP5] },
+    { id: 'solar-energy', label: t.tabSolar, titleLine1: t.solarTitle1, titleLine2: t.solarTitle2, desc: t.solarDesc, image: getAssetUrl('assets/smartet_energy_xn.webp'), points: [t.solarP1, t.solarP2, t.solarP3, t.solarP4, t.solarP5] },
+    { id: 'metering', label: t.tabMeter, titleLine1: t.meterTitle1, titleLine2: t.meterTitle2, desc: t.meterDesc, image: getAssetUrl('assets/easy_meter_xn.webp'), points: [t.meterP1, t.meterP2, t.meterP3, t.meterP4, t.meterP5] },
+    { id: 'iot-device', label: t.tabIoT, titleLine1: t.iotTitle1, titleLine2: t.iotTitle2, desc: t.iotDesc, image: getAssetUrl('assets/iot_device_xn.webp'), points: [t.iotP1, t.iotP2, t.iotP3, t.iotP4, t.iotP5] },
+    { id: 'service-management', label: t.tabService, titleLine1: t.svcTitle1, titleLine2: t.svcTitle2, desc: t.svcDesc, image: getAssetUrl('assets/manage_services_xn.webp'), points: [t.svcP1, t.svcP2, t.svcP3, t.svcP4, t.svcP5] },
   ];
 }
 
@@ -298,6 +348,7 @@ export function LandingPage() {
         <div className="nav-inner">
           <a className="logo" href="#top">
             <img src={getAssetUrl('assets/logo-connex.svg')} alt="SE Connex" className="logo-img" />
+            <span className="lo-brand"><span className="lo-se">SE</span> CONNEX</span>
           </a>
           <nav className="nav-links">
             <a href="#features">{t.navFeatures}</a>
