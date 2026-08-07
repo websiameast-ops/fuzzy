@@ -103,7 +103,7 @@ const T = {
   },
 } as const;
 type Lang = keyof typeof T;
-type Tx = typeof T['en'];
+type Tx = Record<keyof typeof T['en'], string>;
 
 const PATHS = {
   arrow: 'M5 12h14M13 6l6 6-6 6',
