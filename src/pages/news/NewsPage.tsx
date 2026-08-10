@@ -403,6 +403,7 @@ export function NewsPage() {
 
             {sidebarArticles.map((item) => (
               <Link key={item.id} to={`/portal/news/${item.id}`} className="sidebar-card" style={{ background: item.bg }}>
+                <div className="sidebar-card-overlay" />
                 {item.imageUrl && (
                   <img
                     src={`${base}${item.imageUrl.replace(/^\//, '')}`}
@@ -583,6 +584,7 @@ export function NewsDetailPage() {
 
             {sidebarArticles.map((item) => (
               <Link key={item.id} to={`/portal/news/${item.id}`} className="sidebar-card" style={{ background: item.bg }}>
+                <div className="sidebar-card-overlay" />
                 {item.imageUrl && (
                   <img
                     src={`${import.meta.env.BASE_URL}${item.imageUrl.replace(/^\//, '')}`}
