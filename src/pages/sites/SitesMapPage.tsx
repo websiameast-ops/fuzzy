@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import L from 'leaflet';
-import { AlertTriangle, ArrowLeft, ClipboardList, Gauge, Leaf, MapPin, Package, Wrench, Zap } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, CalendarDays, ClipboardList, Leaf, Mail, MapPin, Package, Phone, ShieldCheck, User, Wrench, Zap } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useData } from '@/contexts/DataContext';
@@ -9,7 +9,7 @@ import { EmptyState, SearchBox, StatusBadge } from '@/components/common';
 import { assetsFor } from '@/data/mockAssets';
 import { computeSiteHealth, SITE_STATUS_LABEL, type SiteHealth } from '@/utils/siteHealth';
 import { num } from '@/utils/format';
-import type { Site } from '@/types';
+import { OPERATING_STATUS, REQUEST_STATUS, WARRANTY_STATUS } from '@/utils/status';
 
 /**
  * Real-ish coordinates (lat, lng) on a free, keyless OpenStreetMap base map.
@@ -32,57 +32,10 @@ const SITE_COORDS: Record<string, [number, number]> = {
 const THAILAND_CENTER: [number, number] = [14.15, 100.75];
 const THAILAND_ZOOM = 6;
 
-/** Same basename the router uses, so popup links survive sub-path deploys. */
-const APP_BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
-
 function healthColor(status: SiteHealth['status']) {
   if (status === 'alarm') return 'var(--se-danger)';
   if (status === 'warning') return 'var(--se-warning)';
   return 'var(--se-success)';
-}
-
-function Site360Panel({ site, health, onClose }: { site: Site; health: SiteHealth; onClose: () => void }) {
-  const { lang, t } = useLang();
-  const statusMeta = SITE_STATUS_LABEL[health.status];
-
-  return (
-    <div className="card" style={{ padding: 18 }}>
-      <div className="between" style={{ alignItems: 'flex-start', marginBottom: 10 }}>
-        <div>
-          <div className="fw-600" style={{ fontSize: 16 }}>{lang === 'th' ? site.nameTh : site.name}</div>
-          <div className="muted small">{site.id}</div>
-        </div>
-        <div className="flex" style={{ gap: 8 }}>
-          <StatusBadge label={lang === 'th' ? statusMeta.th : statusMeta.en} tone={statusMeta.tone} />
-          <button className="icon-btn tiny" onClick={onClose} aria-label={t('Close panel', 'ปิดแผง')}>✕</button>
-        </div>
-      </div>
-
-      <div className="grid-4" style={{ gap: 8, marginBottom: 12 }}>
-        <div className="stat-tile"><div className="v">{health.health}%</div><div className="k">{t('Health', 'สุขภาพระบบ')}</div></div>
-        <div className="stat-tile"><div className="v">{health.assetsCount}</div><div className="k">{t('Assets', 'อุปกรณ์')}</div></div>
-        <div className="stat-tile"><div className="v">{health.openTickets}</div><div className="k">{t('Open tickets', 'คำขอค้าง')}</div></div>
-        <div className="stat-tile"><div className="v">{health.openJobs}</div><div className="k">{t('Open jobs', 'งานค้าง')}</div></div>
-      </div>
-
-      {health.criticalAlarms > 0 && (
-        <div className="alert-item a-red" style={{ marginBottom: 12 }}>
-          <AlertTriangle size={16} aria-hidden />
-          <span className="small">{t(`${health.criticalAlarms} critical alarm(s) active at this site.`, `มีสัญญาณเตือนร้ายแรง ${health.criticalAlarms} รายการที่ไซต์นี้`)}</span>
-        </div>
-      )}
-
-      <div className="stat-line"><span className="k">{t('Connected assets', 'อุปกรณ์ที่เชื่อมต่อ')}</span><span className="v">{health.connectedCount} / {health.assetsCount}</span></div>
-      <div className="stat-line"><span className="k">{t('Active alarms', 'สัญญาณเตือนที่มีผล')}</span><span className="v">{health.openAlarms}</span></div>
-      <div className="stat-line"><span className="k">{t('Energy today (est.)', 'พลังงานวันนี้ (ประมาณ)')}</span><span className="v">{num(health.energyTodayKwh)} kWh</span></div>
-      <div className="stat-line"><span className="k">{t('CO₂ avoided today (est.)', 'CO₂ ที่หลีกเลี่ยงได้วันนี้ (ประมาณ)')}</span><span className="v">{num(health.co2TodayKg)} kg</span></div>
-
-      <div className="flex" style={{ gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-        <Link to={`/portal/map/${site.id}`} className="btn btn-primary btn-sm">{t('View full site detail', 'ดูรายละเอียดไซต์ทั้งหมด')}</Link>
-        <Link to={`/portal/equipment?site=${site.id}`} className="btn btn-outline btn-sm">{t('Equipment at this site', 'อุปกรณ์ในไซต์นี้')}</Link>
-      </div>
-    </div>
-  );
 }
 
 export function SitesMapPage() {
@@ -91,6 +44,7 @@ export function SitesMapPage() {
   const { requests, pmVisits } = useData();
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState('');
+  const [panTick, setPanTick] = useState(0);
 
   const mapElRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -146,12 +100,15 @@ export function SitesMapPage() {
       maxZoom: 18,
       zoomControl: true,
       scrollWheelZoom: true,
+      // "Leaflet" prefix is optional (BSD); OpenStreetMap attribution stays (required).
+      attributionControl: false,
     });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
+    L.control.attribution({ prefix: false }).addTo(map);
     // Keep the SPA panel above the map controls.
     map.setView(THAILAND_CENTER, THAILAND_ZOOM);
     mapRef.current = map;
@@ -183,34 +140,32 @@ export function SitesMapPage() {
 
       const icon = L.divIcon({
         className: '',
-        html: `<div class="site-marker${selected ? ' selected' : ''}" style="--pin:${color}" aria-hidden="true"><span></span></div>`,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15],
-        tooltipAnchor: [0, -16],
+        html: `<div class="site-marker${selected ? ' selected' : ''}" aria-hidden="true">
+                 <span class="site-marker-pin" style="--pin:${color}"></span>
+                 <span class="site-marker-badge">${health ? health.health : ''}</span>
+               </div>`,
+        iconSize: [40, 46],
+        iconAnchor: [20, 38],
+        tooltipAnchor: [0, -40],
       });
 
       const marker = L.marker(coord, { icon, title: name, riseOnHover: true });
       marker
         .bindTooltip(
           `<strong>${name}</strong><div class="map-tip-sub">${label}</div>`,
-          { direction: 'top', offset: [0, -14], opacity: 1, permanent: false },
+          { direction: 'top', offset: [0, -6], opacity: 1, permanent: false },
         )
-        .bindPopup(
-          `<div class="map-popup">
-             <div class="map-popup-title">${name}</div>
-             <div class="map-popup-sub">${s.id} · ${health ? SITE_STATUS_LABEL[health.status].en : '—'}</div>
-             <div class="map-popup-health">${health ? `${health.health}% · ${health.assetsCount} assets` : '—'}</div>
-             <a class="map-popup-btn" href="${APP_BASE}/portal/map/${s.id}">${lang === 'th' ? 'ดูรายละเอียดไซต์' : 'View full site detail'}</a>
-           </div>`,
-          { closeButton: true, offset: [0, -10] },
-        )
-        .on('click', () => selectSite(s.id));
+        .on('click', () => {
+          selectSite(s.id);
+          setPanTick((n) => n + 1);
+        });
       marker.addTo(map);
+      marker.setZIndexOffset(selected ? 1000 : 0);
       markersRef.current[s.id] = marker;
       bounds.extend(coord);
     });
 
-    if (bounds.isValid()) {
+    if (bounds.isValid() && !(selectedId && SITE_COORDS[selectedId])) {
       // Focus on Thailand first, then frame the installation zone (eastern seaboard).
       map.setView(THAILAND_CENTER, THAILAND_ZOOM);
       map.fitBounds(bounds, { padding: [60, 60], maxZoom: 10, animate: true });
@@ -218,14 +173,15 @@ export function SitesMapPage() {
     setTimeout(() => map.invalidateSize(), 0);
   }, [company.sites, healths, lang, selectedId, selectSite]);
 
-  // Re-open the panel + popup when a site is targeted from the table/search.
+  // When a site is selected (pin click / table row / search result),
+  // fly the map to focus on that pin instead of showing the whole zone.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
-    if (selectedId && markersRef.current[selectedId]) {
-      markersRef.current[selectedId].openPopup();
-    }
-  }, [selectedId]);
+    if (!map || !selectedId) return;
+    const coord = SITE_COORDS[selectedId];
+    if (!coord) return;
+    map.flyTo(coord, Math.max(map.getZoom(), 11), { duration: 0.7 });
+  }, [selectedId, panTick]);
 
   return (
     <div>
@@ -299,14 +255,99 @@ export function SitesMapPage() {
             </span>
           ))}
         </div>
-        <div ref={mapElRef} className="map-leaflet" role="region" aria-label={t('Interactive site map', 'แผนที่ไซต์แบบโต้ตอบ')} />
-      </div>
+        <div className="map-wrap">
+          <div ref={mapElRef} className="map-leaflet" role="region" aria-label={t('Interactive site map', 'แผนที่ไซต์แบบโต้ตอบ')} />
 
-      {selectedSite && selectedHealth && (
-        <div style={{ marginTop: 16 }}>
-          <Site360Panel site={selectedSite} health={selectedHealth} onClose={clearSelection} />
+          {selectedSite && selectedHealth && (() => {
+            const meta = SITE_STATUS_LABEL[selectedHealth.status];
+            const accent = healthColor(selectedHealth.status);
+            return (
+              <div className="map-info-card map-info-card-v2" style={{ '--info-accent': accent } as CSSProperties}>
+                <div className="map-info-ambient-glow" aria-hidden />
+                <button type="button" className="map-info-close" onClick={clearSelection} aria-label={t('Close site card', 'ปิดการ์ดไซต์')}>✕</button>
+
+                <div className="map-info-header">
+                  <div className="map-info-top-tags">
+                    <div className="map-info-status">
+                      <span className="map-info-dot-pulse" style={{ '--dot-color': accent } as CSSProperties} aria-hidden />
+                      <StatusBadge label={lang === 'th' ? meta.th : meta.en} tone={meta.tone} />
+                    </div>
+                    <span className="map-info-id-badge">{selectedSite.id}</span>
+                  </div>
+                  <div className="map-info-title" title={lang === 'th' ? selectedSite.nameTh : selectedSite.name}>
+                    {lang === 'th' ? selectedSite.nameTh : selectedSite.name}
+                  </div>
+                </div>
+
+                <div className="map-info-gauge-row">
+                  <div className="map-info-ring-wrap" aria-hidden>
+                    <svg viewBox="0 0 36 36" className="map-info-ring-svg">
+                      <path
+                        className="map-info-ring-bg"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                      <path
+                        className="map-info-ring-fill"
+                        style={{
+                          stroke: accent,
+                          strokeDasharray: `${(selectedHealth.health * 100) / 100}, 100`,
+                        }}
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                    </svg>
+                    <span className="map-info-ring-pct" style={{ color: accent }}>{selectedHealth.health}%</span>
+                  </div>
+                  <div className="map-info-gauge-meta">
+                    <span className="map-info-health-label">{t('System Health', 'สุขภาพระบบโดยรวม')}</span>
+                    <span className="map-info-conn-chip">
+                      {t(`${selectedHealth.connectedCount}/${selectedHealth.assetsCount} Connected`, `เชื่อมต่อ ${selectedHealth.connectedCount}/${selectedHealth.assetsCount} เครื่อง`)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="map-info-kpis">
+                  <div className="map-info-kpi">
+                    <div className="map-info-kpi-head"><Package size={13} className="muted" /><span>{t('Assets', 'อุปกรณ์')}</span></div>
+                    <b>{selectedHealth.assetsCount}</b>
+                  </div>
+                  <div className="map-info-kpi">
+                    <div className="map-info-kpi-head"><ClipboardList size={13} className="muted" /><span>{t('Tickets', 'คำขอค้าง')}</span></div>
+                    <b>{selectedHealth.openTickets}</b>
+                  </div>
+                  <div className="map-info-kpi">
+                    <div className="map-info-kpi-head"><Wrench size={13} className="muted" /><span>{t('Jobs', 'งานค้าง')}</span></div>
+                    <b>{selectedHealth.openJobs}</b>
+                  </div>
+                  <div className="map-info-kpi">
+                    <div className="map-info-kpi-head"><AlertTriangle size={13} style={{ color: selectedHealth.criticalAlarms > 0 ? 'var(--se-danger)' : undefined }} /><span>{t('Alarms', 'เตือน')}</span></div>
+                    <b style={{ color: selectedHealth.criticalAlarms > 0 ? 'var(--se-danger)' : undefined }}>{selectedHealth.criticalAlarms}</b>
+                  </div>
+                </div>
+
+                <div className={`map-info-alarm${selectedHealth.criticalAlarms > 0 ? ' has-alarm' : ''}`} aria-live="polite">
+                  {selectedHealth.criticalAlarms > 0 && (
+                    <>
+                      <AlertTriangle size={14} aria-hidden />
+                      <span>{t('Critical alarm active in site', 'มีสัญญาณเตือนร้ายแรงเกิดขึ้น')}</span>
+                    </>
+                  )}
+                </div>
+
+                <div className="map-info-actions">
+                  <Link to={`/portal/map/${selectedSite.id}`} className="btn btn-primary btn-sm map-info-btn-primary">
+                    {t('View full site detail', 'ดูรายละเอียดไซต์ทั้งหมด')}
+                    <ArrowRight size={15} aria-hidden />
+                  </Link>
+                  <Link to={`/portal/equipment?site=${selectedSite.id}`} className="map-info-link">
+                    <Package size={15} aria-hidden />
+                    {t('Equipment at this site', 'อุปกรณ์ในไซต์นี้')}
+                  </Link>
+                </div>
+              </div>
+            );
+          })()}
         </div>
-      )}
+      </div>
 
       <h3 style={{ margin: '20px 0 10px' }}>{t('All sites', 'ไซต์ทั้งหมด')}</h3>
       <div className="card table-to-cards" style={{ overflow: 'hidden' }}>
@@ -380,102 +421,236 @@ export function SiteDetailPage() {
     .slice(0, 6);
   const sitePM = pmVisits.filter((v) => v.siteId === site.id && v.status !== 'completed').slice(0, 6);
   const statusMeta = SITE_STATUS_LABEL[health.status];
+  const accent = healthColor(health.status);
+  const am = company.accountManager;
+  const sc = company.serviceCoordinator;
 
   return (
-    <div>
-      <button className="btn btn-ghost btn-sm" onClick={() => navigate('/portal/map')} style={{ marginBottom: 12, marginLeft: -8 }}>
+    <div className="site-detail-container">
+      <button className="btn btn-ghost btn-sm site-detail-back-btn" onClick={() => navigate('/portal/map')}>
         <ArrowLeft size={16} aria-hidden />
         {t('All sites', 'ไซต์ทั้งหมด')}
       </button>
 
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">{lang === 'th' ? site.nameTh : site.name}</h1>
-          <p className="page-sub">{site.id} · {lang === 'th' ? company.nameTh : company.name}</p>
-          <div className="flex" style={{ gap: 6, marginTop: 8 }}>
-            <StatusBadge label={lang === 'th' ? statusMeta.th : statusMeta.en} tone={statusMeta.tone} />
+      {/* ── Hero / overview ── */}
+      <section className="site-detail-hero" style={{ '--hero-accent': accent } as CSSProperties}>
+        <div className="site-detail-hero-ambient" aria-hidden />
+        <div className="site-detail-hero-top">
+          <div className="site-detail-hero-title">
+            <div className="flex" style={{ gap: 8, alignItems: 'center' }}>
+              <StatusBadge label={lang === 'th' ? statusMeta.th : statusMeta.en} tone={statusMeta.tone} />
+              <span className="site-detail-id-chip">{site.id}</span>
+            </div>
+            <h1 className="site-detail-hero-name">{lang === 'th' ? site.nameTh : site.name}</h1>
+            <div className="site-detail-hero-sub">
+              {lang === 'th' ? company.nameTh : company.name}
+              {company.industry ? ` · ${company.industry}` : ''}
+            </div>
+          </div>
+          <div className="site-detail-hero-actions">
+            <Link to={`/portal/equipment?site=${site.id}`} className="btn btn-outline btn-sm">
+              <Package size={15} aria-hidden />
+              {t('Equipment here', 'อุปกรณ์ในไซต์นี้')}
+            </Link>
+            <Link to={`/portal/requests/new?site=${site.id}`} className="btn btn-primary btn-sm">
+              {t('Report a problem', 'แจ้งปัญหา')}
+            </Link>
           </div>
         </div>
-        <div className="page-actions">
-          <Link to={`/portal/equipment?site=${site.id}`} className="btn btn-outline">
-            <Package size={16} aria-hidden />
-            {t('Equipment here', 'อุปกรณ์ในไซต์นี้')}
-          </Link>
-          <Link to={`/portal/requests/new?site=${site.id}`} className="btn btn-primary">
-            {t('Report a problem', 'แจ้งปัญหา')}
-          </Link>
-        </div>
-      </div>
 
-      <div className="grid-4" style={{ marginBottom: 16 }}>
-        <div className="card" style={{ padding: 16 }}>
-          <div className="flex" style={{ gap: 8 }}><Gauge size={16} className="muted" aria-hidden /><span className="muted small">{t('Health', 'สุขภาพระบบ')}</span></div>
-          <div className="kpi-value" style={{ fontSize: 20 }}>{health.health}%</div>
+        <div className="site-detail-stats">
+          <div className="site-detail-stat">
+            <div className="site-detail-stat-v" style={{ color: accent }}>{health.health}%</div>
+            <div className="site-detail-stat-k">{t('Health', 'สุขภาพระบบ')}</div>
+          </div>
+          <div className="site-detail-stat">
+            <div className="site-detail-stat-v">{health.assetsCount}</div>
+            <div className="site-detail-stat-k">{t('Assets', 'อุปกรณ์')} · {t(`${health.connectedCount} connected`, `เชื่อมต่อ ${health.connectedCount} ตัว`)}</div>
+          </div>
+          <div className="site-detail-stat">
+            <div className="site-detail-stat-v">{health.openTickets}</div>
+            <div className="site-detail-stat-k">{t('Open tickets', 'คำขอค้าง')}</div>
+          </div>
+          <div className="site-detail-stat">
+            <div className="site-detail-stat-v" style={{ color: health.criticalAlarms > 0 ? 'var(--se-danger)' : undefined }}>
+              {health.criticalAlarms}
+            </div>
+            <div className="site-detail-stat-k">{t('Critical alarms', 'สัญญาณเตือนร้ายแรง')}</div>
+          </div>
+          <div className="site-detail-stat">
+            <div className="site-detail-stat-v">{health.openJobs}</div>
+            <div className="site-detail-stat-k">{t('Open PM jobs', 'งาน PM เปิดอยู่')}</div>
+          </div>
         </div>
-        <div className="card" style={{ padding: 16 }}>
-          <div className="flex" style={{ gap: 8 }}><Package size={16} className="muted" aria-hidden /><span className="muted small">{t('Assets', 'อุปกรณ์')}</span></div>
-          <div className="kpi-value" style={{ fontSize: 20 }}>{health.assetsCount}</div>
-          <div className="muted small">{t(`${health.connectedCount} connected`, `เชื่อมต่อ ${health.connectedCount}`)}</div>
-        </div>
-        <div className="card" style={{ padding: 16 }}>
-          <div className="flex" style={{ gap: 8 }}><Zap size={16} className="muted" aria-hidden /><span className="muted small">{t('Energy today (est.)', 'พลังงานวันนี้ (ประมาณ)')}</span></div>
-          <div className="kpi-value" style={{ fontSize: 20 }}>{num(health.energyTodayKwh)} kWh</div>
-        </div>
-        <div className="card" style={{ padding: 16 }}>
-          <div className="flex" style={{ gap: 8 }}><Leaf size={16} className="muted" aria-hidden /><span className="muted small">{t('CO₂ avoided today (est.)', 'CO₂ ที่หลีกเลี่ยงได้วันนี้')}</span></div>
-          <div className="kpi-value" style={{ fontSize: 20 }}>{num(health.co2TodayKg)} kg</div>
-        </div>
-      </div>
+      </section>
 
       {health.criticalAlarms > 0 && (
-        <div className="alert-item a-red" style={{ marginBottom: 16 }}>
+        <div className="alert-item a-red site-detail-alarm-banner">
           <AlertTriangle size={17} aria-hidden />
           <span>{t(`${health.criticalAlarms} critical alarm(s) active — see Live Monitoring for detail.`, `มีสัญญาณเตือนร้ายแรง ${health.criticalAlarms} รายการ — ดูรายละเอียดที่หน้ามอนิเตอริ่ง`)}</span>
         </div>
       )}
 
-      <div className="grid-2" style={{ alignItems: 'start' }}>
-        <div className="card" style={{ padding: 18 }}>
-          <div className="between" style={{ marginBottom: 8 }}>
-            <h3 style={{ margin: 0 }}><ClipboardList size={17} aria-hidden style={{ verticalAlign: -3 }} /> {t('Open tickets at this site', 'คำขอที่ค้างอยู่ในไซต์นี้')}</h3>
-            <Link to="/portal/requests" className="card-link">{t('All requests', 'คำขอทั้งหมด')}</Link>
+      {/* ── Energy & sustainability ── */}
+      <div className="grid-2 site-detail-energy-grid">
+        <div className="card site-detail-energy-card">
+          <div className="site-detail-energy-icon energy-zap-icon">
+            <Zap size={20} />
           </div>
-          {siteRequests.length === 0 ? (
-            <p className="muted small">{t('No open requests at this site.', 'ไม่มีคำขอค้างในไซต์นี้')}</p>
-          ) : (
-            siteRequests.map((r) => (
-              <Link key={r.ticketNo} to={`/portal/requests/${r.ticketNo}`} className="between" style={{ padding: '8px 0', borderBottom: '1px dashed var(--se-border)', textDecoration: 'none', color: 'inherit' }}>
-                <span className="small">{r.ticketNo} · {r.title}</span>
-              </Link>
-            ))
-          )}
+          <div className="site-detail-energy-info">
+            <span className="muted small">{t('Energy today (est.)', 'พลังงานวันนี้ (ประมาณ)')}</span>
+            <div className="kpi-value">{num(health.energyTodayKwh)} <span className="muted small">kWh</span></div>
+          </div>
         </div>
-        <div className="card" style={{ padding: 18 }}>
-          <div className="between" style={{ marginBottom: 8 }}>
-            <h3 style={{ margin: 0 }}><Wrench size={17} aria-hidden style={{ verticalAlign: -3 }} /> {t('Upcoming PM at this site', 'งาน PM ที่กำลังจะถึงในไซต์นี้')}</h3>
-            <Link to="/portal/pm" className="card-link">{t('Full schedule', 'ดูแผนทั้งหมด')}</Link>
+        <div className="card site-detail-energy-card">
+          <div className="site-detail-energy-icon energy-leaf-icon">
+            <Leaf size={20} />
           </div>
-          {sitePM.length === 0 ? (
-            <p className="muted small">{t('No upcoming PM visits at this site.', 'ไม่มีนัดหมาย PM ในไซต์นี้')}</p>
-          ) : (
-            sitePM.map((v) => (
-              <div key={v.id} className="small" style={{ padding: '8px 0', borderBottom: '1px dashed var(--se-border)' }}>
-                {v.date} · {v.time} — {v.scope}
-              </div>
-            ))
-          )}
+          <div className="site-detail-energy-info">
+            <span className="muted small">{t('CO₂ avoided today (est.)', 'CO₂ ที่หลีกเลี่ยงได้วันนี้')}</span>
+            <div className="kpi-value">{num(health.co2TodayKg)} <span className="muted small">kg</span></div>
+          </div>
         </div>
       </div>
 
-      <h3 style={{ margin: '20px 0 10px' }}>{t('Equipment at this site', 'อุปกรณ์ในไซต์นี้')}</h3>
-      <div className="grid-3">
-        {siteAssets.map((a) => (
-          <Link key={a.id} to={`/portal/equipment/${a.id}`} className="card" style={{ padding: 14, textDecoration: 'none', color: 'inherit' }}>
-            <div className="fw-600 small">{a.name}</div>
-            <div className="muted small">{a.id} · {a.category}</div>
-          </Link>
-        ))}
+      {/* ── Tickets / PM / Contact ── */}
+      <div className="grid-3 site-detail-columns">
+        <div className="card site-detail-col">
+          <div className="between site-detail-col-head">
+            <h3 className="site-detail-h3">
+              <span className="col-head-icon col-head-blue"><ClipboardList size={16} aria-hidden /></span>
+              {t('Open tickets', 'คำขอค้าง')}
+            </h3>
+            <Link to="/portal/requests" className="card-link">{t('All requests', 'คำขอทั้งหมด')}</Link>
+          </div>
+          {siteRequests.length === 0 ? (
+            <div className="site-detail-empty-col">
+              <p className="muted small">{t('No open requests at this site.', 'ไม่มีคำขอค้างในไซต์นี้')}</p>
+            </div>
+          ) : (
+            <div className="site-detail-list">
+              {siteRequests.map((r) => {
+                const st = REQUEST_STATUS[r.status];
+                return (
+                  <Link key={r.ticketNo} to={`/portal/requests/${r.ticketNo}`} className="site-detail-row">
+                    <div className="row-main">
+                      <div className="fw-600 small">{r.ticketNo}</div>
+                      <div className="muted small line">{r.title}</div>
+                    </div>
+                    <StatusBadge label={lang === 'th' ? st.th : st.en} tone={st.tone} />
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="card site-detail-col">
+          <div className="between site-detail-col-head">
+            <h3 className="site-detail-h3">
+              <span className="col-head-icon col-head-amber"><Wrench size={16} aria-hidden /></span>
+              {t('Upcoming PM', 'งาน PM ที่จะถึง')}
+            </h3>
+            <Link to="/portal/pm" className="card-link">{t('Full schedule', 'ดูแผนทั้งหมด')}</Link>
+          </div>
+          {sitePM.length === 0 ? (
+            <div className="site-detail-empty-col">
+              <p className="muted small">{t('No upcoming PM visits at this site.', 'ไม่มีนัดหมาย PM ในไซต์นี้')}</p>
+            </div>
+          ) : (
+            <div className="site-detail-list">
+              {sitePM.map((v) => (
+                <div key={v.id} className="site-detail-row">
+                  <div className="row-main">
+                    <div className="flex" style={{ gap: 6, alignItems: 'center' }}>
+                      <span className="site-detail-date"><CalendarDays size={12} aria-hidden /> {v.date}</span>
+                      <span className="muted small">{v.time}</span>
+                    </div>
+                    <div className="muted small line">{v.scope}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="card site-detail-col">
+          <div className="site-detail-col-head">
+            <h3 className="site-detail-h3">
+              <span className="col-head-icon col-head-green"><Phone size={16} aria-hidden /></span>
+              {t('Contact & support', 'ติดต่อและดูแล')}
+            </h3>
+          </div>
+          <div className="site-detail-contact-wrap">
+            <div className="site-detail-contact-card">
+              <div className="contact-card-header">
+                <div className="contact-avatar-chip">
+                  <ShieldCheck size={15} />
+                </div>
+                <div>
+                  <div className="contact-role-label">{t('Account manager', 'ผู้จัดการฝ่ายลูกค้า')}</div>
+                  <div className="contact-name">{am.name}</div>
+                  <div className="contact-sub">{lang === 'th' && am.roleTh ? am.roleTh : am.role}</div>
+                </div>
+              </div>
+              <div className="site-detail-contact-links">
+                <a href={`tel:${am.phone}`} className="contact-btn-link"><Phone size={12} aria-hidden /> {am.phone}</a>
+                <a href={`mailto:${am.email}`} className="contact-btn-link"><Mail size={12} aria-hidden /> {am.email}</a>
+              </div>
+            </div>
+
+            <div className="site-detail-contact-card">
+              <div className="contact-card-header">
+                <div className="contact-avatar-chip">
+                  <User size={15} />
+                </div>
+                <div>
+                  <div className="contact-role-label">{t('Service coordinator', 'ผู้ประสานงานบริการ')}</div>
+                  <div className="contact-name">{sc.name}</div>
+                </div>
+              </div>
+              <div className="site-detail-contact-links">
+                <a href={`tel:${sc.phone}`} className="contact-btn-link"><Phone size={12} aria-hidden /> {sc.phone}</a>
+                <a href={`mailto:${sc.email}`} className="contact-btn-link"><Mail size={12} aria-hidden /> {sc.email}</a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* ── Equipment ── */}
+      <div className="between" style={{ margin: '24px 0 12px' }}>
+        <h3 className="site-detail-h3" style={{ margin: 0 }}>
+          <Package size={17} aria-hidden /> {t('Equipment at this site', 'อุปกรณ์ในไซต์นี้')}
+          <span className="muted small"> ({siteAssets.length})</span>
+        </h3>
+        <Link to={`/portal/equipment?site=${site.id}`} className="card-link">{t('Browse all', 'ดูทั้งหมด')}</Link>
+      </div>
+
+      {siteAssets.length === 0 ? (
+        <p className="muted small">{t('No equipment registered at this site.', 'ยังไม่มีอุปกรณ์ที่ลงทะเบียนในไซต์นี้')}</p>
+      ) : (
+        <div className="grid-3 site-detail-assets-grid">
+          {siteAssets.map((a) => {
+            const op = OPERATING_STATUS[a.status];
+            const w = WARRANTY_STATUS[a.warranty];
+            return (
+              <Link key={a.id} to={`/portal/equipment/${a.id}`} className="card site-detail-asset">
+                <div className="between" style={{ marginBottom: 8 }}>
+                  <span className={`status-indicator status-${op.tone === 'red' ? 'red' : op.tone === 'amber' ? 'amber' : 'green'}`} aria-hidden />
+                  {a.connected && <span className="badge t-blue">{t('IoT', 'IoT')}</span>}
+                </div>
+                <div className="fw-600 small">{a.name}</div>
+                <div className="muted small">{a.id} · {a.category} · {a.brand}</div>
+                <div className="flex" style={{ gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+                  <StatusBadge label={lang === 'th' ? op.th : op.en} tone={op.tone} />
+                  {a.warranty !== 'active' && <StatusBadge label={lang === 'th' ? w.th : w.en} tone={w.tone} />}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

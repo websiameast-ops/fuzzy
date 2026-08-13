@@ -18,14 +18,13 @@ export function Sidebar({
 }) {
   const { lang, t } = useLang();
   const { company } = useCompany();
-
   return (
     <>
       {mobileOpen && <div className="sidebar-backdrop" onClick={onCloseMobile} role="presentation" />}
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`} aria-label={t('Main navigation', 'เมนูหลัก')}>
         <div className="sidebar-header">
           <Link to="/portal" aria-label={t('SE Connex home', 'หน้าหลัก SE Connex')} onClick={onCloseMobile}>
-            <Logo height={collapsed ? 26 : 32} />
+            <Logo height={collapsed ? 28 : 32} collapsed={collapsed} />
           </Link>
           <div className="company-chip">
             <div className="fw-600 small" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

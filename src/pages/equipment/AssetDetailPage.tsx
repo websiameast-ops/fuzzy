@@ -4,12 +4,16 @@ import {
   Activity,
   AlertTriangle,
   ArrowLeft,
+  CalendarDays,
+  Camera,
   Download,
   FileText,
   Gauge,
+  MapPin,
   Package,
   Plus,
   QrCode,
+  ShieldCheck,
   Wifi,
   WifiOff,
   Zap,
@@ -90,29 +94,28 @@ export function AssetDetailPage() {
         {t('All equipment', 'อุปกรณ์ทั้งหมด')}
       </button>
 
-      {/* Header card */}
-      <div className="card" style={{ padding: 18, marginBottom: 16 }}>
-        <div className="asset-head">
+      {/* Header card with clean grid and integrated ac-rows grey detail box */}
+      <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+        <div className="asset-head" style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
           {asset.image ? (
-            <div className="asset-thumb-photo" aria-hidden>
-              <img src={asset.image} alt="" />
+            <div className="asset-thumb-photo" style={{ width: 140, height: 130, borderRadius: 12, flexShrink: 0, overflow: 'hidden' }} aria-hidden>
+              <img src={asset.image} alt={asset.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
           ) : (
-            <div className="asset-thumb light" style={{ width: 120, height: 100, borderRadius: 12, flex: '0 0 auto' }} aria-hidden>
-              <Package size={38} strokeWidth={1.2} />
+            <div className="asset-thumb light" style={{ width: 140, height: 130, borderRadius: 12, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--se-background)' }} aria-hidden>
+              <Package size={40} strokeWidth={1.2} style={{ color: 'var(--se-text-muted)' }} />
             </div>
           )}
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 className="page-title" style={{ marginBottom: 2 }}>{asset.name}</h1>
-            <div className="muted small" style={{ marginBottom: 8 }}>
-              {asset.id} · {asset.brand} {asset.model} · S/N {asset.serial} · {t('Your tag', 'แท็กของคุณ')}: {asset.customerRef}
+
+          {/* Core identity info */}
+          <div style={{ minWidth: 220, flex: '1 1 240px' }}>
+            <h1 className="page-title" style={{ fontSize: 22, fontWeight: 700, margin: '0 0 6px' }}>{asset.name}</h1>
+            <div className="muted small" style={{ fontSize: 13, marginBottom: 12, lineHeight: 1.4 }}>
+              {asset.id} · {asset.brand} {asset.model} · S/N {asset.serial} {asset.customerRef ? `· ${t('Your tag', 'แท็กของคุณ')}: ${asset.customerRef}` : ''}
             </div>
-            <div className="muted small" style={{ marginBottom: 10 }}>
-              {siteName(customerCode, asset.siteId, lang)} — {asset.location}
-            </div>
-            <div className="flex" style={{ gap: 6, flexWrap: 'wrap' }}>
-              <StatusBadge label={lang === 'th' ? op.th : op.en} tone={op.tone} />
-              <StatusBadge label={lang === 'th' ? wa.th : wa.en} tone={wa.tone} />
+            <div className="flex" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <StatusBadge label={lang === 'th' ? op.th : op.en} tone={op.tone} dot />
+              <StatusBadge label={lang === 'th' ? wa.th : wa.en} tone={wa.tone} dot />
               <span className={`badge ${asset.connected ? 't-blue' : 't-grey'}`}>
                 {asset.connected ? <Wifi size={12} aria-hidden /> : <WifiOff size={12} aria-hidden />}
                 {asset.connected ? t('Monitoring connected', 'เชื่อมต่อมอนิเตอริ่ง') : t('Not connected', 'ไม่เชื่อมต่อ')}
@@ -124,14 +127,54 @@ export function AssetDetailPage() {
               )}
             </div>
           </div>
-          <div className="asset-head-right">
-            <div className="qr-mini" aria-hidden title={t('QR label on this asset', 'ป้าย QR บนอุปกรณ์นี้')}>
-              <QrCode size={54} strokeWidth={1.1} />
-              <span className="small muted">{asset.id}</span>
+
+          {/* Matched ac-rows grey detail box */}
+          <div className="ac-rows" style={{ flex: '1 1 300px', width: 'auto', minWidth: 280, height: 'auto', gap: 8, padding: '12px 14px' }}>
+            <div className="ac-row">
+              <MapPin size={15} aria-hidden />
+              <span className="ac-row-text" style={{ fontSize: 13, fontWeight: 500 }}>
+                {siteName(customerCode, asset.siteId, lang) || asset.location ? `${siteName(customerCode, asset.siteId, lang)} · ${asset.location}` : '—'}
+              </span>
             </div>
-            <Link to={`/portal/requests/new?asset=${asset.id}`} className="btn btn-primary">
-              <Plus size={16} aria-hidden />
-              {t('Report a problem', 'แจ้งปัญหา')}
+            <div className="ac-row">
+              <CalendarDays size={15} aria-hidden />
+              <span style={{ fontSize: 13, fontWeight: 500 }}>
+                {t('Next PM', 'PM ถัดไป')}: {asset.nextPM ? fmtDate(asset.nextPM, lang) : '—'}
+              </span>
+            </div>
+            <div className="ac-row">
+              <ShieldCheck size={15} aria-hidden />
+              <span style={{ fontSize: 13, fontWeight: 500 }}>
+                {t('Warranty until', 'ประกันถึง')} {asset.warrantyEnd && asset.warranty !== 'none' ? fmtDate(asset.warrantyEnd, lang) : '—'}
+              </span>
+            </div>
+          </div>
+
+          {/* Prominent QR Code Badge & Quick Action */}
+          <div className="asset-head-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, flexShrink: 0, marginLeft: 'auto' }}>
+            <div
+              className="qr-card"
+              title={t('QR label on this asset', 'ป้าย QR บนอุปกรณ์นี้')}
+              style={{
+                padding: '10px 14px',
+                borderRadius: 12,
+                border: '1px solid var(--se-border)',
+                background: '#ffffff',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 4,
+                cursor: 'pointer',
+              }}
+            >
+              <QrCode size={56} strokeWidth={1.3} style={{ color: 'var(--se-text)' }} />
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', color: 'var(--se-text-secondary)' }}>{asset.id}</span>
+            </div>
+
+            <Link to={`/portal/requests/new?asset=${asset.id}`} className="btn btn-soft btn-sm" style={{ width: '100%', justifyContent: 'center' }}>
+              <Plus size={14} aria-hidden />
+              {t('Report', 'แจ้งปัญหา')}
             </Link>
           </div>
         </div>

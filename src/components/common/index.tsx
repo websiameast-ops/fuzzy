@@ -6,31 +6,26 @@ import { useLang } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Tone } from '@/utils/status';
 
-/* ---------------- Logo ---------------- */
 const BASE = import.meta.env.BASE_URL;
-const LOGO_SOURCES = [
-  `${BASE}assets/se-connex-logo.svg`,
-  `${BASE}assets/se-connex-logo.png`,
-  `${BASE}se-connex-logo.svg`,
-  `${BASE}se-connex-logo.png`,
-];
 
-export function Logo({ height = 34 }: { height?: number }) {
-  const [idx, setIdx] = useState(0);
-  if (idx >= LOGO_SOURCES.length) {
-    return (
-      <span className="logo-placeholder" title="Place the official logo at public/assets/se-connex-logo.svg">
-        SE Connex logo asset required
-      </span>
-    );
-  }
+export function Logo({ height = 32, collapsed = false }: { height?: number; collapsed?: boolean }) {
   return (
-    <img
-      src={LOGO_SOURCES[idx]}
-      alt="SE Connex"
-      style={{ height, width: 'auto', display: 'block' }}
-      onError={() => setIdx((i) => i + 1)}
-    />
+    <div className="logo" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+      <img
+        src={`${BASE}assets/logo-connex.svg`}
+        alt="SE Connex"
+        className="logo-img"
+        style={{ height, width: 'auto', display: 'block', flexShrink: 0 }}
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = `${BASE}assets/se-connex-logo.png`;
+        }}
+      />
+      {!collapsed && (
+        <span className="lo-brand">
+          <span className="lo-se">SE</span> CONNEX
+        </span>
+      )}
+    </div>
   );
 }
 

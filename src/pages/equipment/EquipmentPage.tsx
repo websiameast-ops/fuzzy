@@ -332,18 +332,16 @@ export function EquipmentPage() {
                   <div className="ac-rows">
                     <div className="ac-row">
                       <MapPin size={14} aria-hidden />
-                      <span>{siteName(customerCode, a.siteId, lang)} · {a.location}</span>
+                      <span className="ac-row-text">{siteName(customerCode, a.siteId, lang) || a.location ? `${siteName(customerCode, a.siteId, lang)} · ${a.location}` : '—'}</span>
                     </div>
                     <div className="ac-row">
                       <CalendarDays size={14} aria-hidden />
                       <span>{t('Next PM', 'PM ถัดไป')}: {a.nextPM ? fmtDate(a.nextPM, lang) : '—'}</span>
                     </div>
-                    {a.warranty !== 'none' && (
-                      <div className="ac-row">
-                        <ShieldCheck size={14} aria-hidden />
-                        <span>{t('Warranty until', 'ประกันถึง')} {fmtDate(a.warrantyEnd, lang)}</span>
-                      </div>
-                    )}
+                    <div className="ac-row">
+                      <ShieldCheck size={14} aria-hidden />
+                      <span>{t('Warranty until', 'ประกันถึง')} {a.warrantyEnd && a.warranty !== 'none' ? fmtDate(a.warrantyEnd, lang) : '—'}</span>
+                    </div>
                   </div>
 
                   <div className="ac-foot">

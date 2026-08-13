@@ -31,17 +31,18 @@ function useOutsideClose(open: boolean, onClose: () => void) {
 }
 
 function LangToggle({ lang, setLang, label }: { lang: 'th' | 'en'; setLang: (l: 'th' | 'en') => void; label: string }) {
-  const next = lang === 'th' ? 'EN' : 'TH';
   return (
     <button
-      className="lang-globe-btn btn btn-ghost btn-sm"
+      type="button"
+      className={`wg-lang-flip ${lang === 'en' ? 'is-en' : 'is-th'}`}
       onClick={() => setLang(lang === 'th' ? 'en' : 'th')}
       aria-label={label}
-      title={`Switch to ${next}`}
     >
-      <Globe size={14} aria-hidden />
-      <span className="lang-globe-current">{lang.toUpperCase()}</span>
-      <span className="lang-globe-next" aria-hidden>→ {next}</span>
+      <Globe size={15} strokeWidth={2} className="wg-lang-globe" />
+      <div className="wg-lang-track">
+        <span className="wg-lang-text wg-lang-th">TH</span>
+        <span className="wg-lang-text wg-lang-en">EN</span>
+      </div>
     </button>
   );
 }
@@ -79,17 +80,18 @@ export function TopHeader({
             <span className="hide-mobile">{collapsed ? <PanelLeftOpen size={19} /> : <PanelLeftClose size={19} />}</span>
             <span className="only-mobile"><Menu size={20} /></span>
           </button>
-          <div style={{ minWidth: 0 }}>
+          <div className="topbar-header-info">
             <nav className="crumbs" aria-label="Breadcrumb">
-              <Link to="/portal">{t('Home', 'หน้าหลัก')}</Link>
+              <Link to="/portal" className="crumb-home" title={t('Home', 'หน้าหลัก')}>
+                {t('Home', 'หน้าหลัก')}
+              </Link>
               {location.pathname !== '/portal' && (
                 <>
-                  <span aria-hidden>/</span>
-                  <span className="current">{title}</span>
+                  <span className="crumb-sep" aria-hidden>›</span>
+                  <span className="crumb-page">{title}</span>
                 </>
               )}
             </nav>
-            <div className="topbar-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</div>
           </div>
         </div>
 
