@@ -16,9 +16,9 @@ export function EquipmentPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
 
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(() => params.get('q') ?? '');
   const [site, setSite] = useState(() => params.get('site') ?? '');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(() => params.get('category') ?? '');
   const [brand, setBrand] = useState('');
   const [status, setStatus] = useState('');
   const [connected, setConnected] = useState('');
@@ -90,6 +90,10 @@ export function EquipmentPage() {
           </p>
         </div>
         <div className="page-actions">
+          <Link to="/portal/equipment" className="btn btn-outline">
+            <LayoutGrid size={15} aria-hidden />
+            {t('Category Portal', 'หมวดหมู่สินค้า')}
+          </Link>
           <button className="btn btn-outline" onClick={() => setScanOpen(true)}>
             <QrCode size={16} aria-hidden />
             {t('Scan QR', 'สแกน QR')}

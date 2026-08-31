@@ -1,0 +1,834 @@
+/* ==========================================================================
+   Equipment Portal & Category Card Styles (Refined Industrial Design System)
+   - Top Category Image (16:10 / rounded corners)
+   - Headline 24px (Category Name)
+   - Subheadline 16px (Total Units & Thai description)
+   - Body 14px:
+     - Left Col: Operation (prominent fraction, vertical divider)
+     - Right Col: Warranty Status with colored dot indicators
+   - Action Button 16px (Full-width pill with micro-interaction)
+   - Interactive Telemetry Cards with Progress Meters & Filter Presets
+   - Dark Theme & Multi-Resolution Support
+   ========================================================================== */
+
+.equipment-portal-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding-bottom: 48px;
+  animation: fadeInPortal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInPortal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   1. Portal Page Header
+   -------------------------------------------------------------------------- */
+.portal-header-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 4px;
+}
+
+.portal-breadcrumb-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--se-primary);
+  background: var(--se-primary-soft);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(20, 93, 160, 0.12);
+}
+
+[data-theme='dark'] .portal-breadcrumb-tag {
+  border-color: rgba(88, 166, 255, 0.2);
+}
+
+.portal-pulse-live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--se-success);
+  box-shadow: 0 0 0 0 rgba(22, 133, 91, 0.5);
+  animation: livePulse 2s infinite;
+}
+
+@keyframes livePulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(22, 133, 91, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(22, 133, 91, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(22, 133, 91, 0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. Overview Telemetry Cards
+   -------------------------------------------------------------------------- */
+.portal-summary-ribbon {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.portal-ribbon-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--se-surface);
+  border: 1px solid var(--se-border);
+  border-radius: var(--radius-lg, 16px);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.portal-ribbon-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-pop);
+  border-color: var(--se-primary);
+}
+
+.portal-ribbon-card.is-active-card {
+  border-color: var(--se-primary);
+  background: var(--se-surface);
+  box-shadow: 0 0 0 2px var(--se-primary-soft), var(--shadow-card);
+}
+
+.portal-ribbon-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--se-grey-soft);
+  color: var(--se-text);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.portal-ribbon-card:hover .portal-ribbon-icon {
+  transform: scale(1.06);
+}
+
+.portal-ribbon-icon.ic-primary {
+  background: var(--se-primary-soft);
+  color: var(--se-primary);
+}
+
+.portal-ribbon-icon.ic-info {
+  background: var(--se-info-soft);
+  color: var(--se-info);
+}
+
+.portal-ribbon-icon.ic-success {
+  background: var(--se-success-soft);
+  color: var(--se-success);
+}
+
+.portal-ribbon-icon.ic-warning {
+  background: var(--se-warning-soft);
+  color: var(--se-warning);
+}
+
+.portal-ribbon-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.ribbon-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--se-text-secondary);
+  letter-spacing: -0.01em;
+}
+
+.ribbon-main-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 2px 0 3px;
+}
+
+.ribbon-num {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--se-text);
+  line-height: 1.15;
+  font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums;
+}
+
+.ribbon-num.highlight-soon {
+  color: var(--se-warning, #d89016);
+}
+
+.ribbon-total {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--se-text-muted);
+}
+
+.ribbon-sub {
+  font-size: 12px;
+  color: var(--se-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ribbon-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.ribbon-progress-track {
+  width: 100%;
+  height: 4px;
+  background: var(--se-grey-soft);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.ribbon-progress-fill {
+  height: 100%;
+  background: var(--se-success);
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+/* --------------------------------------------------------------------------
+   3. TailAdmin Enterprise Control Toolbar (Clean, Sharp, Human Design)
+   -------------------------------------------------------------------------- */
+.portal-control-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--se-surface);
+  border: 1px solid var(--se-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme='dark'] .portal-control-bar {
+  background: #1a222c;
+  border-color: #2e3a47;
+}
+
+.portal-control-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  max-width: 520px;
+}
+
+/* Search Box */
+.portal-custom-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 180px;
+}
+
+.portal-custom-search .portal-search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 13px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.portal-custom-search .portal-search-input {
+  width: 100%;
+  height: 38px;
+  padding-left: 36px !important;
+  padding-right: 30px !important;
+  border: 1px solid var(--se-border);
+  border-radius: 6px;
+  background-color: var(--se-background);
+  color: var(--se-text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+[data-theme='dark'] .portal-custom-search .portal-search-input {
+  background-color: #24303f;
+  border-color: #2e3a47;
+  color: #f0f6fc;
+}
+
+.portal-custom-search .portal-search-input:focus {
+  border-color: var(--se-primary);
+  box-shadow: 0 0 0 2px var(--se-primary-soft);
+  background-color: var(--se-surface);
+}
+
+[data-theme='dark'] .portal-custom-search .portal-search-input:focus {
+  background-color: #1a222c;
+}
+
+.portal-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.portal-search-clear:hover {
+  color: var(--se-text);
+}
+
+/* Site Selector */
+.portal-site-selector-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 175px;
+  flex-shrink: 0;
+}
+
+.portal-site-selector-wrap .portal-site-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 13px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.portal-site-select {
+  width: 100%;
+  height: 38px;
+  padding-left: 32px !important;
+  padding-right: 28px !important;
+  border: 1px solid var(--se-border);
+  border-radius: 6px;
+  background-color: var(--se-background);
+  color: var(--se-text);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+[data-theme='dark'] .portal-site-select {
+  background-color: #24303f;
+  border-color: #2e3a47;
+  color: #f0f6fc;
+}
+
+.portal-site-select:focus {
+  border-color: var(--se-primary);
+  box-shadow: 0 0 0 2px var(--se-primary-soft);
+}
+
+/* Right Side Controls */
+.portal-control-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Filter Segment Tabs */
+.portal-filter-segment {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  background: var(--se-background);
+  border: 1px solid var(--se-border);
+  padding: 3px;
+  border-radius: 6px;
+  gap: 2px;
+}
+
+[data-theme='dark'] .portal-filter-segment {
+  background: #24303f;
+  border-color: #2e3a47;
+}
+
+.portal-segment-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: inherit;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--se-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.portal-segment-tab:hover {
+  color: var(--se-text);
+}
+
+.portal-segment-tab.active {
+  background: var(--se-surface);
+  color: var(--se-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='dark'] .portal-segment-tab.active {
+  background: #1a222c;
+  color: #58a6ff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.portal-segment-tab .tab-num {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--se-text-muted);
+}
+
+.portal-segment-tab.active .tab-num {
+  color: var(--se-primary);
+}
+
+[data-theme='dark'] .portal-segment-tab.active .tab-num {
+  color: #58a6ff;
+}
+
+.portal-segment-tab .num-warn {
+  color: #d97706;
+}
+
+.portal-segment-tab .num-alert {
+  color: #dc2626;
+}
+
+/* Reset Button */
+.portal-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid var(--se-border);
+  background: var(--se-surface);
+  color: var(--se-text-secondary);
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+[data-theme='dark'] .portal-clear-btn {
+  background: #24303f;
+  border-color: #2e3a47;
+}
+
+.portal-clear-btn:hover {
+  border-color: var(--se-danger);
+  color: var(--se-danger);
+  background: var(--se-danger-soft);
+}
+
+/* Meta Summary Badge */
+.portal-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--se-text-secondary);
+  background: var(--se-background);
+  border: 1px solid var(--se-border);
+  padding: 0 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+[data-theme='dark'] .portal-count-badge {
+  background: #24303f;
+  border-color: #2e3a47;
+  color: #c9d1d9;
+}
+
+@media (max-width: 1024px) {
+  .portal-control-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .portal-control-left {
+    max-width: 100%;
+  }
+  .portal-control-right {
+    justify-content: space-between;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+}
+
+@media (max-width: 640px) {
+  .portal-control-left {
+    flex-direction: column;
+  }
+  .portal-site-selector-wrap {
+    width: 100%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. Category Grid Section
+   -------------------------------------------------------------------------- */
+.cat-portal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .cat-portal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. Category Portal Card Component (Refined 2-Column Wireframe Structure)
+   -------------------------------------------------------------------------- */
+.cat-portal-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--se-surface);
+  border: 1px solid var(--se-border);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cat-portal-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-pop);
+  border-color: var(--se-primary);
+}
+
+/* 1. Category Top Image (16:10 with rounded corners) */
+.cat-card-media {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--se-grey-soft);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+[data-theme='dark'] .cat-card-media {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.cat-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cat-portal-card:hover .cat-card-img {
+  transform: scale(1.04);
+}
+
+/* 2. Headline (24px) & Subheadline (16px) */
+.cat-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.cat-headline {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--se-text);
+  line-height: 1.25;
+  margin: 0;
+  letter-spacing: -0.015em;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cat-subheadline {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--se-text-secondary);
+  line-height: 1.4;
+  margin: 0;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 3. Body Section (14px) - 2 Columns with Vertical Divider */
+.cat-card-body {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  color: var(--se-text);
+  margin-bottom: 20px;
+  flex-grow: 1;
+}
+
+.cat-metrics-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  border-top: 1px solid var(--se-border);
+  padding-top: 14px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* Column 1: Operation (Numbers Only, Large, with Right Divider) */
+.cat-metric-col-operation {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-right: 14px;
+  border-right: 1px solid var(--se-border);
+}
+
+.cat-stat-heading {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--se-text-muted);
+  margin-bottom: 8px;
+}
+
+.cat-operation-display {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  padding-top: 4px;
+}
+
+.cat-operation-main-val {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--se-text);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums;
+}
+
+/* Column 2: Warranty Status with Colored Dots */
+.cat-metric-col-warranty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cat-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13.5px;
+  line-height: 1.4;
+  border-radius: 6px;
+  padding: 3px 6px;
+  margin: -2px -6px;
+  transition: background-color 0.15s ease;
+}
+
+.cat-stat-clickable {
+  cursor: pointer;
+}
+
+.cat-stat-clickable:hover {
+  background: var(--se-grey-soft);
+}
+
+.cat-status-dot-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Colored Status Dots */
+.cat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cat-dot.dot-green {
+  background-color: var(--se-success, #16855b);
+  box-shadow: 0 0 0 2px var(--se-success-soft, #eaf7f1);
+}
+
+.cat-dot.dot-orange {
+  background-color: var(--se-warning, #d97706);
+  box-shadow: 0 0 0 2px var(--se-warning-soft, #fff6e2);
+}
+
+.cat-dot.dot-red {
+  background-color: var(--se-danger, #dc2626);
+  box-shadow: 0 0 0 2px var(--se-danger-soft, #fdedef);
+}
+
+.cat-status-row .stat-label {
+  color: var(--se-text-secondary);
+  font-weight: 500;
+}
+
+.cat-status-row .stat-value {
+  font-weight: 700;
+  font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums;
+}
+
+.cat-status-row .stat-value.val-green {
+  color: var(--se-success, #16855b);
+}
+
+.cat-status-row .stat-value.val-orange {
+  color: var(--se-warning, #d97706);
+}
+
+.cat-status-row .stat-value.val-red {
+  color: var(--se-danger, #dc2626);
+}
+
+.cat-status-row .stat-value.muted {
+  color: var(--se-text-muted);
+  font-weight: 500;
+}
+
+/* 4. Action Button (16px) */
+.cat-card-actions {
+  display: flex;
+  width: 100%;
+  margin-top: auto;
+}
+
+.cat-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 48px;
+  padding: 0 20px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--se-charcoal, #24272c);
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: -0.01em;
+}
+
+.cat-btn-primary:hover {
+  background: #000000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cat-btn-icon {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cat-portal-card:hover .cat-btn-icon {
+  transform: translateX(4px);
+}
+
+[data-theme='dark'] .cat-btn-primary {
+  background: var(--se-primary);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .cat-btn-primary:hover {
+  background: var(--se-primary-hover);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(88, 166, 255, 0.25);
+}

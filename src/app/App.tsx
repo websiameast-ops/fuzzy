@@ -12,6 +12,7 @@ import { LoginPage, LogoutRoute } from '@/pages/auth/LoginPage';
 import { DashboardPage } from '@/pages/dashboard/DashboardPage';
 import { NewsPage, NewsDetailPage } from '@/pages/news/NewsPage';
 import { EquipmentPage } from '@/pages/equipment/EquipmentPage';
+import { EquipmentPortalPage } from '@/pages/equipment/EquipmentPortalPage';
 import { AssetDetailPage } from '@/pages/equipment/AssetDetailPage';
 import { SitesMapPage, SiteDetailPage } from '@/pages/sites/SitesMapPage';
 import { IoTMonitoringPage } from '@/pages/iot/IoTMonitoringPage';
@@ -68,7 +69,8 @@ export function App() {
             <Route index element={<DashboardPage />} />
             <Route path="news" element={<NewsPage />} />
             <Route path="news/:id" element={<NewsDetailPage />} />
-            <Route path="equipment" element={<EquipmentPage />} />
+            <Route path="equipment" element={<EquipmentPortalPage />} />
+            <Route path="equipment/list" element={<EquipmentPage />} />
             <Route path="equipment/:assetId" element={<AssetDetailPage />} />
             <Route path="map" element={<SitesMapPage />} />
             <Route path="map/:siteId" element={<SiteDetailPage />} />
