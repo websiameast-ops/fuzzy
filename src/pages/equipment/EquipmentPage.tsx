@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { CalendarDays, Camera, Filter, LayoutGrid, MapPin, Package, Plus, QrCode, Rows3, ShieldCheck, SlidersHorizontal, Wifi, WifiOff, X } from 'lucide-react';
+import { MapPin, Package, QrCode, SlidersHorizontal, X } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { EmptyState, ExportButton, QRScannerMock, SearchBox, StatusBadge } from '@/components/common';
 import { assetsFor } from '@/data/mockAssets';
 import { siteName } from '@/data/mockCompanies';
-import { fmtDate } from '@/utils/format';
+import { daysSince, fmtDate } from '@/utils/format';
 import { OPERATING_STATUS, WARRANTY_STATUS } from '@/utils/status';
 import type { WarrantyStatus } from '@/types';
 
@@ -24,7 +24,6 @@ export function EquipmentPage() {
   const [connected, setConnected] = useState('');
   const [year, setYear] = useState('');
   const [sort, setSort] = useState('name');
-  const [view, setView] = useState<'cards' | 'table'>('cards');
   const [scanOpen, setScanOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -90,10 +89,6 @@ export function EquipmentPage() {
           </p>
         </div>
         <div className="page-actions">
-          <Link to="/portal/equipment" className="btn btn-outline">
-            <LayoutGrid size={15} aria-hidden />
-            {t('Category Portal', 'หมวดหมู่สินค้า')}
-          </Link>
           <button className="btn btn-outline" onClick={() => setScanOpen(true)}>
             <QrCode size={16} aria-hidden />
             {t('Scan QR', 'สแกน QR')}
@@ -210,15 +205,6 @@ export function EquipmentPage() {
             <option value="oldest">{t('Sort: Oldest Install', 'เรียง: ติดตั้งเก่าสุด')}</option>
             <option value="warranty">{t('Sort: Warranty End', 'เรียง: วันหมดประกัน')}</option>
           </select>
-
-          <div className="seg eq-view-seg" role="group" aria-label={t('View mode', 'รูปแบบการแสดงผล')}>
-            <button className={view === 'cards' ? 'active' : ''} onClick={() => setView('cards')} aria-pressed={view === 'cards'} aria-label={t('Card view', 'มุมมองการ์ด')}>
-              <LayoutGrid size={15} aria-hidden />
-            </button>
-            <button className={view === 'table' ? 'active' : ''} onClick={() => setView('table')} aria-pressed={view === 'table'} aria-label={t('Table view', 'มุมมองตาราง')}>
-              <Rows3 size={15} aria-hidden />
-            </button>
-          </div>
         </div>
 
         {/* Collapsible Advanced Filters Drawer */}
@@ -302,75 +288,7 @@ export function EquipmentPage() {
         />
       )}
 
-      {view === 'cards' && (
-        <div className="grid-3">
-          {filtered.map((a) => {
-            const op = OPERATING_STATUS[a.status];
-            const wa = WARRANTY_STATUS[a.warranty];
-            return (
-              <div key={a.id} className="card asset-card-new">
-                {a.image && (
-                  <Link to={`/portal/equipment/${a.id}`} className="ac-photo" tabIndex={-1} aria-hidden>
-                    <img src={a.image} alt="" loading="lazy" />
-                    <span className={`ac-photo-pill t-${op.tone}`}>
-                      <Camera size={11} aria-hidden /> {t('Photo', 'รูป')}
-                    </span>
-                  </Link>
-                )}
-                <div className="ac-body">
-                  <div className="ac-head">
-                    <div className={`ac-icon ic-${op.tone}`} aria-hidden>
-                      <Package size={22} strokeWidth={1.5} />
-                    </div>
-                    <div className="ac-title">
-                      <Link to={`/portal/equipment/${a.id}`} className="ac-name">{a.name}</Link>
-                      <div className="ac-meta">{a.id} · {a.brand} {a.model}</div>
-                    </div>
-                  </div>
-
-                  <div className="ac-badges">
-                    <StatusBadge label={lang === 'th' ? op.th : op.en} tone={op.tone} dot />
-                    <StatusBadge label={lang === 'th' ? wa.th : wa.en} tone={wa.tone} dot />
-                  </div>
-
-                  <div className="ac-rows">
-                    <div className="ac-row">
-                      <MapPin size={14} aria-hidden />
-                      <span className="ac-row-text">{siteName(customerCode, a.siteId, lang) || a.location ? `${siteName(customerCode, a.siteId, lang)} · ${a.location}` : '—'}</span>
-                    </div>
-                    <div className="ac-row">
-                      <CalendarDays size={14} aria-hidden />
-                      <span>{t('Next PM', 'PM ถัดไป')}: {a.nextPM ? fmtDate(a.nextPM, lang) : '—'}</span>
-                    </div>
-                    <div className="ac-row">
-                      <ShieldCheck size={14} aria-hidden />
-                      <span>{t('Warranty until', 'ประกันถึง')} {a.warrantyEnd && a.warranty !== 'none' ? fmtDate(a.warrantyEnd, lang) : '—'}</span>
-                    </div>
-                  </div>
-
-                  <div className="ac-foot">
-                    <span className={`badge ${a.connected ? 't-blue' : 't-grey'}`}>
-                      {a.connected ? <Wifi size={13} aria-hidden /> : <WifiOff size={13} aria-hidden />}
-                      {a.connected ? t('Connected', 'เชื่อมต่อ') : t('Not connected', 'ไม่เชื่อมต่อ')}
-                    </span>
-                    <div className="ac-actions">
-                      <Link to={`/portal/equipment/${a.id}`} className="btn btn-outline btn-sm">
-                        {t('View', 'ดู')}
-                      </Link>
-                      <Link to={`/portal/requests/new?asset=${a.id}`} className="btn btn-soft btn-sm">
-                        <Plus size={14} aria-hidden />
-                        {t('Report', 'แจ้ง')}
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {view === 'table' && filtered.length > 0 && (
+      {filtered.length > 0 && (
         <div className="card table-to-cards" style={{ overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
             <table className="se-table">
@@ -379,6 +297,7 @@ export function EquipmentPage() {
                   <th>{t('Asset', 'อุปกรณ์')}</th>
                   <th>{t('Site', 'ไซต์')}</th>
                   <th>{t('Category', 'หมวด')}</th>
+                  <th>{t('Purchase Date', 'วันที่ซื้อ')}</th>
                   <th>{t('Status', 'สถานะ')}</th>
                   <th>{t('Warranty', 'การรับประกัน')}</th>
                   <th>{t('Next PM', 'PM ถัดไป')}</th>
@@ -389,6 +308,8 @@ export function EquipmentPage() {
                 {filtered.map((a) => {
                   const op = OPERATING_STATUS[a.status];
                   const wa = WARRANTY_STATUS[a.warranty];
+                  const pDate = a.purchaseDate || a.events?.find((e) => e.type === 'sale')?.date || a.installDate || a.warrantyStart || '2024-01-15';
+                  const days = Math.max(1, daysSince(pDate));
                   return (
                     <tr key={a.id} className="row-link" onClick={() => navigate(`/portal/equipment/${a.id}`)}>
                       <td data-label={t('Asset', 'อุปกรณ์')}>
@@ -397,10 +318,24 @@ export function EquipmentPage() {
                       </td>
                       <td data-label={t('Site', 'ไซต์')}>{siteName(customerCode, a.siteId, lang)}</td>
                       <td data-label={t('Category', 'หมวด')}>{a.category}</td>
+                      <td data-label={t('Purchase Date', 'วันที่ซื้อ')}>
+                        <div className="fw-500">{fmtDate(pDate, lang)}</div>
+                        <div className="muted small" style={{ color: 'var(--se-text-secondary)' }}>
+                          {t(`Total ${days} days`, `รวม ${days} วัน`)}
+                        </div>
+                      </td>
                       <td data-label={t('Status', 'สถานะ')}><StatusBadge label={lang === 'th' ? op.th : op.en} tone={op.tone} /></td>
                       <td data-label={t('Warranty', 'การรับประกัน')}>
-                        <StatusBadge label={lang === 'th' ? wa.th : wa.en} tone={wa.tone} />
-                        {a.warranty !== 'none' && <div className="muted small">{fmtDate(a.warrantyEnd, lang)}</div>}
+                        {a.warranty === 'none' ? (
+                          <span className="muted small">{t('No warranty', 'ไม่มีประกัน')}</span>
+                        ) : (
+                          <div>
+                            <StatusBadge label={lang === 'th' ? wa.th : wa.en} tone={wa.tone} />
+                            <div className="muted small" style={{ marginTop: 3 }}>
+                              {t('Expires:', 'หมดอายุ:')} {fmtDate(a.warrantyEnd, lang)}
+                            </div>
+                          </div>
+                        )}
                       </td>
                       <td data-label={t('Next PM', 'PM ถัดไป')}>{a.nextPM ? fmtDate(a.nextPM, lang) : '—'}</td>
                       <td data-label={t('Actions', 'การทำงาน')}>

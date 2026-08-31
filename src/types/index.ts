@@ -98,6 +98,7 @@ export interface Asset {
   location: string;
   status: OperatingStatus;
   warranty: WarrantyStatus;
+  purchaseDate?: string;
   warrantyStart: string;
   warrantyEnd: string;
   installDate: string;

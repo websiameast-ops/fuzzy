@@ -14,6 +14,7 @@ import {
   Plus,
   QrCode,
   ShieldCheck,
+  ShoppingBag,
   Wifi,
   WifiOff,
   Zap,
@@ -28,7 +29,7 @@ import { getAsset } from '@/data/mockAssets';
 import { siteName } from '@/data/mockCompanies';
 import { getContract } from '@/data/mockContracts';
 import { getReport } from '@/data/mockHistory';
-import { fmtDate, num } from '@/utils/format';
+import { daysSince, fmtDate, num } from '@/utils/format';
 import { OPERATING_STATUS, REQUEST_STATUS, WARRANTY_STATUS } from '@/utils/status';
 import type { ServiceRecord } from '@/types';
 
@@ -78,6 +79,8 @@ export function AssetDetailPage() {
   const wa = WARRANTY_STATUS[asset.warranty];
   const contract = asset.contractId ? getContract(asset.contractId) : undefined;
   const activeAlarms = asset.iot?.alarms.filter((a) => a.active) ?? [];
+  const pDate = asset.purchaseDate || asset.events?.find((e) => e.type === 'sale')?.date || asset.installDate || asset.warrantyStart || '2024-01-15';
+  const days = Math.max(1, daysSince(pDate));
 
   const TABS: { key: TabKey; en: string; th: string }[] = [
     { key: 'overview', en: 'Overview', th: 'ภาพรวม' },
@@ -134,6 +137,12 @@ export function AssetDetailPage() {
               <MapPin size={15} aria-hidden />
               <span className="ac-row-text" style={{ fontSize: 13, fontWeight: 500 }}>
                 {siteName(customerCode, asset.siteId, lang) || asset.location ? `${siteName(customerCode, asset.siteId, lang)} · ${asset.location}` : '—'}
+              </span>
+            </div>
+            <div className="ac-row">
+              <ShoppingBag size={15} aria-hidden />
+              <span style={{ fontSize: 13, fontWeight: 500 }}>
+                {t('Purchased', 'วันที่ซื้อ')}: {fmtDate(pDate, lang)} ({t(`Total ${days} days`, `รวม ${days} วัน`)})
               </span>
             </div>
             <div className="ac-row">
@@ -203,6 +212,8 @@ export function AssetDetailPage() {
             <h3 style={{ marginTop: 0 }}>{t('Key information', 'ข้อมูลสำคัญ')}</h3>
             <div className="stat-line"><span className="k">{t('Category', 'หมวด')}</span><span className="v">{asset.category}</span></div>
             <div className="stat-line"><span className="k">{t('SE division', 'ฝ่ายที่ดูแล')}</span><span className="v">{asset.division}</span></div>
+            <div className="stat-line"><span className="k">{t('Purchased', 'วันที่ซื้อ')}</span><span className="v">{fmtDate(pDate, lang)}</span></div>
+            <div className="stat-line"><span className="k">{t('Total age', 'รวมระยะเวลา')}</span><span className="v">{t(`Total ${days} days`, `รวมทั้งหมด ${days} วัน`)}</span></div>
             <div className="stat-line"><span className="k">{t('Installed', 'ติดตั้งเมื่อ')}</span><span className="v">{fmtDate(asset.installDate, lang)}</span></div>
             <div className="stat-line"><span className="k">{t('Commissioned', 'ทดสอบเดินเครื่อง')}</span><span className="v">{fmtDate(asset.commissionDate, lang)}</span></div>
             <div className="stat-line">
