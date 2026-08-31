@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { pageMeta } from '@/utils/nav';
 import { initials } from '@/utils/format';
-import { Modal, ContactSECard } from '@/components/common';
+import { Modal, ContactSECard, LanguageSelector } from '@/components/common';
 
 function useOutsideClose(open: boolean, onClose: () => void) {
   const ref = useRef<HTMLDivElement>(null);
@@ -28,23 +28,6 @@ function useOutsideClose(open: boolean, onClose: () => void) {
     };
   }, [open, onClose]);
   return ref;
-}
-
-function LangToggle({ lang, setLang, label }: { lang: 'th' | 'en'; setLang: (l: 'th' | 'en') => void; label: string }) {
-  return (
-    <button
-      type="button"
-      className={`wg-lang-flip ${lang === 'en' ? 'is-en' : 'is-th'}`}
-      onClick={() => setLang(lang === 'th' ? 'en' : 'th')}
-      aria-label={label}
-    >
-      <Globe size={15} strokeWidth={2} className="wg-lang-globe" />
-      <div className="wg-lang-track">
-        <span className="wg-lang-text wg-lang-th">TH</span>
-        <span className="wg-lang-text wg-lang-en">EN</span>
-      </div>
-    </button>
-  );
 }
 
 export function TopHeader({
@@ -135,8 +118,8 @@ export function TopHeader({
             )}
           </div>
 
-          {/* Language — sliding pill toggle */}
-          <LangToggle lang={lang} setLang={setLang} label={t('Language', 'ภาษา')} />
+          {/* Language Selector Dropdown */}
+          <LanguageSelector />
 
 
           {/* Notifications */}

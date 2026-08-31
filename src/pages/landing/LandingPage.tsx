@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Globe } from 'lucide-react';
 import { ContactWidget } from '@/components/landing/ContactWidget';
 import { CookieConsentBanner } from '@/components/landing/CookieConsentBanner';
+import { LanguageSelector } from '@/components/common';
+import { useLang } from '@/contexts/LanguageContext';
 import { getAssetUrl } from '@/utils/assets';
 import '@/styles/landing.css';
 
@@ -322,7 +323,7 @@ export function LandingPage() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
-  const [lang, setLang] = useState<Lang>('th');
+  const { lang } = useLang();
   const t = T[lang];
   const root = useReveal([]);
 
@@ -338,7 +339,6 @@ export function LandingPage() {
   }, [videoModalOpen]);
 
   const goLogin = () => navigate('/login');
-  const toggleLang = () => setLang((l) => l === 'en' ? 'th' : 'en');
 
   return (
     <div ref={root} className="se-landing">
@@ -357,18 +357,7 @@ export function LandingPage() {
             <a href={SE.about} target="_blank" rel="noopener">{t.navAbout}</a>
           </nav>
           <div className="nav-actions">
-            <button
-              type="button"
-              className={`wg-lang-flip ${lang === 'en' ? 'is-en' : 'is-th'}`}
-              onClick={toggleLang}
-              aria-label={lang === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย'}
-            >
-              <Globe size={15} strokeWidth={2} className="wg-lang-globe" />
-              <div className="wg-lang-track">
-                <span className="wg-lang-text wg-lang-th">TH</span>
-                <span className="wg-lang-text wg-lang-en">EN</span>
-              </div>
-            </button>
+            <LanguageSelector />
             <button className="btn btn-nav-signin btn-sm" onClick={goLogin}>{t.signIn}</button>
           </div>
           <button className="nav-hamburger" aria-label="Toggle menu" onClick={() => setMobileMenuOpen((o) => !o)}>
@@ -385,18 +374,7 @@ export function LandingPage() {
         <a href={SE.about} target="_blank" rel="noopener" onClick={() => setMobileMenuOpen(false)}>{t.navAbout}</a>
         <div className="nav-mobile-divider" />
         <div className="nav-mobile-actions">
-          <button
-            type="button"
-            className={`wg-lang-flip ${lang === 'en' ? 'is-en' : 'is-th'}`}
-            onClick={() => { toggleLang(); setMobileMenuOpen(false); }}
-            aria-label={lang === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย'}
-          >
-            <Globe size={15} strokeWidth={2} className="wg-lang-globe" />
-            <div className="wg-lang-track">
-              <span className="wg-lang-text wg-lang-th">TH</span>
-              <span className="wg-lang-text wg-lang-en">EN</span>
-            </div>
-          </button>
+          <LanguageSelector onSelect={() => setMobileMenuOpen(false)} />
           <button className="btn btn-nav-signin btn-sm" onClick={() => { goLogin(); setMobileMenuOpen(false); }}>{t.signIn}</button>
         </div>
       </div>

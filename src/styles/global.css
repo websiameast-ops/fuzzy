@@ -615,7 +615,169 @@ button {
   color: #fff;
 }
 
-/* â”€â”€ Weglot-inspired 3D Flip Switch â”€â”€ */
+/* ── Reusable Language Selector with Dropdown ── */
+.se-lang-selector-wrap {
+  position: relative;
+  display: inline-flex;
+  z-index: 100;
+}
+
+.se-lang-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border-radius: 9999px;
+  border: 1.5px solid var(--se-border);
+  background: var(--se-card);
+  color: var(--se-text-secondary);
+  cursor: pointer;
+  transition: all .2s ease;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  outline: none;
+  user-select: none;
+}
+
+.se-lang-btn:hover,
+.se-lang-btn.is-active {
+  border-color: var(--se-primary);
+  color: var(--se-primary);
+  background: var(--se-card);
+  box-shadow: 0 2px 10px rgba(20, 93, 160, 0.12);
+}
+
+.se-lang-globe-icon {
+  color: currentColor;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.se-lang-btn:hover .se-lang-globe-icon {
+  transform: rotate(20deg);
+}
+
+.se-lang-code-text {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  line-height: 1;
+}
+
+.se-lang-chevron {
+  opacity: 0.7;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.se-lang-chevron.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.se-lang-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 175px;
+  background: var(--se-surface);
+  border: 1px solid var(--se-border);
+  border-radius: 10px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  padding: 6px;
+  z-index: 1200;
+  animation: seLangFadeIn 0.15s ease-out;
+}
+
+[data-theme='dark'] .se-lang-dropdown-menu {
+  background: #1a222c;
+  border-color: #2e3a47;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes seLangFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.se-lang-menu-header {
+  padding: 5px 8px 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--se-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--se-border);
+  margin-bottom: 4px;
+}
+
+.se-lang-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.se-lang-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--se-text);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.se-lang-menu-item:hover {
+  background: var(--se-primary-soft);
+  color: var(--se-primary);
+}
+
+.se-lang-menu-item.selected {
+  background: var(--se-primary-soft);
+  color: var(--se-primary);
+  font-weight: 600;
+}
+
+.se-lang-flag {
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.se-lang-names {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.se-lang-native-name {
+  font-size: 12.5px;
+}
+
+.se-lang-check-icon {
+  color: var(--se-primary);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ── Weglot-inspired 3D Flip Switch (Legacy Fallback) ── */
 .wg-lang-flip {
   display: inline-flex;
   align-items: center;

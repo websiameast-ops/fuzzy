@@ -455,3 +455,6 @@ export function SignaturePadMock({ onChange }: { onChange: (hasInk: boolean) => 
     </div>
   );
 }
+
+export { LanguageSelector, SUPPORTED_LANGUAGES } from './LanguageSelector';
+
