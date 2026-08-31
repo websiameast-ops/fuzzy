@@ -19,46 +19,61 @@ import { getAssetUrl } from '@/utils/assets';
 import { CategoryPortalCard, type CategorySummary } from './CategoryPortalCard';
 
 const CATEGORY_IMAGE_MAP: Record<string, string> = {
-  'Pump': getAssetUrl('assets/connect_every_pump_xn.webp'),
-  'Metering & Instrumentation': getAssetUrl('assets/easy_meter_xn.webp'),
-  'Monitoring & IoT': getAssetUrl('assets/iot_device_xn.webp'),
-  'Solar & Energy': getAssetUrl('assets/smartet_energy_xn.webp'),
-  'Valve': getAssetUrl('assets/manage_services_xn.webp'),
+  'Pump': getAssetUrl('assets/Pump.webp'),
+  'Pump / Pump System': getAssetUrl('assets/Pump.webp'),
+  'Mixer': getAssetUrl('assets/Mixer.webp'),
+  'Mixer / Agitator': getAssetUrl('assets/Mixer.webp'),
+  'Service': getAssetUrl('assets/Service.webp'),
+  'Service / Control': getAssetUrl('assets/Service.webp'),
+  'Spare Part': getAssetUrl('assets/Sparepart.webp'),
+  'Sparepart': getAssetUrl('assets/Sparepart.webp'),
+  'Spare Part / Kit': getAssetUrl('assets/Sparepart.webp'),
+  'Other': getAssetUrl('assets/Other.webp'),
+  'Other / Verify': getAssetUrl('assets/Other.webp'),
+  'Metering & Instrumentation': getAssetUrl('assets/Other.webp'),
+  'Monitoring & IoT': getAssetUrl('assets/Other.webp'),
+  'Solar & Energy': getAssetUrl('assets/Other.webp'),
+  'Valve': getAssetUrl('assets/Other.webp'),
 };
 
 const CATEGORY_META: Record<
   string,
-  { th: string; subCategories: string[]; descEn: string; descTh: string }
+  { displayName: string; th: string; subCategories: string[]; descEn: string; descTh: string }
 > = {
   'Pump': {
+    displayName: 'PUMP / PUMP SYSTEM',
     th: 'ระบบปั๊มและอุปกรณ์หมุน',
-    subCategories: ['Vertical Multistage', 'End-suction', 'Split-case', 'Slurry Pump'],
+    subCategories: ['Vertical Multistage', 'End-suction', 'Split-case', 'Submersible Pump'],
     descEn: 'Vertical multistage, end-suction and split-case industrial pump systems.',
     descTh: 'ระบบปั๊มอุตสาหกรรม ปั๊มน้ำหล่อเย็น และปั๊มเคมีแรงดันสูง',
   },
-  'Valve': {
-    th: 'วาล์วและระบบควบคุมการไหล',
-    subCategories: ['Butterfly Valve', 'Ball Valve', 'Control Valve', 'Pneumatic Actuator'],
-    descEn: 'Butterfly, ball, and control valves with pneumatic actuators.',
-    descTh: 'วาล์วควบคุมการไหล วาล์วผีเสื้อ และหัวขับลมสำหรับไลน์ผลิต',
+  'Mixer': {
+    displayName: 'MIXER / AGITATOR',
+    th: 'เครื่องกวนและถังกวนผสม',
+    subCategories: ['Top Entry Agitator', 'Side Entry Mixer', 'Static Mixer', 'Inline Blender'],
+    descEn: 'Top-entry agitators, high-shear mixers, and fluid blending systems.',
+    descTh: 'เครื่องกวนผสมแนวตั้ง มิกเซอร์ถังกวน และระบบผสมของเหลว',
   },
-  'Metering & Instrumentation': {
-    th: 'เครื่องมือวัดและเซนเซอร์',
-    subCategories: ['Electromagnetic Flowmeter', 'Pressure Transmitter', 'Ultrasonic Level Meter'],
-    descEn: 'Electromagnetic flowmeters, ultrasonic level and pressure transmitters.',
-    descTh: 'เครื่องวัดอัตราการไหล มิเตอร์น้ำ และเซนเซอร์วัดระดับในถัง',
+  'Service': {
+    displayName: 'SERVICE / CONTROL',
+    th: 'ระบบควบคุมและบริการบำรุงรักษา',
+    subCategories: ['Control Panel', 'PLC & SCADA', 'Overhaul Service', 'Field Calibration'],
+    descEn: 'Industrial control panels, automation systems, and scheduled service solutions.',
+    descTh: 'ตู้ควบคุมระบบไฟฟ้า PLC ระบบอัตโนมัติ และงานบริการซ่อมบำรุง',
   },
-  'Solar & Energy': {
-    th: 'ระบบโซลาร์และพลังงาน',
-    subCategories: ['Solar PV Inverter', 'Rooftop PV Array', 'Power Conditioning Unit'],
-    descEn: 'Solar PV inverters, rooftop arrays, and power conditioning units.',
-    descTh: 'ระบบโซลาร์รูฟท็อป อินเวอร์เตอร์แปลงไฟ และตู้ควบคุมพลังงาน',
+  'Spare Part': {
+    displayName: 'SPARE PART / KIT',
+    th: 'อะไหล่แท้และชุดอุปกรณ์ซ่อมบำรุง',
+    subCategories: ['Mechanical Seal', 'Impeller & Casing', 'Bearing Kit', 'Gasket & O-Ring'],
+    descEn: 'Original spare parts, seal kits, bearings, and replacement components.',
+    descTh: 'แมคคานิคอลซีล ใบพัดปั๊ม ตลับลูกปืน และชุดประเก็นโอริงแท้',
   },
-  'Monitoring & IoT': {
-    th: 'ระบบตรวจวัดและ IoT',
-    subCategories: ['IoT Edge Gateway', 'Vibration Transmitter', 'Telemetry Pod'],
-    descEn: 'IoT edge gateways, vibration transmitters, and telemetry pods.',
-    descTh: 'กล่องรับส่งสัญญาณ IoT เซนเซอร์วัดแรงสั่นสะเทือนแบบไร้สาย',
+  'Other': {
+    displayName: 'OTHER / VERIFY',
+    th: 'เครื่องมือตรวจสอบและอุปกรณ์อื่นๆ',
+    subCategories: ['Inspection Tool', 'Verification Kit', 'Power Quality Meter', 'Flow Verification'],
+    descEn: 'Inspection tools, verification equipment, and auxiliary industrial units.',
+    descTh: 'เครื่องมือตรวจสอบความถูกต้อง อุปกรณ์เฉพาะทาง และระบบเสริม',
   },
 };
 
@@ -110,19 +125,21 @@ export function EquipmentPortalPage() {
         const expired = itemsInCat.filter((a) => a.warranty === 'expired').length;
 
         const meta = CATEGORY_META[cat] || {
+          displayName: cat,
           th: cat,
           subCategories: [...new Set(itemsInCat.map((i) => i.name))],
           descEn: 'Industrial equipment and systems.',
           descTh: 'อุปกรณ์และระบบอุตสาหกรรม',
         };
 
-        return {
+        const item: CategorySummary = {
           category: cat,
+          categoryDisplayName: meta.displayName,
           categoryLabelTh: meta.th,
           subCategories: meta.subCategories,
           descriptionEn: meta.descEn,
           descriptionTh: meta.descTh,
-          imageUrl: CATEGORY_IMAGE_MAP[cat] || getAssetUrl('assets/connect_every_pump_xn.webp'),
+          imageUrl: CATEGORY_IMAGE_MAP[cat] || getAssetUrl('assets/Pump.webp'),
           total,
           active,
           inactive,
@@ -130,6 +147,7 @@ export function EquipmentPortalPage() {
           expiringSoon,
           expired,
         };
+        return item;
       })
       .filter((item): item is CategorySummary => item !== null);
   }, [allAssets, filteredAssets, q, site]);

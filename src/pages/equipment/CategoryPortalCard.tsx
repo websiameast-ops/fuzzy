@@ -5,6 +5,7 @@ import { useLang } from '@/contexts/LanguageContext';
 
 export interface CategorySummary {
   category: string;
+  categoryDisplayName?: string;
   categoryLabelTh: string;
   subCategories: string[];
   descriptionEn: string;
@@ -34,6 +35,7 @@ export const CategoryPortalCard: React.FC<CategoryPortalCardProps> = ({
 
   const {
     category,
+    categoryDisplayName,
     categoryLabelTh,
     imageUrl,
     total,
@@ -81,8 +83,8 @@ export const CategoryPortalCard: React.FC<CategoryPortalCardProps> = ({
 
       {/* 2. Headline (24px) & Subheadline (16px) */}
       <div className="cat-card-header">
-        <h2 className="cat-headline" title={category}>
-          {category}
+        <h2 className="cat-headline" title={categoryDisplayName || category}>
+          {categoryDisplayName || category}
         </h2>
         <p className="cat-subheadline">
           {t(
@@ -181,9 +183,9 @@ export const CategoryPortalCard: React.FC<CategoryPortalCardProps> = ({
             e.stopPropagation();
             handleExplore();
           }}
-          title={t(`Explore ${category}`, `ดูรายการ ${category}`)}
+          title={t(`Discover ${category}`, `ดูรายการ ${category}`)}
         >
-          <span>{t(`Explore (${total})`, `ดูรายการ (${total})`)}</span>
+          <span>{t(`Discover (${total})`, `ดูรายการ (${total})`)}</span>
           <ArrowRight size={17} className="cat-btn-icon" aria-hidden />
         </button>
       </div>

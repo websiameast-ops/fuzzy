@@ -25,6 +25,10 @@ npm run preview
 
 After signing in you'll choose between two demo companies (Demo Industrial Co., Ltd. and Eastern Water Systems Co., Ltd.) — each has its own equipment, contracts, requests, and history. You can switch companies at any time from the top bar.
 
+## Release Notes
+
+- See [RELEASE_NOTES.md](file:///d:/laragon/www/se-connex-r1-f1-1/RELEASE_NOTES.md) for recent changelogs and UI updates.
+
 ## What's included
 
 - Full bilingual (English / Thai) interface with a persistent language toggle

@@ -14,16 +14,16 @@ import { fmtDate, num } from '@/utils/format';
 import { getAssetRecommendations } from '@/utils/recommendations';
 import type { Asset } from '@/types';
 
-const DEVICE_TABS = ['all', 'Pump', 'Valve', 'Solar & Energy', 'Metering & Instrumentation', 'Monitoring & IoT'] as const;
+const DEVICE_TABS = ['all', 'Pump', 'Mixer', 'Service', 'Spare Part', 'Other'] as const;
 type DeviceTab = (typeof DEVICE_TABS)[number];
 
 const TAB_LABEL: Record<DeviceTab, { en: string; th: string }> = {
   all: { en: 'All Devices', th: 'อุปกรณ์ทั้งหมด' },
-  Pump: { en: 'Pumps', th: 'ปั๊ม' },
-  Valve: { en: 'Valves', th: 'วาล์ว' },
-  'Solar & Energy': { en: 'Solar', th: 'โซลาร์' },
-  'Metering & Instrumentation': { en: 'Metering', th: 'มิเตอร์' },
-  'Monitoring & IoT': { en: 'IoT', th: 'IoT' },
+  Pump: { en: 'Pump System', th: 'ระบบปั๊ม' },
+  Mixer: { en: 'Mixer & Agitator', th: 'เครื่องกวนผสม' },
+  Service: { en: 'Service & Control', th: 'ระบบควบคุมและบริการ' },
+  'Spare Part': { en: 'Spare Part & Kit', th: 'อะไหล่และชุดซ่อม' },
+  Other: { en: 'Other & Verify', th: 'เครื่องมือตรวจสอบ' },
 };
 
 function seedFrom(str: string): number {
