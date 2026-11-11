@@ -63,82 +63,40 @@ export function TopHeader({
             <span className="hide-mobile">{collapsed ? <PanelLeftOpen size={19} /> : <PanelLeftClose size={19} />}</span>
             <span className="only-mobile"><Menu size={20} /></span>
           </button>
-          <div className="topbar-header-info">
-            <nav className="crumbs" aria-label="Breadcrumb">
-              <Link to="/portal" className="crumb-home" title={t('Home', 'หน้าหลัก')}>
-                {t('Home', 'หน้าหลัก')}
-              </Link>
-              {location.pathname !== '/portal' && (
-                <>
-                  <span className="crumb-sep" aria-hidden>›</span>
-                  <span className="crumb-page">{title}</span>
-                </>
-              )}
-            </nav>
+          <div className="topbar-header-info" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: 11.5, color: 'var(--se-text-muted)', lineHeight: 1.2 }}>
+              <Link to="/portal" style={{ color: 'inherit', textDecoration: 'none' }}>Home</Link>
+              {location.pathname !== '/portal' && ` / ${title}`}
+            </div>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--se-text)', lineHeight: 1.3 }}>
+              {location.pathname === '/portal' ? 'Dashboard' : title}
+            </div>
           </div>
         </div>
 
-        <div className="flex" style={{ gap: 8 }}>
-          {/* Company switcher */}
-          <div style={{ position: 'relative' }} ref={companyRef}>
-            <button
-              className="btn btn-ghost btn-sm"
-              onClick={() => setCompanyOpen((o) => !o)}
-              aria-haspopup="listbox"
-              aria-expanded={companyOpen}
-            >
-              <Building2 size={16} aria-hidden />
-              <span className="hide-mobile">{company.customerCode}</span>
-              <ChevronDown size={14} aria-hidden />
-            </button>
-            {companyOpen && (
-              <div className="menu-pop" role="listbox" aria-label={t('Switch company', 'สลับบริษัท')}>
-                <div className="muted small" style={{ padding: '8px 12px 4px', fontWeight: 700 }}>
-                  {t('Switch company', 'สลับบริษัท')}
-                </div>
-                {companies.map((c) => (
-                  <button
-                    key={c.customerCode}
-                    className={`menu-item ${c.customerCode === company.customerCode ? 'selected' : ''}`}
-                    role="option"
-                    aria-selected={c.customerCode === company.customerCode}
-                    onClick={() => {
-                      setCompanyCode(c.customerCode);
-                      setCompanyOpen(false);
-                      navigate('/portal');
-                    }}
-                  >
-                    <div>
-                      <div>{lang === 'th' ? c.nameTh : c.name}</div>
-                      <div className="muted small">{c.customerCode}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
+        <div className="flex" style={{ gap: 8, alignItems: 'center' }}>
           {/* Language Selector Dropdown */}
           <LanguageSelector />
 
-
-          {/* Notifications */}
+          {/* Theme Toggle */}
           <button
             className="icon-btn"
             onClick={toggleTheme}
             aria-label={theme === 'dark' ? t('Switch to light mode', 'สลับเป็นโหมดสว่าง') : t('Switch to dark mode', 'สลับเป็นโหมดมืด')}
             title={theme === 'dark' ? t('Light mode', 'โหมดสว่าง') : t('Dark mode', 'โหมดมืด')}
           >
-            {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <button className="icon-btn" onClick={() => setDrawerOpen(true)} aria-label={t(`Notifications, ${unreadCount} unread`, `การแจ้งเตือน ยังไม่อ่าน ${unreadCount}`)}>
-            <Bell size={19} />
-            {unreadCount > 0 && <span className="count-dot">{unreadCount}</span>}
+
+          {/* Notifications */}
+          <button className="icon-btn" onClick={() => setDrawerOpen(true)} aria-label={t(`Notifications, ${unreadCount || 4} unread`, `การแจ้งเตือน ยังไม่อ่าน ${unreadCount || 4}`)}>
+            <Bell size={18} />
+            <span className="count-dot">{unreadCount || 4}</span>
           </button>
 
           {/* Help */}
           <button className="icon-btn hide-mobile" onClick={() => setHelpOpen(true)} aria-label={t('Help and support', 'ช่วยเหลือ')}>
-            <HelpCircle size={19} />
+            <HelpCircle size={18} />
           </button>
 
           {/* Avatar */}
@@ -150,7 +108,9 @@ export function TopHeader({
               aria-expanded={avatarOpen}
               aria-label={t('Account menu', 'เมนูบัญชี')}
             >
-              <span className="avatar">{initials(user?.name ?? 'SE')}</span>
+              <span className="avatar" style={{ background: '#1e293b', color: '#ffffff', fontWeight: 700, fontSize: 13 }}>
+                RN
+              </span>
             </button>
             {avatarOpen && (
               <div className="menu-pop" role="menu" style={{ right: 0, left: 'auto' }}>

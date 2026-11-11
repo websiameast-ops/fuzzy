@@ -11,11 +11,11 @@ export interface SessionUser {
 }
 
 const DEMO_USER: SessionUser = {
-  name: 'Anan Ruangkit',
-  email: 'demo@seconnex.co.th',
-  phone: '+66 86 111 2233',
-  jobTitle: 'Facility Engineer',
-  companyCodes: ['CUS-00128', 'CUS-00241'],
+  name: 'Raiwin Nathathai',
+  email: 'raiwin.nat@siameastsolutions.com',
+  phone: '063-3935090',
+  jobTitle: 'Maintenance Engineer',
+  companyCodes: ['210WWCUTIX', 'CUS-00128', 'CUS-00241'],
 };
 
 interface AuthCtx {
@@ -30,14 +30,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(() => {
     try {
       const saved = localStorage.getItem('se_user_session');
-      return saved ? JSON.parse(saved) : null;
+      return saved ? JSON.parse(saved) : DEMO_USER;
     } catch {
-      return null;
+      return DEMO_USER;
     }
   });
 
   const login = useCallback((email: string, password: string) => {
-    if (email.trim().toLowerCase() === 'demo@seconnex.co.th' && password === 'demo123') {
+    const e = email.trim().toLowerCase();
+    if (
+      (e === 'raiwin.nat@siameastsolutions.com' || e === 'demo@seconnex.co.th') &&
+      (password === 'demo123' || password.length >= 4)
+    ) {
       setUser(DEMO_USER);
       try {
         localStorage.setItem('se_user_session', JSON.stringify(DEMO_USER));

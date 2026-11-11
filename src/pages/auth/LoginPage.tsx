@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
-import { AlertTriangle, ArrowRight, Building2, ChevronLeft, Eye, EyeOff, Lock, Mail } from 'lucide-react';
-import { Logo } from '@/components/common';
+import { AlertTriangle, ArrowRight, Building2, ChevronLeft, Eye, EyeOff, Lock, Mail, Moon, Sun } from 'lucide-react';
+import { Logo, LanguageSelector } from '@/components/common';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useLang } from '@/contexts/LanguageContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/contexts/ToastContext';
 import { assetsFor } from '@/data/mockAssets';
 import { mockRequests } from '@/data/mockRequests';
@@ -12,6 +13,7 @@ import { mockPM } from '@/data/mockPM';
 
 export function LoginPage() {
   const { lang, setLang, t } = useLang();
+  const { theme, toggleTheme } = useTheme();
   const { user, login } = useAuth();
   const { companies, setCompanyCode } = useCompany();
   const { showToast } = useToast();
@@ -19,9 +21,9 @@ export function LoginPage() {
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? '/portal';
 
-  const [step, setStep] = useState<'credentials' | 'company'>(user ? 'company' : 'credentials');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [step, setStep] = useState<'credentials' | 'company'>('credentials');
+  const [email, setEmail] = useState('raiwin.nat@siameastsolutions.com');
+  const [password, setPassword] = useState('demo123');
   const [showPw, setShowPw] = useState(false);
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState('');
@@ -35,12 +37,13 @@ export function LoginPage() {
     const res = login(email, password);
     if (res.ok) {
       setError('');
-      setStep('company');
+      setCompanyCode('210WWCUTIX');
+      navigate(from, { replace: true });
     } else {
       setError(
         t(
-          'Email or password is incorrect. For this demo, use demo@seconnex.co.th / demo123.',
-          'อีเมลหรือรหัสผ่านไม่ถูกต้อง สำหรับเดโมนี้ใช้ demo@seconnex.co.th / demo123',
+          'Email or password is incorrect. For this demo, use raiwin.nat@siameastsolutions.com / demo123.',
+          'อีเมลหรือรหัสผ่านไม่ถูกต้อง สำหรับเดโมนี้ใช้ raiwin.nat@siameastsolutions.com / demo123',
         ),
       );
     }
@@ -53,56 +56,60 @@ export function LoginPage() {
 
   return (
     <div className="login-layout">
-      <div className="login-visual">
+      <div className="login-visual" style={{ background: 'radial-gradient(1000px 600px at 15% 15%, rgba(18, 48, 86, 0.5), transparent 65%), linear-gradient(165deg, #0f1c2c 0%, #08111a 100%)' }}>
         <div className="grid-deco" aria-hidden />
         <div style={{ position: 'relative' }}>
           <Link
             to="/"
             aria-label={t('SE Connex — back to home', 'SE Connex — กลับหน้าแรก')}
             className="login-logo-link"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}
           >
-            <div style={{ background: '#fff', display: 'inline-flex', padding: '8px 12px', borderRadius: 10, cursor: 'pointer', transition: 'box-shadow 0.15s ease' }}>
-              <Logo height={30} />
+            <div style={{ width: 28, height: 28, borderRadius: 6, background: '#0a0f1d', border: '1px solid rgba(255,255,255,0.18)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 8, height: 8, background: '#dc2626', borderRadius: 2 }} />
             </div>
+            <span style={{ color: '#ffffff', fontWeight: 800, fontSize: 16, letterSpacing: '0.04em' }}>
+              SE <span style={{ color: '#ffffff' }}>CONNEX</span>
+            </span>
           </Link>
         </div>
         <div style={{ position: 'relative', maxWidth: 460 }}>
-          <h1 style={{ fontSize: 30, lineHeight: 1.2, margin: '0 0 12px' }}>
-            {t('Every asset, every service job, one portal.', 'ทุกอุปกรณ์ ทุกงานบริการ ในพอร์ทัลเดียว')}
+          <h1 style={{ fontSize: 32, fontWeight: 700, lineHeight: 1.25, margin: '0 0 16px', color: '#2b3f56', whiteSpace: 'pre-line' }}>
+            {t('Every asset, every service job,\none portal.', 'ทุกอุปกรณ์ ทุกงานบริการ ในพอร์ทัลเดียว')}
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 15, margin: 0 }}>
+          <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 14.5, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
             {t(
-              'SE Connex gives your team live visibility of equipment, warranties, service requests, PM plans and energy performance — backed by SiamEast Solutions engineers.',
+              'SE Connex gives your team live visibility of equipment,\nwarranties, service requests, PM plans and energy performance\n— backed by SiamEast Solutions engineers.',
               'SE Connex ให้ทีมของคุณเห็นสถานะอุปกรณ์ การรับประกัน คำขอบริการ แผน PM และประสิทธิภาพพลังงานแบบเรียลไทม์ โดยทีมวิศวกรสยามอีสท์ โซลูชั่น',
             )}
           </p>
         </div>
-        <div style={{ position: 'relative', color: 'rgba(255,255,255,0.55)', fontSize: 12.5 }}>
-          SiamEast Solutions PCL · Customer Portal v2 Preview
+        <div style={{ position: 'relative', color: 'rgba(255,255,255,0.45)', fontSize: 12.5 }}>
+          SiamEast Solutions PCL - Customer Portal
         </div>
       </div>
 
-      <div className="login-form-side">
+      <div className="login-form-side" style={{ background: 'var(--se-background)' }}>
         <div className="login-card">
-          <div className="between" style={{ marginBottom: 22 }}>
-            <Link
-              to="/"
-              aria-label={t('SE Connex — back to home', 'SE Connex — กลับหน้าแรก')}
-              className="login-logo-link only-mobile"
+          <div className="between" style={{ marginBottom: 32, justifyContent: 'flex-end', display: 'flex', gap: 8 }}>
+            <LanguageSelector />
+            <button
+              className="icon-btn"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? t('Switch to light mode', 'สลับเป็นโหมดสว่าง') : t('Switch to dark mode', 'สลับเป็นโหมดมืด')}
+              title={theme === 'dark' ? t('Light mode', 'โหมดสว่าง') : t('Dark mode', 'โหมดมืด')}
+              style={{ width: 34, height: 34, borderRadius: 8, border: '1px solid var(--se-border)', background: 'var(--se-surface)' }}
             >
-              <Logo height={28} />
-            </Link>
-            <span aria-hidden className="hide-mobile" />
-            <div className="seg" role="group" aria-label={t('Language', 'ภาษา')}>
-              <button className={lang === 'th' ? 'active' : ''} onClick={() => setLang('th')} aria-pressed={lang === 'th'}>TH</button>
-              <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')} aria-pressed={lang === 'en'}>EN</button>
-            </div>
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
           </div>
 
           {step === 'credentials' && (
             <>
-              <h2 style={{ margin: '0 0 6px' }}>{t('Sign in to SE Connex', 'เข้าสู่ระบบ SE Connex')}</h2>
-              <p className="muted" style={{ margin: '0 0 20px' }}>
+              <h2 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: 'var(--se-text)' }}>
+                {t('Sign in to SE Connex', 'เข้าสู่ระบบ SE Connex')}
+              </h2>
+              <p className="muted" style={{ margin: '0 0 24px', fontSize: 13.5 }}>
                 {t('Use the account provided by your SE administrator.', 'ใช้บัญชีที่ผู้ดูแลระบบของ SE จัดเตรียมให้')}
               </p>
 
@@ -114,24 +121,30 @@ export function LoginPage() {
               )}
 
               <form onSubmit={submit} noValidate>
-                <div className="field">
-                  <label htmlFor="login-email">{t('Email', 'อีเมล')}</label>
-                  <div className="input-icon">
-                    <Mail size={16} aria-hidden />
+                <div className="field" style={{ marginBottom: 16 }}>
+                  <label htmlFor="login-email" style={{ fontSize: 13, fontWeight: 600, color: 'var(--se-text)', display: 'block', marginBottom: 6 }}>
+                    {t('Email', 'อีเมล')}
+                  </label>
+                  <div className="input-icon" style={{ background: '#edf3f8', borderRadius: 8, border: '1px solid #dce4ee', paddingLeft: 12 }}>
+                    <Mail size={16} aria-hidden style={{ color: '#64748b' }} />
                     <input
                       id="login-email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@company.co.th"
+                      placeholder="raiwin.nat@siameastsolutions.com"
                       autoComplete="username"
+                      style={{ background: 'transparent', border: 'none', padding: '11px 12px 11px 0', fontSize: 14, width: '100%' }}
                     />
                   </div>
                 </div>
-                <div className="field">
-                  <label htmlFor="login-pw">{t('Password', 'รหัสผ่าน')}</label>
-                  <div className="input-icon">
-                    <Lock size={16} aria-hidden />
+
+                <div className="field" style={{ marginBottom: 16 }}>
+                  <label htmlFor="login-pw" style={{ fontSize: 13, fontWeight: 600, color: 'var(--se-text)', display: 'block', marginBottom: 6 }}>
+                    {t('Password', 'รหัสผ่าน')}
+                  </label>
+                  <div className="input-icon" style={{ background: '#edf3f8', borderRadius: 8, border: '1px solid #dce4ee', paddingLeft: 12 }}>
+                    <Lock size={16} aria-hidden style={{ color: '#64748b' }} />
                     <input
                       id="login-pw"
                       type={showPw ? 'text' : 'password'}
@@ -139,26 +152,34 @@ export function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       autoComplete="current-password"
+                      style={{ background: 'transparent', border: 'none', padding: '11px 12px 11px 0', fontSize: 14, width: '100%' }}
                     />
                     <button
                       type="button"
                       className="icon-btn tiny"
                       onClick={() => setShowPw((s) => !s)}
                       aria-label={showPw ? t('Hide password', 'ซ่อนรหัสผ่าน') : t('Show password', 'แสดงรหัสผ่าน')}
+                      style={{ marginRight: 6 }}
                     >
                       {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
 
-                <div className="between" style={{ margin: '4px 0 18px' }}>
-                  <label className="checkbox-row">
-                    <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+                <div className="between" style={{ margin: '4px 0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <label className="checkbox-row" style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--se-text-secondary)' }}>
+                    <input
+                      type="checkbox"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                      style={{ accentColor: '#4f80b0', width: 16, height: 16 }}
+                    />
                     <span>{t('Remember me', 'จดจำการเข้าสู่ระบบ')}</span>
                   </label>
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm"
+                    style={{ fontSize: 13, color: '#64748b', padding: '2px 4px' }}
                     onClick={() =>
                       showToast(
                         t('A password-reset link was sent to your email (demo).', 'ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมลแล้ว (เดโม)'),
@@ -170,17 +191,32 @@ export function LoginPage() {
                   </button>
                 </div>
 
-                <button type="submit" className="btn btn-primary btn-lg btn-block">
+                <button
+                  type="submit"
+                  className="btn btn-block"
+                  style={{
+                    background: '#638fae',
+                    color: '#ffffff',
+                    borderRadius: 8,
+                    padding: '12px 16px',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    width: '100%',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#547f9e')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = '#638fae')}
+                >
                   {t('Sign in', 'เข้าสู่ระบบ')}
-                  <ArrowRight size={17} aria-hidden />
+                  <ArrowRight size={16} aria-hidden />
                 </button>
               </form>
-
-              <div className="card" style={{ marginTop: 18, padding: '12px 14px', background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: '0 8px 24px rgba(16,24,40,0.08)' }}>
-                <div className="small">
-                  <strong>{t('Demo access', 'บัญชีสำหรับเดโม')}:</strong> demo@seconnex.co.th · {t('password', 'รหัสผ่าน')} demo123
-                </div>
-              </div>
             </>
           )}
 

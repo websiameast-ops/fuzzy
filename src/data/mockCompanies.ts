@@ -2,6 +2,37 @@ import type { Company } from '@/types';
 
 export const mockCompanies: Company[] = [
   {
+    customerCode: '210WWCUTIX',
+    name: 'Unilever Business Services Co., Ltd. (PCL)',
+    nameTh: 'บริษัท ยูนิลิเวอร์ บิสิเนส เซอร์วิสเซส จำกัด (มหาชน)',
+    industry: 'Consumer Goods & Manufacturing',
+    sites: [
+      { id: 'S-01', name: 'Gateway Plant', nameTh: 'โรงงานเกตเวย์' },
+      { id: 'S-02', name: 'Minburi Plant', nameTh: 'โรงงานมีนบุรี' },
+      { id: 'S-03', name: 'Bangpoo Utility', nameTh: 'อาคารสาธารณูปโภคบางปู' },
+      { id: 'S-04', name: 'Chonburi Warehouse', nameTh: 'คลังสินค้าชลบุรี' },
+      { id: 'S-05', name: 'Rayong Site A', nameTh: 'ไซต์ระยอง เอ' },
+      { id: 'S-06', name: 'Rayong Site B', nameTh: 'ไซต์ระยอง บี' },
+      { id: 'S-07', name: 'Head Office', nameTh: 'สำนักงานใหญ่' },
+    ],
+    accountManager: {
+      name: 'Irada Apiwong',
+      role: 'Sales Engineer',
+      roleTh: 'วิศวกรฝ่ายขาย',
+      phone: '063-3935208',
+      email: 'irada.api@siameastsolutions.com',
+      line: '@siameast',
+    },
+    serviceCoordinator: {
+      name: 'Nathathai Boonwan',
+      role: 'Sales Engineer',
+      roleTh: 'วิศวกรฝ่ายขาย',
+      phone: '063-3935090',
+      email: 'nathathai.boo@siameastsolutions.com',
+      line: '@siameast',
+    },
+  },
+  {
     customerCode: 'CUS-00128',
     name: 'Demo Industrial Co., Ltd.',
     nameTh: 'บริษัท เดโม อินดัสเทรียล จำกัด',

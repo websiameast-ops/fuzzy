@@ -861,12 +861,124 @@ export const mockAssets: Asset[] = [
   },
 ];
 
+function generateUnileverAssets(): Asset[] {
+  const list: Asset[] = [];
+  const sites = ['S-01', 'S-02', 'S-03', 'S-04', 'S-05', 'S-06', 'S-07'];
+  const brands = ['Grundfos', 'Flygt', 'Sulzer', 'KSB', 'Wilo'];
+  
+  // 7 active warranty
+  for (let i = 1; i <= 7; i++) {
+    list.push({
+      id: `AST-ULV-${String(i).padStart(3, '0')}`,
+      customerCode: '210WWCUTIX',
+      name: `Grundfos CR ${15 + i}-2 Booster Pump`,
+      category: 'Pump',
+      brand: 'Grundfos',
+      model: `CR ${15 + i}-2 A-FJ-A-E-HQQE`,
+      serial: `GF-2025-${9000 + i}`,
+      customerRef: `PMP-${100 + i}`,
+      siteId: sites[(i - 1) % sites.length],
+      location: 'Utility Basement Plant',
+      status: 'operating',
+      warranty: 'active',
+      warrantyStart: '2025-05-15',
+      warrantyEnd: '2027-05-15',
+      installDate: '2025-06-01',
+      commissionDate: '2025-06-15',
+      lastService: '2026-06-10',
+      lastInspection: '2026-06-10',
+      contractId: 'CTR-2026-001',
+      connected: true,
+      installYear: 2025,
+      supplier: 'SiamEast Solutions PCL',
+      division: 'Fluid & Rotating Equipment',
+      condition: 'Normal',
+      specs: [{ label: 'Flow', value: '15 m³/h' }],
+      documents: docs(`CR ${15 + i}-2`),
+      events: lifecycle('2025-05-15', '2025-06-01', '2025-06-15'),
+    });
+  }
+
+  // 1 expiring soon
+  list.push({
+    id: `AST-ULV-008`,
+    customerCode: '210WWCUTIX',
+    name: 'Grundfos Hydro MPC Booster System',
+    category: 'Pump',
+    brand: 'Grundfos',
+    model: 'Hydro MPC-E 3 CRIE 15-3',
+    serial: 'GF-2024-8112',
+    customerRef: 'SYS-BOOST-01',
+    siteId: 'S-01',
+    location: 'Main Booster Room',
+    status: 'operating',
+    warranty: 'expiring',
+    warrantyStart: '2024-11-01',
+    warrantyEnd: '2026-12-10',
+    installDate: '2024-11-20',
+    commissionDate: '2024-12-10',
+    lastService: '2026-05-01',
+    lastInspection: '2026-05-01',
+    contractId: 'CTR-2026-001',
+    connected: true,
+    installYear: 2024,
+    supplier: 'SiamEast Solutions PCL',
+    division: 'Fluid & Rotating Equipment',
+    condition: 'Normal - Maintenance required within 60 days',
+    specs: [{ label: 'Flow', value: '45 m³/h' }],
+    documents: docs('Hydro MPC-E 3'),
+    events: lifecycle('2024-11-01', '2024-11-20', '2024-12-10'),
+  });
+
+  // 98 expired
+  for (let i = 9; i <= 106; i++) {
+    const brand = brands[(i - 9) % brands.length];
+    list.push({
+      id: `AST-ULV-${String(i).padStart(3, '0')}`,
+      customerCode: '210WWCUTIX',
+      name: `${brand} Industrial Centrifugal Unit #${i}`,
+      category: i % 5 === 0 ? 'Mixer' : i % 7 === 0 ? 'Service' : 'Pump',
+      brand,
+      model: `${brand.slice(0, 3).toUpperCase()}-${100 + i}`,
+      serial: `SN-${brand.slice(0, 2)}-${10000 + i}`,
+      customerRef: `EQ-${200 + i}`,
+      siteId: sites[(i - 1) % sites.length],
+      location: `Zone ${((i % 4) + 1)} Production Floor`,
+      status: 'operating',
+      warranty: 'expired',
+      warrantyStart: '2021-08-10',
+      warrantyEnd: '2023-12-31',
+      installDate: '2021-09-01',
+      commissionDate: '2021-09-15',
+      lastService: '2025-10-10',
+      lastInspection: '2025-10-10',
+      connected: false,
+      installYear: 2021,
+      supplier: 'SiamEast Solutions PCL',
+      division: 'Fluid & Rotating Equipment',
+      condition: 'Normal',
+      specs: [{ label: 'Power', value: '7.5 kW' }],
+      documents: docs(`Industrial Unit ${i}`),
+      events: lifecycle('2021-08-10', '2021-09-01', '2021-09-15'),
+    });
+  }
+
+  return list;
+}
+
+const unileverAssetsCache = generateUnileverAssets();
+
 export function getAsset(id: string): Asset | undefined {
-  const asset = mockAssets.find((a) => a.id === id);
+  const asset = id.startsWith('AST-ULV-')
+    ? unileverAssetsCache.find((a) => a.id === id)
+    : mockAssets.find((a) => a.id === id);
   return asset ? withImage(asset) : undefined;
 }
 
 export function assetsFor(customerCode: string): Asset[] {
+  if (customerCode === '210WWCUTIX') {
+    return unileverAssetsCache.map(withImage);
+  }
   return mockAssets
     .filter((a) => a.customerCode === customerCode)
     .map(withImage);

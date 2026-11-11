@@ -285,7 +285,7 @@ export interface SignoffJob {
   rating?: ServiceRating;
 }
 
-export type NewsCategory = 'company' | 'products' | 'promotions' | 'tips' | 'sustainability';
+export type NewsCategory = 'company' | 'products' | 'promotions' | 'tips' | 'sustainability' | 'service';
 
 export interface NewsArticle {
   id: string;

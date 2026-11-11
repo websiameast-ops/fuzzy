@@ -1,178 +1,203 @@
 import type { NewsArticle } from '@/types';
 
 export const mockNews: NewsArticle[] = [
+  // 1. Featured Hero Article (Products - Kimberly-Clark Sustainable Solutions)
   {
-    id: 'NW-2026-018',
-    category: 'tips',
-    title: '5 early warning signs your pump bearing is failing',
-    titleTh: '5 สัญญาณเตือนแบริ่งปั๊มใกล้เสียหาย',
+    id: 'NW-2026-024',
+    category: 'products',
+    title: 'Build a Greener Workplace with Sustainable Solutions',
+    titleTh: 'สร้างสถานที่ทำงานที่เป็นมิตรต่อสิ่งแวดล้อมด้วยโซลูชันเพื่อความยั่งยืน',
     summary:
-      'Bearing failures rarely happen without notice. Learn the five signals — vibration, noise, temperature, lubricant condition and current draw — that your maintenance team can catch weeks before a breakdown.',
-    date: '2026-07-08',
+      'Sustainability is no longer an option—it is a key priority for organizations striving to achieve their ESG (Environmental, Social & Governance) goals...',
+    date: '2026-08-11',
+    readMins: 3,
+    featured: true,
+    imageUrl: '/assets/news/prd-05.jpg',
+    content: [
+      'Sustainability is no longer an option—it is a key priority for organizations striving to achieve their ESG (Environmental, Social & Governance) goals and build resilient industrial operations.',
+      'Through our strategic partnership with Kimberly-Clark Professional, SiamEast Solutions brings industrial customers leading wiping, sanitation, and protective solutions under WypAll, Kimtech, Kimwipes, and WetTask brands.',
+      'These engineered solutions reduce consumable waste by up to 25%, lower VOC emissions, and support corporate decarbonization targets across automotive, electronics, food processing, and chemical sectors.',
+      'Contact our industrial solutions team to conduct a site waste-audit and start your green workplace journey.',
+    ],
+  },
+
+  // 2. Grundfos Industrial Pump Solutions (Products - Main Article in Detail Page)
+  {
+    id: 'NW-2026-025',
+    category: 'products',
+    title: 'Grundfos: World-Class Pump Solutions for Industrial Applications',
+    titleTh: 'Grundfos: โซลูชันปั๊มอุตสาหกรรมมาตรฐานระดับโลก',
+    summary:
+      'Grundfos is a global leader in the design, manufacture, and supply of high-quality pumping solutions for a wide range of industrial applications. Renowned for durability, reliability, and energy efficiency, Grundfos is committed to developing innovative solutions that meet the diverse demands of water and fluid management systems.',
+    date: '2026-08-06',
     readMins: 4,
     featured: true,
-    imageUrl: '/assets/Hero_Banner_xn.png',
+    imageUrl: '/assets/news/prd-01.jpg',
     content: [
-      'Most rotating-equipment breakdowns give weeks of notice before they stop production. The problem is that the signals are easy to dismiss individually — a little more noise here, a slightly warmer housing there. Together, they tell a clear story.',
-      '1. Rising vibration. A healthy pump has a stable vibration signature. When overall velocity trends upward — especially past 4.5 mm/s RMS on a mid-size pump — bearing wear is the most common cause. Envelope analysis can identify the exact defect frequency long before it is audible.',
-      '2. A change in sound. Operators know their machines. A new hum, growl or periodic click at the drive end is worth logging with a date, load condition and location. This context makes an engineer’s diagnosis dramatically faster.',
-      '3. Housing temperature. Bearing temperature that creeps 10°C above its normal running value at the same load usually means lubrication breakdown or increased friction. A monthly thermal photo takes seconds and builds a trend you can act on.',
-      '4. Lubricant condition. Darkened, contaminated or leaking grease is a direct window into bearing health. If grease purges dark grey at the relief port, metal particles are likely present.',
-      '5. Motor current. As friction increases, current draw at the same duty point rises. If your motor is on an SE monitoring gateway, this trend is captured automatically and can trigger an alert before failure.',
-      'If you recognise two or more of these signs on any asset in this portal, open the equipment page and press “Report a problem”. An SE engineer can perform a vibration survey and give you a repair window that fits your production plan — instead of the breakdown choosing the time for you.',
+      'Grundfos is a global leader in the design, manufacture, and supply of high-quality pumping solutions for a wide range of industrial applications. Renowned for durability, reliability, and energy efficiency, Grundfos is committed to developing innovative solutions that meet the diverse demands of water and fluid management systems.',
+      'Why Choose Grundfos for Industrial Applications?',
+      'Built for Long-Term Performance: Grundfos pumps are engineered with advanced technology and durable materials to withstand demanding industrial operating conditions and deliver reliable performance over the long term.',
+      'Energy-Efficient Operation: Equipped with Variable Frequency Drives (VFDs) and high-efficiency motors, Grundfos pumping systems help optimize energy consumption and reduce operating costs.',
+      'Comprehensive Industrial Solutions: Grundfos offers products designed for a broad range of industries, including: Food & Beverage, Wastewater Treatment, Heating and Cooling Systems, Chemical Processing and Fluid Handling.',
+      'Smart Monitoring with IoT: Grundfos CONNECT and Grundfos iSOLUTIONS enable real-time pump monitoring, diagnostics, and control through intelligent IoT-based technologies, helping improve operational efficiency and predictive maintenance.',
+      'Grundfos Product Range: Centrifugal Pumps, Multistage Pumps, Dosing Pumps, Wastewater Pumps.',
+      'Grundfos: A Smart Investment for Sustainable Industry: Choosing Grundfos means investing in more than just reliable pumping equipment. It means improving operational efficiency, reducing energy costs, and supporting long-term sustainability goals. Contact our team to learn more about the right pumping solution for your business.',
+      'Learn more:\nhttps://siameastsolutions.com/en/our-products/pumping/grundfos-3/',
+      'Contact Us:\nTel: 063-393-5088 | Line: @siameast | Email: info@siameastsolutions.com',
     ],
   },
+
+  // 3. Knowledge: HDPE to PP-R
   {
-    id: 'NW-2026-016',
-    category: 'promotions',
-    title: 'Mid-year PM package: 15% off multi-asset preventive maintenance',
-    titleTh: 'โปรโมชั่นกลางปี: ส่วนลด 15% แพ็กเกจ PM หลายอุปกรณ์',
-    summary:
-      'Book a preventive-maintenance package covering three or more assets before 31 August 2026 and receive 15% off labour, plus a free vibration baseline for every rotating asset in the package.',
-    date: '2026-07-01',
-    readMins: 2,
-    imageUrl: '/assets/Hero_Banner_xn.png',
-    content: [
-      'From now until 31 August 2026, SE customers can book a preventive-maintenance package covering three or more assets at a 15% labour discount.',
-      'Every rotating asset included in the package also receives a complimentary vibration baseline measurement — the single most valuable data point for future condition monitoring.',
-      'The offer applies to pumps, valves, instrumentation and solar assets registered in SE Connex, and can be combined with an existing MA contract as an expansion.',
-      'To request a quotation, open Requests → New request and select “Preventive maintenance request”, or contact your account manager directly from the dashboard.',
-    ],
-  },
-  {
-    id: 'NW-2026-014',
-    category: 'products',
-    title: 'SE monitoring gateway V2: edge alarms and LINE OA push',
-    titleTh: 'เกตเวย์มอนิเตอริ่ง V2: แจ้งเตือนที่อุปกรณ์และ push ผ่าน LINE OA',
-    summary:
-      'The next generation of the SE industrial monitoring gateway adds on-device alarm logic, faster sampling and direct push notifications to LINE OA — so your team hears about an abnormal condition in seconds.',
-    date: '2026-06-18',
-    readMins: 3,
-    imageUrl: '/assets/Hero_Banner_xn.png',
-    content: [
-      'SE Industrial Intelligence has released version 2 of its monitoring gateway, now available for new installations and as an upgrade for existing V1 customers.',
-      'The headline change is edge alarm logic: limits and rate-of-change rules now run on the gateway itself, cutting alarm latency from minutes to seconds even when the uplink is congested.',
-      'Sampling has been increased to one-second resolution for critical tags, with smart compression so data costs stay flat. A built-in store-and-forward buffer covers up to 14 days of connectivity loss.',
-      'Notifications can now be pushed directly to LINE OA, in addition to in-app and email alerts already available in SE Connex. Alert routing follows the notification preferences you set in this portal.',
-      'Customers with an active Equipment Monitoring contract can request a free upgrade assessment from the Energy & IoT tab of any connected asset.',
-    ],
-  },
-  {
-    id: 'NW-2026-012',
-    category: 'sustainability',
-    title: 'From kWh to carbon: how SE reports avoided emissions',
-    titleTh: 'จาก kWh สู่คาร์บอน: SE รายงานการลดการปล่อยอย่างไร',
-    summary:
-      'A transparent look at the methodology behind the Energy & Carbon page: what is measured, what is estimated, and what it takes to turn energy savings into a verifiable carbon claim.',
-    date: '2026-06-02',
-    readMins: 5,
-    imageUrl: '/assets/Hero_Banner_xn.png',
-    content: [
-      'The Energy & Carbon page in SE Connex summarises the energy your connected assets consume and estimates the emissions avoided through solar generation and efficiency work. This article explains exactly how those numbers are produced.',
-      'Measured values come from revenue-grade meters and inverter telemetry collected by SE gateways. These carry the “Measured” label and are the strongest basis for any claim.',
-      'Estimated values fill the gaps where metering is not yet installed. They combine nameplate data, runtime and typical load profiles. These carry the “Estimated” label and should be treated as indicative.',
-      'Avoided CO₂ is calculated by applying the current Thailand grid emission factor to measured solar generation and verified efficiency savings against a documented baseline.',
-      'Importantly, none of these figures constitute carbon credits. Formal credit issuance requires an approved methodology, a verified baseline, third-party validation and registration with a recognised program. SE can support customers through that journey — talk to our Energy & Sustainability team to scope a verification-ready project.',
-    ],
-  },
-  {
-    id: 'NW-2026-009',
-    category: 'company',
-    title: 'SiamEast Solutions opens expanded Rayong service centre',
-    titleTh: 'สยามอีสท์ โซลูชั่น เปิดศูนย์บริการระยองส่วนขยาย',
-    summary:
-      'A larger workshop, dedicated pump test bay and expanded parts inventory bring faster turnaround for customers across the Eastern Seaboard.',
-    date: '2026-05-20',
-    readMins: 3,
-    imageUrl: '/assets/Hero_Banner_xn.png',
-    content: [
-      'SiamEast Solutions PCL has opened its expanded service centre in Rayong, tripling workshop floor space and adding a dedicated pump performance test bay rated to 400 m³/h.',
-      'The expansion shortens overhaul turnaround for pumps and valves serving customers across the Eastern Seaboard industrial area, and increases on-hand inventory of high-rotation spare parts.',
-      'The centre also houses the new SE Industrial Intelligence lab, where monitoring gateways are staged and configured before field installation.',
-      'Customers are welcome to visit — contact your account manager to arrange a workshop tour.',
-    ],
-  },
-  {
-    id: 'NW-2026-007',
+    id: 'NW-2026-026',
     category: 'tips',
-    title: 'Preparing your site for a PM visit: a 15-minute checklist',
-    titleTh: 'เตรียมหน้างานก่อนวัน PM: เช็กลิสต์ 15 นาที',
+    title: 'FROM HDPE TO PP-R | UPGRADE YOUR PIPING SYSTEM FOR...',
+    titleTh: 'จาก HDPE สู่ PP-R | อัปเกรดระบบท่อของคุณเพื่อประสิทธิภาพสูงสุด',
     summary:
-      'PM visits go faster and safer when the site is ready. This short checklist — access, isolation, safety, representative — is the same one built into the PM Schedule page.',
-    date: '2026-04-22',
+      'Choosing the right piping material can significantly reduce installation time, prevent corrosion, and increase operating lifespan under high-temperature demands...',
+    date: '2026-08-10',
     readMins: 3,
-    imageUrl: '/assets/Hero_Banner_xn.png',
+    featured: false,
+    imageUrl: '/assets/news/knw-04.jpg',
     content: [
-      'A well-prepared site can cut an hour or more from a preventive-maintenance visit. Fifteen minutes of preparation the day before is usually all it takes.',
-      'Access: confirm gate passes and contractor registration for the SE team, and reserve parking near the equipment where possible.',
-      'Isolation: check that the equipment can be shut down or switched to standby in the agreed window, and that lock-out/tag-out points are accessible.',
-      'Safety: review any permit-to-work requirements — hot work, confined space, working at height — and have permits ready for signature at arrival.',
-      'Representative: name one person who can answer operational questions and witness the work. Their sign-off in SE Connex closes the job without paperwork.',
-      'You will find this same checklist attached to every upcoming visit on the PM Schedule page, so you can tick items off as you go.',
+      'Industrial piping systems face aggressive chemical environments, thermal expansion, and pressure surges. Upgrading from conventional HDPE to PP-R (Polypropylene Random Copolymer) provides superior heat deflection and long-term chemical resistance.',
+      'Key engineering advantages include smooth internal surfaces that lower pumping head losses, homogeneous fusion joints with zero leak points, and corrosion immunity against industrial cooling chemicals.',
     ],
   },
+
+  // 4. Knowledge: Water pump care
   {
-    id: 'NW-2026-021',
-    category: 'promotions',
-    title: 'Vibration baseline week: free survey with any spare-parts order',
-    titleTh: 'สัปดาห์วัดค่าฐานการสั่นสะเทือน: สำรวจฟรีเมื่อสั่งอะไหล่',
+    id: 'NW-2026-027',
+    category: 'tips',
+    title: 'HOW TO TAKE CARE OF YOUR HOME WATER PUMP FOR...',
+    titleTh: 'วิธีดูแลรักษาปั๊มน้ำบ้านเพื่ออายุการใช้งานที่ยาวนาน',
     summary:
-      'Book any spare-parts order in August and add a complimentary vibration baseline survey (worth ฿6,500) for the same asset — the data that makes future condition monitoring possible.',
-    date: '2026-07-15',
+      'Your water pump is the "heart" of your water system. Regular inspection and simple preventive steps keep it running quietly and reliably...',
+    date: '2026-08-10',
+    readMins: 3,
+    featured: false,
+    imageUrl: '/assets/news/knw-02.jpg',
+    content: [
+      'Maintaining reliable water delivery requires simple periodic checks. Inspect mechanical seals for weeping, monitor suction line air leaks, and verify pressure switch cut-in and cut-out calibrations.',
+      'SE service engineers recommend annual pressure-tank bladder checks to avoid motor short-cycling and premature stator burnout.',
+    ],
+  },
+
+  // 5. Knowledge: Why choose Grundfos genuine parts
+  {
+    id: 'NW-2026-028',
+    category: 'tips',
+    title: 'WHY CHOOSE GRUNDFOS GENUINE PARTS?',
+    titleTh: 'ทำไมต้องเลือกใช้อะไหล่แท้ Grundfos?',
+    summary:
+      'Because "close enough" isn\'t enough — genuine parts ensure exact hydraulic tolerances, motor protection, and valid manufacturer warranty...',
+    date: '2026-08-10',
+    readMins: 3,
+    featured: false,
+    imageUrl: '/assets/news/knw-03.jpg',
+    content: [
+      'Imitation impellers and seals often deviate by tenths of a millimetre, causing severe hydraulic cavitation, shaft deflection, and bearing overload.',
+      'SiamEast Solutions is an authorized Grundfos master distributor supplying factory-certified impellers, silicon-carbide mechanical seals, and shaft kits with full serial traceability.',
+    ],
+  },
+
+  // 6. Knowledge / Featured: Threadlockers
+  {
+    id: 'NW-2026-029',
+    category: 'tips',
+    title: 'How to Choose the Right Threadlocker? Understanding...',
+    titleTh: 'วิธีเลือกใช้น้ำยาล็อคเกลียวให้ถูกต้องสำหรับการใช้งานอุตสาหกรรม',
+    summary:
+      'Selecting the correct threadlocker for your fasteners prevents loosening under heavy vibration, stops thread corrosion, and ensures safe disassembly...',
+    date: '2026-08-07',
+    readMins: 3,
+    featured: true,
+    imageUrl: '/assets/news/prd-06.jpg',
+    content: [
+      'Anaerobic threadlockers cure in the absence of air between active metal surfaces. Low-strength formulations suit adjustment screws and small gauges (under M6), medium-strength blue threadlockers secure machine bolts removable with hand tools, while high-strength red adhesives lock permanent studs.',
+      'Applying the correct viscosity and surface primer ensures 100% thread engagement without loosening under thermal cycles.',
+    ],
+  },
+
+  // 7. Services: SE Overhaul Service
+  {
+    id: 'NW-2026-030',
+    category: 'service',
+    title: 'SE OVERHAUL SERVICE – EXTEND EQUIPMENT LIFE, REDUCE DOWNTIME',
+    titleTh: 'บริการโอเวอร์ฮอล SE – ยืดอายุการใช้งานอุปกรณ์ ลดการหยุดชะงัก',
+    summary:
+      'A pump that is still running does not necessarily mean it is operating at its best. Comprehensive overhaul restores original factory performance.',
+    date: '2026-08-06',
+    readMins: 3,
+    featured: true,
+    imageUrl: '/assets/news/prd-02.jpg',
+    content: [
+      'Degraded internal clearances reduce hydraulic efficiency by up to 18% before visible failure occurs. The SE Overhaul Service includes dynamic balancing, sandblasting, protective polymer recoating, and certified hydrostatic testing at our Rayong service centre.',
+    ],
+  },
+
+  // 8. Promotions: August Flash Sale
+  {
+    id: 'NW-2026-031',
+    category: 'promotions',
+    title: 'AUGUST FLASH SALE – SAVE UP TO 50%!',
+    titleTh: 'โปรโมชั่น Flash Sale เดือนสิงหาคม – ลดสูงสุด 50%!',
+    summary:
+      'Special discounts on high-rotation spare parts, seal kits, and maintenance consumables throughout this month only.',
+    date: '2026-08-01',
+    readMins: 2,
+    featured: true,
+    imageUrl: '/assets/news/pro-01.jpg',
+    content: [
+      'Throughout August 2026, registered SE Connex customers receive exclusive volume rebates and up to 50% discount on selected mechanical seals, gaskets, and maintenance chemicals.',
+    ],
+  },
+
+  // 9. Services: Solar Rooftop
+  {
+    id: 'NW-2026-032',
+    category: 'service',
+    title: 'SE SOLAR ROOFTOP SOLUTIONS | TURN SOLAR...',
+    titleTh: 'โซลูชันโซลาร์รูฟท็อป SE | เปลี่ยนพลังงานแสงอาทิตย์เป็นความคุ้มค่า',
+    summary:
+      'SE Solar Rooftop Solutions on YouTube. Reduce electricity costs, improve ESG ratings, and optimize clean industrial energy with turnkey EPC.',
+    date: '2026-08-05',
+    readMins: 2,
+    imageUrl: '/assets/news/prd-03.jpg',
+    content: [
+      'Turn rooftop real estate into clean electricity with SiamEast Solutions full EPC service — from structural load auditing and BOI filing to tier-1 PV inverter commissioning and zero-export grid connection.',
+    ],
+  },
+
+  // 10. Services: Save Energy Boost
+  {
+    id: 'NW-2026-033',
+    category: 'service',
+    title: 'SAVE ENERGY. REDUCE COSTS. WITH BOOST ENERGY...',
+    titleTh: 'ประหยัดพลังงาน ลดต้นทุน ด้วยโซลูชัน Boost Energy',
+    summary:
+      'Your pumping system could be consuming more energy than necessary — without proper optimization, oversized pumps waste thousands each month.',
+    date: '2026-08-04',
     readMins: 2,
     imageUrl: '/assets/Hero_Banner_xn.png',
     content: [
-      'Throughout August 2026, every spare-parts order placed through SE Connex qualifies for a free vibration baseline survey on the asset being serviced — normally ฿6,500.',
-      'A baseline captured while a machine is healthy is the reference every future measurement is compared against. Without it, condition monitoring starts blind.',
-      'To claim, open Parts & Orders, request a quote, and note “baseline” in the cost-center field. Your coordinator will schedule the survey alongside the parts fitting.',
+      'Our Boost Energy audit identifies throttling losses, oversized impellers, and inefficient duty cycles, delivering typical electricity savings of 20–35% with less than 18 months payback.',
     ],
   },
+
+  // 11. Services: Fire pump test
   {
-    id: 'NW-2026-020',
-    category: 'promotions',
-    title: 'VMI onboarding offer: three months of managed stock, no service fee',
-    titleTh: 'ข้อเสนอเริ่มต้น VMI: บริหารสต็อก 3 เดือน ไม่มีค่าบริการ',
+    id: 'NW-2026-034',
+    category: 'service',
+    title: 'FIRE PUMP PERFORMANCE TEST | VERIFY PERFORMANCE...',
+    titleTh: 'ทดสอบประสิทธิภาพปั๊มดับเพลิง | ตรวจสอบความพร้อมใช้งาน',
     summary:
-      'Switch a consumables line to Vendor-Managed Inventory before 30 September and SE waives the management fee for the first three months, including automatic reorder points.',
-    date: '2026-07-11',
-    readMins: 2,
-    imageUrl: '/assets/Hero_Banner_xn.png',
+      'Having a Fire Pump does not necessarily mean your system is fully prepared for an emergency. Annual NFPA-compliant flow testing proves readiness.',
+    date: '2026-08-03',
+    readMins: 3,
+    imageUrl: '/assets/Hero_Banner_xn(4).png',
     content: [
-      'Vendor-Managed Inventory keeps your critical consumables above their reorder point automatically, so a production line never waits on a ฿300 seal kit.',
-      'Onboard any consumables line before 30 September 2026 and SE waives the VMI management fee for the first three months, including reorder-point setup and monthly stock reporting.',
-      'You can see how VMI works today under Materials & Consumables → VMI / CMI Stock, where auto-reorder is already switchable per line.',
-    ],
-  },
-  {
-    id: 'NW-2026-019',
-    category: 'promotions',
-    title: 'Monitoring gateway trade-in: 25% off the V2 edge device',
-    titleTh: 'เทิร์นเกตเวย์มอนิเตอริ่ง: ลด 25% สำหรับรุ่น V2',
-    summary:
-      'Trade in any first-generation monitoring gateway and receive 25% off the SE V2 edge device, with on-device alarms and LINE push notifications included.',
-    date: '2026-07-04',
-    readMins: 2,
-    imageUrl: '/assets/Hero_Banner_xn.png',
-    content: [
-      'The SE monitoring gateway V2 moves alarm logic onto the device itself, so a critical trip reaches your team in seconds rather than waiting on a cloud round-trip.',
-      'Until 30 September 2026, trade in any first-generation SE gateway for 25% off the V2 unit. LINE push notifications and faster sampling are included at no extra charge.',
-      'Ask your account manager for a per-site quote, or open Requests → New request and select “Monitoring / IoT”.',
-    ],
-  },
-  {
-    id: 'NW-2026-017',
-    category: 'promotions',
-    title: 'Loyalty rewards: earn service credits on every completed job',
-    titleTh: 'สิทธิพิเศษสมาชิก: รับเครดิตบริการทุกงานที่เสร็จ',
-    summary:
-      'SE Connex customers now earn 2% service credit on every completed and signed-off job this quarter — redeemable against future PM packages or parts.',
-    date: '2026-06-25',
-    readMins: 2,
-    imageUrl: '/assets/Hero_Banner_xn.png',
-    content: [
-      'From Q3 2026, every job you complete and sign off in SE Connex earns 2% of its value back as service credit.',
-      'Credits accrue automatically once you approve a service report, and can be redeemed against future PM packages, spare parts or monitoring subscriptions.',
-      'Your running balance will appear on the dashboard — signing off promptly is all it takes to start earning.',
+      'SE field engineers conduct NFPA 25 flow and churn testing using calibrated pitot arrays and ultrasonic flowmeters, providing certified performance curves for plant insurance underwriters.',
     ],
   },
 ];

@@ -71,7 +71,7 @@ export function Sidebar({
             <LogOut size={19} className="nav-icon" aria-hidden />
             <span className="nav-label">{t('Sign out', 'ออกจากระบบ')}</span>
           </Link>
-          <div className="version-label">Customer Portal v2 Preview</div>
+          <div className="version-label">Customer Portal v1.23.0</div>
         </div>
       </aside>
     </>

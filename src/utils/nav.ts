@@ -31,16 +31,10 @@ export const NAV_ITEMS: NavItemDef[] = [
   { to: '/portal/news', en: 'News & Offers', th: 'ข่าวสารและข้อเสนอ', icon: Newspaper },
   { to: '/portal/equipment', en: 'My Equipment', th: 'อุปกรณ์ของฉัน', icon: Package },
   { to: '/portal/map', en: 'My Sites — Map', th: 'ไซต์ของฉัน — แผนที่', icon: MapPin },
-  { to: '/portal/iot', en: 'Live Monitoring', th: 'มอนิเตอริ่งแบบเรียลไทม์', icon: Wifi },
-  // { to: '/portal/digital-twin', en: 'Factory Digital Twin', th: 'ฝาแฝดดิจิทัลโรงงาน', icon: Activity },
   { to: '/portal/history', en: 'Service History', th: 'ประวัติการบริการ', icon: History },
   { to: '/portal/requests', en: 'Requests', th: 'คำขอบริการ', icon: ClipboardList },
   { to: '/portal/contracts', en: 'Contracts & MA', th: 'สัญญาและบริการ MA', icon: FileText },
   { to: '/portal/pm', en: 'PM Schedule', th: 'แผนบำรุงรักษา', icon: CalendarCheck },
-  { to: '/portal/sign-off', en: 'Sign-off & Rating', th: 'ยืนยันงานและประเมินบริการ', icon: FileSignature },
-  // { to: '/portal/carbon', en: 'Energy & Carbon', th: 'พลังงานและคาร์บอน', icon: Leaf },
-  // { to: '/portal/materials', en: 'Materials & Consumables', th: 'วัสดุสิ้นเปลือง', icon: Boxes, isNew: true },
-  // { to: '/portal/parts', en: 'Parts & Orders', th: 'อะไหล่และคำสั่งซื้อ', icon: Wrench, isNew: true },
   { to: '/portal/profile', en: 'Profile & Settings', th: 'โปรไฟล์และการตั้งค่า', icon: UserCog },
 ];
 

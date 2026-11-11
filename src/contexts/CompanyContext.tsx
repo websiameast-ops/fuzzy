@@ -18,7 +18,7 @@ interface CompanyCtx {
 const Ctx = createContext<CompanyCtx | null>(null);
 
 export function CompanyProvider({ children }: { children: ReactNode }) {
-  const [customerCode, setCustomerCode] = useState<string>('CUS-00128');
+  const [customerCode, setCustomerCode] = useState<string>('210WWCUTIX');
   const [companySelected, setCompanySelected] = useState(false);
   const [siteId, setSiteId] = useState<string>('');
 
