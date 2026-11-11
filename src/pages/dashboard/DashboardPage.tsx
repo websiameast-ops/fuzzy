@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Activity,
@@ -22,15 +22,27 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useLang } from '@/contexts/LanguageContext';
 import { useCompany } from '@/contexts/CompanyContext';
-import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
-import { KpiCard, QRScannerMock, StatusBadge } from '@/components/common';
+import { ContactSECard, KpiCard, QRScannerMock, StatusBadge } from '@/components/common';
+import { newsDisplayDate } from '@/pages/news/NewsPage';
 import { assetsFor } from '@/data/mockAssets';
 import { siteName } from '@/data/mockCompanies';
-import { mockNews } from '@/data/mockNews';
 import { contractsFor } from '@/data/mockContracts';
-import { fmtDate, fmtDateLong, daysUntil, greeting } from '@/utils/format';
-import { REQUEST_STATUS, PRIORITY, WARRANTY_STATUS } from '@/utils/status';
+import { fmtDate, fmtDateLong, daysUntil, greeting, companyDisplayName } from '@/utils/format';
+import { WARRANTY_STATUS, TICKET_PRIORITY, TICKET_STATUS } from '@/utils/status';
+import {
+  apiGetDashboardMaintenance,
+  apiGetDashboardSummary,
+  apiGetDashboardTickets,
+  apiGetNewsFeed,
+  apiGetSEContacts,
+  type DashboardMaintenanceItemResponse,
+  type DashboardSummaryResponse,
+  type DashboardTicketResponse,
+  type NewsFeedItemResponse,
+  type SEContactResponse,
+} from '@/lib/apiClient';
+import { tokenStore } from '@/lib/tokenStore';
 
 const WARRANTY_COLORS: Record<string, string> = {
   active: 'var(--se-success)',
@@ -42,43 +54,102 @@ const WARRANTY_COLORS: Record<string, string> = {
 export function DashboardPage() {
   const { lang, t } = useLang();
   const { customerCode, company } = useCompany();
-  const { user } = useAuth();
-  const { requests, pmVisits, confirmPM, signoffs } = useData();
+  const { signoffs } = useData();
   const navigate = useNavigate();
   const [scanOpen, setScanOpen] = useState(false);
+  const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
+  const [tickets, setTickets] = useState<DashboardTicketResponse[] | null>(null);
+  const [maintenance, setMaintenance] = useState<DashboardMaintenanceItemResponse[] | null>(null);
+  const [seContacts, setSeContacts] = useState<SEContactResponse[] | null>(null);
+  const [newsFeed, setNewsFeed] = useState<NewsFeedItemResponse[] | null>(null);
+  const [confirmedPm, setConfirmedPm] = useState<Set<string>>(new Set());
+
+  // "Your SE team" follows Warranty overview's rendered height — Warranty is
+  // the reference card, SE team never grows past it and scrolls internally
+  // for any contacts beyond that.
+  const warrantyCardRef = useRef<HTMLDivElement>(null);
+  const [warrantyHeight, setWarrantyHeight] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const el = warrantyCardRef.current;
+    if (!el) return;
+    // offsetHeight (border-box) so it matches the SE-team card's own
+    // border-box exactly — contentRect would be 2px short (the 1px border).
+    const ro = new ResizeObserver(([entry]) => setWarrantyHeight((entry.target as HTMLElement).offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // "Upcoming maintenance" follows Latest service requests' rendered height —
+  // same pattern as SE team/Warranty above. Requests is the reference card;
+  // maintenance never grows past it and scrolls internally instead.
+  const requestsCardRef = useRef<HTMLDivElement>(null);
+  const [requestsHeight, setRequestsHeight] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const el = requestsCardRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setRequestsHeight((entry.target as HTMLElement).offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetDashboardSummary(accessToken).then(setSummary).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetDashboardTickets(accessToken).then(setTickets).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetDashboardMaintenance(accessToken).then(setMaintenance).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetSEContacts(accessToken).then(setSeContacts).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetNewsFeed(accessToken).then(setNewsFeed).catch(() => {});
+  }, []);
 
   const assets = useMemo(() => assetsFor(customerCode), [customerCode]);
-  const myRequests = requests.filter((r) => r.customerCode === customerCode);
-  const openRequests = myRequests.filter((r) => !['completed', 'closed', 'cancelled'].includes(r.status));
-  const upcomingPM = pmVisits
-    .filter((v) => v.customerCode === customerCode && v.status !== 'completed' && v.date >= '2026-07-14')
-    .sort((a, b) => (a.date > b.date ? 1 : -1));
   const pendingSignoffs = signoffs.filter((s) => s.customerCode === customerCode && s.status === 'pending');
   const contracts = contractsFor(customerCode);
   const expiringContracts = contracts.filter((c) => c.status === 'expiring');
 
   const wCounts = {
-    active: assets.filter((a) => a.warranty === 'active').length,
-    expiring: assets.filter((a) => a.warranty === 'expiring').length,
-    expired: assets.filter((a) => a.warranty === 'expired').length,
-    none: assets.filter((a) => a.warranty === 'none').length,
+    active: summary?.unitsInWarranty ?? 0,
+    expiring: summary?.unitsWarrantyExpiringSoon ?? 0,
+    expired: summary?.unitsWarrantyExpired ?? 0,
+    none: summary?.unitsNoWarranty ?? 0,
   };
   const donutData = [
     { key: 'active', name: lang === 'th' ? WARRANTY_STATUS.active.th : WARRANTY_STATUS.active.en, value: wCounts.active },
     { key: 'expiring', name: lang === 'th' ? WARRANTY_STATUS.expiring.th : WARRANTY_STATUS.expiring.en, value: wCounts.expiring },
     { key: 'expired', name: lang === 'th' ? WARRANTY_STATUS.expired.th : WARRANTY_STATUS.expired.en, value: wCounts.expired },
     { key: 'none', name: t('No warranty', 'ไม่มีประกัน'), value: wCounts.none },
-  ].filter((d) => d.value > 0);
+  ];
 
   const alarmedAssets = assets.filter((a) => a.iot?.alarms.some((al) => al.active && al.severity === 'critical'));
-  const latestRequests = [...myRequests].sort((a, b) => (a.updated < b.updated ? 1 : -1)).slice(0, 4);
-  const news = mockNews.slice(0, 3);
+  const news = (newsFeed ?? []).slice(0, 3);
 
   const quickActions = [
     { to: '/portal/requests/new', icon: Plus, en: 'Report a problem', th: 'แจ้งปัญหา', tone: 'brand' },
     { to: '/portal/equipment', icon: Package, en: 'Browse equipment', th: 'ดูอุปกรณ์', tone: '' },
     { to: '/portal/map', icon: MapPin, en: 'My Sites — Map', th: 'ไซต์ของฉัน — แผนที่', tone: '' },
-    { to: '/portal/iot', icon: Wifi, en: 'Live Monitoring', th: 'มอนิเตอริ่งแบบเรียลไทม์', tone: '' },
+    // { to: '/portal/iot', icon: Wifi, en: 'Live Monitoring', th: 'มอนิเตอริ่งแบบเรียลไทม์', tone: '' },
     // { to: '/portal/digital-twin', icon: Activity, en: 'Factory Digital Twin', th: 'ฝาแฝดดิจิทัลโรงงาน', tone: '' },
     { to: '/portal/pm', icon: CalendarCheck, en: 'PM schedule', th: 'แผน PM', tone: '' },
     { to: '/portal/history', icon: HistoryIcon, en: 'Service history', th: 'ประวัติบริการ', tone: '' },
@@ -93,10 +164,10 @@ export function DashboardPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">
-            {greeting(lang)}, {user?.name.split(' ')[0]}
+            {greeting(lang)}
           </h1>
           <p className="page-sub">
-            {lang === 'th' ? company.nameTh : company.name} · {company.customerCode} · {fmtDateLong('2026-07-14', lang)}
+            {companyDisplayName(summary?.preName, summary?.customerName, lang === 'th' ? company.nameTh : company.name)} · {summary?.customerCode ?? company.customerCode} · {fmtDateLong(new Date().toISOString(), lang)}
           </p>
         </div>
         <div className="page-actions">
@@ -115,35 +186,35 @@ export function DashboardPage() {
       <div className="grid-4" style={{ marginBottom: 16 }}>
         <KpiCard
           icon={<Package size={22} />}
-          value={assets.length}
+          value={summary?.totalUnits ?? 0}
           label={t('Registered equipment', 'อุปกรณ์ที่ลงทะเบียน')}
-          sub={t(`${company.sites.length} sites`, `${company.sites.length} ไซต์งาน`)}
+          sub={t(`${summary?.totalSites ?? 0} sites`, `${summary?.totalSites ?? 0} ไซต์งาน`)}
           to="/portal/equipment"
         />
         <KpiCard
           icon={<ShieldCheck size={22} />}
-          value={wCounts.active + wCounts.expiring}
+          value={summary?.unitsInWarranty ?? 0}
           label={t('Under warranty', 'อยู่ในประกัน')}
-          sub={wCounts.expiring > 0 ? t(`${wCounts.expiring} expiring soon`, `${wCounts.expiring} ใกล้หมดอายุ`) : undefined}
-          to="/portal/equipment?warranty=active"
+          sub={t(`${wCounts.expiring} expiring soon`, `${wCounts.expiring} ใกล้หมดอายุ`)}
+          to="/portal/equipment/list?warranty=active"
           tone="green"
         />
         <KpiCard
           icon={<ClipboardList size={22} />}
-          value={openRequests.length}
+          value={summary?.assignedTickets ?? 0}
           label={t('Open service requests', 'คำขอบริการที่ค้างอยู่')}
           sub={t(
-            `${openRequests.filter((r) => r.priority === 'urgent').length} urgent`,
-            `เร่งด่วน ${openRequests.filter((r) => r.priority === 'urgent').length}`,
+            `${summary?.criticalTickets ?? 0} urgent`,
+            `เร่งด่วน ${summary?.criticalTickets ?? 0}`,
           )}
           to="/portal/requests"
           tone="blue"
         />
         <KpiCard
           icon={<CalendarCheck size={22} />}
-          value={upcomingPM.length}
+          value={summary?.upcomingPmCount ?? 0}
           label={t('Upcoming PM visits', 'งาน PM ที่กำลังจะถึง')}
-          sub={upcomingPM[0] ? fmtDate(upcomingPM[0].date, lang) : undefined}
+          sub={summary?.nextPmDue ? fmtDate(summary.nextPmDue, lang) : undefined}
           to="/portal/pm"
           tone="amber"
         />
@@ -167,7 +238,7 @@ export function DashboardPage() {
         <div className="dash-main">
       {/* C. Alert strip */}
       <div style={{ display: 'grid', gap: 8, marginBottom: 18 }}>
-        {alarmedAssets.map((a) => (
+        {/* {alarmedAssets.map((a) => (
           <Link key={a.id} to={`/portal/equipment/${a.id}`} className="alert-item a-red">
             <AlertTriangle size={17} aria-hidden />
             <span>
@@ -179,8 +250,8 @@ export function DashboardPage() {
             </span>
             <ArrowRight size={15} aria-hidden style={{ marginLeft: 'auto', flex: '0 0 auto' }} />
           </Link>
-        ))}
-        {pendingSignoffs.map((s) => (
+        ))} */}
+        {/* {pendingSignoffs.map((s) => (
           <Link key={s.jobNo} to={`/portal/sign-off/${s.jobNo}`} className="alert-item a-blue">
             <FileSignature size={17} aria-hidden />
             <span>
@@ -189,8 +260,8 @@ export function DashboardPage() {
             </span>
             <ArrowRight size={15} aria-hidden style={{ marginLeft: 'auto', flex: '0 0 auto' }} />
           </Link>
-        ))}
-        {expiringContracts.map((c) => (
+        ))} */}
+        {/* {expiringContracts.map((c) => (
           <Link key={c.id} to={`/portal/contracts/${c.id}`} className="alert-item a-amber">
             <FileText size={17} aria-hidden />
             <span>
@@ -202,13 +273,13 @@ export function DashboardPage() {
             </span>
             <ArrowRight size={15} aria-hidden style={{ marginLeft: 'auto', flex: '0 0 auto' }} />
           </Link>
-        ))}
+        ))} */}
         {wCounts.expiring > 0 && (
-          <Link to="/portal/equipment?warranty=expiring" className="alert-item a-amber">
+          <Link to="/portal/equipment/list?warranty=expiring" className="alert-item a-amber">
             <ShieldCheck size={17} aria-hidden />
             <span>
               <strong>{t('Warranty', 'การรับประกัน')}:</strong>{' '}
-              {t(`${wCounts.expiring} assets leave warranty within 90 days.`, `อุปกรณ์ ${wCounts.expiring} รายการจะหมดประกันภายใน 90 วัน`)}
+              {t(`${wCounts.expiring} assets leave warranty within 60 days.`, `อุปกรณ์ ${wCounts.expiring} รายการจะหมดประกันภายใน 60 วัน`)}
             </span>
             <ArrowRight size={15} aria-hidden style={{ marginLeft: 'auto', flex: '0 0 auto' }} />
           </Link>
@@ -216,8 +287,11 @@ export function DashboardPage() {
       </div>
 
       <div className="grid-2" style={{ alignItems: 'start', marginBottom: 16 }}>
-        {/* D. Warranty donut */}
-        <div className="card">
+        {/* D. Warranty donut — the reference card. "Your SE team" reads this
+            card's rendered height via ResizeObserver (warrantyHeight) and
+            matches it exactly, scrolling its own contact list internally
+            instead of growing taller when there are many contacts. */}
+        <div className="card" ref={warrantyCardRef}>
           <div className="card-header">
             <h3 style={{ margin: 0 }}>{t('Warranty overview', 'ภาพรวมการรับประกัน')}</h3>
             <Link to="/portal/equipment" className="card-link">{t('View all', 'ดูทั้งหมด')}</Link>
@@ -248,43 +322,49 @@ export function DashboardPage() {
             </div>
             <p className="muted small" style={{ marginBottom: 0 }}>
               {t(
-                `${wCounts.active + wCounts.expiring} of ${assets.length} assets are covered; ${wCounts.expiring} need attention within 90 days.`,
-                `${wCounts.active + wCounts.expiring} จาก ${assets.length} รายการยังอยู่ในประกัน โดย ${wCounts.expiring} รายการต้องพิจารณาภายใน 90 วัน`,
+                `${wCounts.active} of ${wCounts.active + wCounts.expired + wCounts.none} assets are covered; ${wCounts.expiring} need attention within 60 days.`,
+                `${wCounts.active} จาก ${wCounts.active + wCounts.expired + wCounts.none} รายการยังอยู่ในประกัน โดย ${wCounts.expiring} รายการต้องพิจารณาภายใน 60 วัน`,
               )}
             </p>
           </div>
         </div>
 
         {/* J. SE contacts */}
-        <div className="card">
+        <div
+          className="card"
+          style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: warrantyHeight }}
+        >
           <div className="card-header">
             <h3 style={{ margin: 0 }}>{t('Your SE team', 'ทีม SE ของคุณ')}</h3>
           </div>
-          <div style={{ padding: 14, display: 'grid', gap: 10 }}>
-            {[
-              { p: company.accountManager, role: t('Account Manager', 'ผู้จัดการฝ่ายลูกค้า') },
-              { p: company.serviceCoordinator, role: t('Service Coordinator', 'ผู้ประสานงานบริการ') },
-            ].map(({ p, role }) => (
-              <div key={p.name} className="contact-card" style={{ border: 'none', padding: 4 }}>
-                <span className="avatar" aria-hidden>{p.name.split(' ').map((x) => x[0]).slice(0, 2).join('')}</span>
-                <div style={{ minWidth: 0 }}>
-                  <div className="fw-600">{p.name}</div>
-                  <div className="muted small">{role}</div>
-                  <div className="contact-links">
-                    <a href={`tel:${p.phone.replace(/\s/g, '')}`} className="chip">{p.phone}</a>
-                    <a href={`mailto:${p.email}`} className="chip">{t('Email', 'อีเมล')}</a>
-                    {p.line && <span className="chip">LINE {p.line}</span>}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div style={{ padding: 14, display: 'grid', gap: 10, flex: 1, minHeight: 0, overflowY: 'auto' }}>
+            {seContacts && seContacts.length === 0 ? (
+              <p className="muted small" style={{ margin: 0 }}>
+                {t('No SE contacts yet.', 'ยังไม่มีข้อมูลผู้ติดต่อ SE')}
+              </p>
+            ) : (
+              (seContacts ?? []).map((c) => (
+                <ContactSECard
+                  key={c.id}
+                  name={c.salePerson
+                    ? `${(lang === 'th' ? c.salePerson.nameTh : c.salePerson.nameEn) ?? ''} ${(lang === 'th' ? c.salePerson.lastNameTh : c.salePerson.lastNameEn) ?? ''}`.trim()
+                    : t('Unknown contact', 'ไม่ทราบชื่อผู้ติดต่อ')}
+                  position={(lang === 'th' ? c.salePerson?.positionTh : c.salePerson?.positionEn) ?? ''}
+                  phone={c.salePerson?.phone ?? ''}
+                  email={c.salePerson?.email ?? ''}
+                  processes={c.processes.map((p) => (lang === 'th' ? p.labelTh : p.labelEn))}
+                  style={{ border: 'none', padding: 4 }}
+                />
+              ))
+            )}
           </div>
         </div>
       </div>
 
       <div className="grid-2" style={{ alignItems: 'start', marginBottom: 16 }}>
-        {/* F. Latest requests */}
-        <div className="card">
+        {/* F. Latest requests — reference card that Upcoming maintenance's
+            height follows via ResizeObserver (requestsHeight). */}
+        <div className="card" ref={requestsCardRef}>
           <div className="card-header">
             <h3 style={{ margin: 0 }}>{t('Latest service requests', 'คำขอบริการล่าสุด')}</h3>
             <Link to="/portal/requests" className="card-link">{t('View all', 'ดูทั้งหมด')}</Link>
@@ -300,15 +380,15 @@ export function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {latestRequests.map((r) => {
-                  const st = REQUEST_STATUS[r.status];
-                  const pr = PRIORITY[r.priority];
+                {(tickets ?? []).map((tk) => {
+                  const pr = TICKET_PRIORITY[tk.priority];
+                  const st = TICKET_STATUS[tk.status];
                   return (
-                    <tr key={r.ticketNo} className="row-link" onClick={() => navigate(`/portal/requests/${r.ticketNo}`)}>
+                    <tr key={tk.ticket_no} className="row-link" onClick={() => navigate(`/portal/requests/${tk.ticket_no}`)}>
                       <td data-label={t('Ticket', 'เลขที่')}>
-                        <Link to={`/portal/requests/${r.ticketNo}`} onClick={(e) => e.stopPropagation()}>{r.ticketNo}</Link>
+                        <Link to={`/portal/requests/${tk.ticket_no}`} onClick={(e) => e.stopPropagation()}>{tk.ticket_no}</Link>
                       </td>
-                      <td data-label={t('Subject', 'เรื่อง')}>{r.title}</td>
+                      <td data-label={t('Subject', 'เรื่อง')}>{tk.description}</td>
                       <td data-label={t('Priority', 'ความเร่งด่วน')}>
                         <StatusBadge label={lang === 'th' ? pr.th : pr.en} tone={pr.tone} />
                       </td>
@@ -323,39 +403,46 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* G. Upcoming PM */}
-        <div className="card">
+        {/* G. Upcoming PM — matches Latest service requests' rendered height
+            via ResizeObserver (requestsHeight) and scrolls its own list
+            internally instead of growing taller when there are many items. */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: requestsHeight }}>
           <div className="card-header">
             <h3 style={{ margin: 0 }}>{t('Upcoming maintenance', 'งานบำรุงรักษาที่กำลังจะถึง')}</h3>
             <Link to="/portal/pm" className="card-link">{t('Full schedule', 'ดูแผนทั้งหมด')}</Link>
           </div>
-          <div style={{ padding: '6px 18px 14px' }}>
-            {upcomingPM.slice(0, 3).map((v) => (
-              <div key={v.id} style={{ padding: '12px 0', borderBottom: '1px dashed var(--se-border)' }}>
-                <div className="between" style={{ alignItems: 'flex-start' }}>
-                  <div>
-                    <div className="fw-600">{fmtDate(v.date, lang)} · {v.time}</div>
-                    <div className="muted small">
-                      {siteName(customerCode, v.siteId, lang)} · {v.assetIds.length} {t('asset(s)', 'อุปกรณ์')}
+          <div style={{ padding: '6px 18px 14px', flex: 1, minHeight: 0, overflowY: 'auto' }}>
+            {(maintenance ?? []).map((v) => {
+              const isConfirmed = confirmedPm.has(v.pmId);
+              return (
+                <div key={v.pmId} style={{ padding: '12px 0', borderBottom: '1px dashed var(--se-border)' }}>
+                  <div className="between" style={{ alignItems: 'flex-start' }}>
+                    <div>
+                      <div className="fw-600">{fmtDate(v.nextDue, lang)}</div>
+                      <div className="muted small">
+                        {t('Site TBD', 'ไซต์ยังไม่ระบุ')} · {v.totalUnits} {t('asset(s)', 'อุปกรณ์')}
+                      </div>
+                      <div className="small" style={{ marginTop: 4 }}>{v.description}</div>
                     </div>
-                    <div className="small" style={{ marginTop: 4 }}>{v.scope}</div>
+                    {isConfirmed && <StatusBadge label={t('Confirmed', 'ยืนยันแล้ว')} tone="green" />}
                   </div>
-                  {v.status === 'confirmed' && <StatusBadge label={t('Confirmed', 'ยืนยันแล้ว')} tone="green" />}
-                  {v.status === 'reschedule_requested' && <StatusBadge label={t('Reschedule requested', 'ขอเลื่อนนัด')} tone="amber" />}
+                  {/* {!isConfirmed && (
+                    <div className="flex" style={{ gap: 8, marginTop: 8 }}>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => setConfirmedPm((prev) => new Set(prev).add(v.pmId))}
+                      >
+                        {t('Confirm', 'ยืนยันนัด')}
+                      </button>
+                      <Link to="/portal/pm" className="btn btn-outline btn-sm">
+                        {t('Reschedule', 'ขอเลื่อนนัด')}
+                      </Link>
+                    </div>
+                  )} */}
                 </div>
-                {v.status === 'unconfirmed' && (
-                  <div className="flex" style={{ gap: 8, marginTop: 8 }}>
-                    <button className="btn btn-primary btn-sm" onClick={() => confirmPM(v.id)}>
-                      {t('Confirm', 'ยืนยันนัด')}
-                    </button>
-                    <Link to="/portal/pm" className="btn btn-outline btn-sm">
-                      {t('Reschedule', 'ขอเลื่อนนัด')}
-                    </Link>
-                  </div>
-                )}
-              </div>
-            ))}
-            {upcomingPM.length === 0 && <p className="muted">{t('No upcoming visits scheduled.', 'ยังไม่มีนัดหมายที่กำลังจะถึง')}</p>}
+              );
+            })}
+            {(maintenance ?? []).length === 0 && <p className="muted">{t('No upcoming visits scheduled.', 'ยังไม่มีนัดหมายที่กำลังจะถึง')}</p>}
           </div>
         </div>
       </div>
@@ -371,12 +458,11 @@ export function DashboardPage() {
             <Link key={n.id} to={`/portal/news/${n.id}`} className="card" style={{ padding: 14, textDecoration: 'none', color: 'inherit' }}>
               <div className="flex" style={{ gap: 8, marginBottom: 6 }}>
                 <Newspaper size={16} className="muted" aria-hidden />
-                <span className="muted small">{fmtDate(n.date, lang)} · {n.readMins} {t('min read', 'นาที')}</span>
+                <span className="muted small">
+                  {fmtDate(newsDisplayDate(n), lang)}
+                </span>
               </div>
-              <div className="fw-600" style={{ marginBottom: 4 }}>{lang === 'th' ? n.titleTh : n.title}</div>
-              <div className="muted small" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                {n.summary}
-              </div>
+              <div className="fw-600">{lang === 'th' ? n.titleTh : n.titleEn}</div>
             </Link>
           ))}
         </div>

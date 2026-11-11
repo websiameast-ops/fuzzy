@@ -17,18 +17,27 @@ interface CompanyCtx {
 
 const Ctx = createContext<CompanyCtx | null>(null);
 
+// Persists which company the user picked at login, so a page refresh doesn't lose the
+// selection and bounce RequireAuth back to /login even though the session is still valid.
+const SELECTED_COMPANY_KEY = 'se_selected_company';
+
 export function CompanyProvider({ children }: { children: ReactNode }) {
-  const [customerCode, setCustomerCode] = useState<string>('CUS-00128');
-  const [companySelected, setCompanySelected] = useState(false);
+  const storedCode = localStorage.getItem(SELECTED_COMPANY_KEY);
+  const [customerCode, setCustomerCode] = useState<string>(storedCode ?? 'CUS-00128');
+  const [companySelected, setCompanySelected] = useState(Boolean(storedCode));
   const [siteId, setSiteId] = useState<string>('');
 
   const setCompanyCode = useCallback((code: string) => {
+    localStorage.setItem(SELECTED_COMPANY_KEY, code);
     setCustomerCode(code);
     setCompanySelected(true);
     setSiteId('');
   }, []);
 
-  const clearSelection = useCallback(() => setCompanySelected(false), []);
+  const clearSelection = useCallback(() => {
+    localStorage.removeItem(SELECTED_COMPANY_KEY);
+    setCompanySelected(false);
+  }, []);
 
   const value = useMemo(
     () => ({

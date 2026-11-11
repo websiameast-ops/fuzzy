@@ -1,9 +1,11 @@
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { LifeBuoy, LogOut } from 'lucide-react';
 import { Logo } from '@/components/common';
-import { NAV_ITEMS } from '@/utils/nav';
+import { NAV_ITEMS, getNewsLastPath } from '@/utils/nav';
 import { useLang } from '@/contexts/LanguageContext';
-import { useCompany } from '@/contexts/CompanyContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { companyDisplayName } from '@/utils/format';
+import { useAppVersion } from '@/hooks/useAppVersion';
 
 export function Sidebar({
   collapsed,
@@ -17,20 +19,32 @@ export function Sidebar({
   onOpenSupport: () => void;
 }) {
   const { lang, t } = useLang();
-  const { company } = useCompany();
+  const { user, profileLoading } = useAuth();
+  const version = useAppVersion();
+  const location = useLocation();
+
   return (
     <>
       {mobileOpen && <div className="sidebar-backdrop" onClick={onCloseMobile} role="presentation" />}
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`} aria-label={t('Main navigation', 'เมนูหลัก')}>
         <div className="sidebar-header">
           <Link to="/portal" aria-label={t('SE Connex home', 'หน้าหลัก SE Connex')} onClick={onCloseMobile}>
-            <Logo height={collapsed ? 28 : 32} collapsed={collapsed} />
+            <Logo height={collapsed ? 26 : 32} collapsed={collapsed} />
           </Link>
           <div className="company-chip">
-            <div className="fw-600 small" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {lang === 'th' ? company.nameTh : company.name}
-            </div>
-            <div className="muted small">{company.customerCode}</div>
+            {profileLoading ? (
+              <>
+                <span className="skeleton" style={{ display: 'block', width: '70%', height: 14, marginBottom: 4 }} />
+                <span className="skeleton" style={{ display: 'block', width: '40%', height: 12 }} />
+              </>
+            ) : (
+              <>
+                <div className="fw-600 small" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {companyDisplayName(user?.preName, user?.customerName, user?.name ?? '—')}
+                </div>
+                <div className="muted small">{user?.customerCode ?? '—'}</div>
+              </>
+            )}
           </div>
         </div>
 
@@ -38,12 +52,14 @@ export function Sidebar({
           <div className="nav-section-title">{t('Portal', 'พอร์ทัล')}</div>
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
+            const isNews = item.to === '/portal/news';
+            const to = isNews ? (getNewsLastPath() ?? item.to) : item.to;
             return (
               <NavLink
                 key={item.to}
-                to={item.to}
+                to={to}
                 end={item.end}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                className={({ isActive }) => `nav-item ${(isNews ? location.pathname.startsWith('/portal/news') : isActive) ? 'active' : ''}`}
                 onClick={onCloseMobile}
                 title={lang === 'th' ? item.th : item.en}
               >
@@ -71,7 +87,9 @@ export function Sidebar({
             <LogOut size={19} className="nav-icon" aria-hidden />
             <span className="nav-label">{t('Sign out', 'ออกจากระบบ')}</span>
           </Link>
-          <div className="version-label">Customer Portal v2 Preview</div>
+          <div className="version-label">
+            {t('Customer Portal', 'พอร์ทัลลูกค้า')} {version ? `v${version}` : ''}
+          </div>
         </div>
       </aside>
     </>

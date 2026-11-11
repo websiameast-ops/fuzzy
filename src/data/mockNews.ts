@@ -1,4 +1,16 @@
-import type { NewsArticle } from '@/types';
+/** Seed articles for the mock news feed (see mockApi.ts::newsFeed). */
+export interface NewsArticle {
+  id: string;
+  category: 'company' | 'products' | 'promotions' | 'sustainability' | 'tips' | string;
+  title: string;
+  titleTh: string;
+  summary: string;
+  date: string;
+  readMins: number;
+  featured?: boolean;
+  imageUrl?: string;
+  content: string[];
+}
 
 export const mockNews: NewsArticle[] = [
   {

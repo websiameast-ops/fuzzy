@@ -10,23 +10,23 @@ import { num } from '@/utils/format';
 import type { Asset } from '@/types';
 
 const CATEGORY_ICON: Record<string, typeof Sun> = {
+  'Solar & Energy': Sun,
   Pump: Droplet,
-  Mixer: Activity,
-  Service: Zap,
-  'Spare Part': Package,
-  Other: Radio,
+  Valve: Package,
+  'Metering & Instrumentation': Zap,
+  'Monitoring & IoT': Radio,
 };
 
 const CATEGORY_COLOR: Record<string, string> = {
+  'Solar & Energy': 'var(--se-accent)',
   Pump: 'var(--se-primary)',
-  Mixer: '#0ea5e9',
-  Service: 'var(--se-accent)',
-  'Spare Part': '#8b5cf6',
-  Other: '#64748b',
+  Valve: '#6b7a8d',
+  'Metering & Instrumentation': 'var(--se-info)',
+  'Monitoring & IoT': '#8a94a3',
 };
 
 function isGeneration(category: string) {
-  return category === 'Service';
+  return category === 'Solar & Energy';
 }
 
 export function DigitalTwinPage() {
@@ -269,11 +269,10 @@ function FactoryMap({
 
   // Place each connected asset into a zone by category, spreading them within.
   const zoneFor = (a: Asset): string => {
-    if (a.category === 'Service') return 'utility';
-    if (a.category === 'Pump') return 'pumproom';
-    if (a.category === 'Mixer') return 'production';
-    if (a.category === 'Spare Part') return 'warehouse';
-    if (a.category === 'Other') return 'production';
+    if (a.category === 'Solar & Energy') return 'solar';
+    if (a.category === 'Pump' || a.category === 'Valve') return 'pumproom';
+    if (a.category === 'Metering & Instrumentation') return 'utility';
+    if (a.category === 'Monitoring & IoT') return 'production';
     return 'production';
   };
 

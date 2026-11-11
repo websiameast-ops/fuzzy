@@ -21,6 +21,7 @@ export const mockPM: PMVisit[] = [
     team: 'SE Rotating Equipment — Team B (Krit S.)',
     contact: 'Suda Phromma',
     status: 'unconfirmed',
+    pmType: 'overhaul',
     checklist: CHECKLIST.map((c) => ({ ...c })),
   },
   {
@@ -34,6 +35,7 @@ export const mockPM: PMVisit[] = [
     team: 'SE Energy Solutions (Pimchanok W.)',
     contact: 'Suda Phromma',
     status: 'confirmed',
+    pmType: 'inspection',
     checklist: CHECKLIST.map((c, i) => ({ ...c, done: i < 3 || c.done })),
   },
   {
@@ -47,6 +49,7 @@ export const mockPM: PMVisit[] = [
     team: 'SE Rotating Equipment — Team A (Thanawat P.)',
     contact: 'Anan Ruangkit',
     status: 'unconfirmed',
+    pmType: 'lubrication',
     checklist: CHECKLIST.map((c) => ({ ...c })),
   },
   {
@@ -60,7 +63,9 @@ export const mockPM: PMVisit[] = [
     team: 'SE Rotating Equipment — Team A (Thanawat P.)',
     contact: 'Anan Ruangkit',
     status: 'completed',
+    pmType: 'routine',
     reportId: 'SR-2026-00119',
+    ticketNo: 'TK-2026-0098',
     checklist: CHECKLIST.map((c) => ({ ...c, done: true })),
   },
   {
@@ -74,7 +79,9 @@ export const mockPM: PMVisit[] = [
     team: 'SE Energy Solutions (Pimchanok W.)',
     contact: 'Suda Phromma',
     status: 'completed',
+    pmType: 'inspection',
     reportId: 'SR-2026-00110',
+    ticketNo: 'TK-2026-0075',
     checklist: CHECKLIST.map((c) => ({ ...c, done: true })),
   },
   {
@@ -88,6 +95,7 @@ export const mockPM: PMVisit[] = [
     team: 'SE Rotating Equipment — Team C (Somyot K.)',
     contact: 'Preecha Wongsa',
     status: 'confirmed',
+    pmType: 'overhaul',
     checklist: CHECKLIST.map((c, i) => ({ ...c, done: i < 2 || c.done })),
   },
   {
@@ -101,7 +109,9 @@ export const mockPM: PMVisit[] = [
     team: 'SE Rotating Equipment — Team C (Somyot K.)',
     contact: 'Preecha Wongsa',
     status: 'completed',
+    pmType: 'routine',
     reportId: 'SR-2026-00204',
+    ticketNo: 'TK-2026-0188',
     checklist: CHECKLIST.map((c) => ({ ...c, done: true })),
   },
   {
@@ -115,6 +125,7 @@ export const mockPM: PMVisit[] = [
     team: 'SE Rotating Equipment — Team C',
     contact: 'Preecha Wongsa',
     status: 'unconfirmed',
+    pmType: 'calibration',
     checklist: CHECKLIST.map((c) => ({ ...c })),
   },
 ];

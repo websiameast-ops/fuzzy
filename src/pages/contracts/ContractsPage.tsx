@@ -1,25 +1,146 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Download, FileText, Package, RefreshCw, ShieldCheck, Wrench } from 'lucide-react';
+import { ArrowLeft, Calendar, ChevronLeft, ChevronRight, Download, Eye, FileText, Package, RefreshCw, ShieldCheck, Wrench } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/contexts/ToastContext';
 import { EmptyState, Modal, StatusBadge } from '@/components/common';
 import { ServiceReportModal } from '@/components/service/ServiceReportModal';
-import { contractsFor, getContract } from '@/data/mockContracts';
+import {
+  apiGetEquipmentUnitDatasheets,
+  apiGetEquipmentUnits,
+  type EquipmentDatasheetResponse,
+  type EquipmentUnitResponse,
+} from '@/lib/apiClient';
+import { tokenStore } from '@/lib/tokenStore';
+import { getContract } from '@/data/mockContracts';
 import { getAsset } from '@/data/mockAssets';
 import { historyFor } from '@/data/mockHistory';
 import { siteName } from '@/data/mockCompanies';
 import { daysUntil, fmtDate } from '@/utils/format';
-import { CONTRACT_STATUS } from '@/utils/status';
-import type { ServiceRecord } from '@/types';
+import { CONTRACT_STATUS, WARRANTY_STATUS } from '@/utils/status';
+import type { WarrantyStatus } from '@/types';
+
+const PAGE_SIZE = 20;
+
+// Backend vocab.WarrantyState → the portal's shared WARRANTY_STATUS badge
+// tokens (same boundary translation as EquipmentPage.tsx).
+const STATE_TO_WARRANTY: Record<EquipmentUnitResponse['warrantyState'], WarrantyStatus> = {
+  active: 'active',
+  expiringSoon: 'expiring',
+  expired: 'expired',
+  unknown: 'none',
+};
+
+// One row per Asset (catalog item), not per serialized AssetUnit. Data sheets
+// are stored per Asset and shared by all its units, so any one unitId of the
+// Asset is enough to fetch them — it's kept internal and never rendered.
+interface AssetRow {
+  key: string;
+  id: string;
+  assetCode: string | null;
+  nameEn: string;
+  nameTh: string;
+  categoryEn: string | null;
+  categoryTh: string | null;
+  nextDue: string | null;
+  purchaseDate: string | null;
+  installDate: string | null;
+  warrantyUntil: string | null;
+  warrantyState: EquipmentUnitResponse['warrantyState'];
+  unitId: string;
+  datasheetCount: number;
+}
+
+function groupByAsset(units: EquipmentUnitResponse[]): AssetRow[] {
+  const rows = new Map<string, AssetRow>();
+  for (const u of units) {
+    // Asset.asset_code is UNIQUE, so it identifies one Asset.
+    const key = u.assetCode ?? u.id;
+    const row = rows.get(key);
+    if (!row) {
+      rows.set(key, {
+        key,
+        id: u.id,
+        assetCode: u.assetCode,
+        nameEn: u.nameEn,
+        nameTh: u.nameTh,
+        categoryEn: u.categoryEn,
+        categoryTh: u.categoryTh,
+        nextDue: u.nextDue,
+        // Purchase date comes from the Asset's invoice, so it's shared by all
+        // its units; install date and warranty are per unit and aggregated
+        // below (earliest install, soonest-expiring warranty).
+        purchaseDate: u.purchaseDate,
+        installDate: u.installDate,
+        warrantyUntil: u.warrantyUntil,
+        warrantyState: u.warrantyState,
+        unitId: u.unitId,
+        datasheetCount: u.datasheetCount,
+      });
+    } else {
+      if (u.nextDue && (!row.nextDue || u.nextDue < row.nextDue)) row.nextDue = u.nextDue;
+      if (u.installDate && (!row.installDate || u.installDate < row.installDate)) row.installDate = u.installDate;
+      if (u.warrantyUntil && (!row.warrantyUntil || u.warrantyUntil < row.warrantyUntil)) {
+        row.warrantyUntil = u.warrantyUntil;
+        row.warrantyState = u.warrantyState;
+      }
+    }
+  }
+  return [...rows.values()];
+}
 
 export function ContractsPage() {
   const { lang, t } = useLang();
-  const { customerCode } = useCompany();
-  const navigate = useNavigate();
-  const contracts = useMemo(() => contractsFor(customerCode), [customerCode]);
+
+  const [units, setUnits] = useState<EquipmentUnitResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) {
+      setLoading(false);
+      return;
+    }
+    apiGetEquipmentUnits(accessToken)
+      .then(setUnits)
+      .catch(() => setUnits([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const assets = useMemo(() => groupByAsset(units), [units]);
+
+  // Paged client-side: rows are grouped per Asset here, so server-side paging
+  // of units would split an Asset across pages.
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(assets.length / PAGE_SIZE));
+  const pagedAssets = useMemo(
+    () => assets.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [assets, page],
+  );
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  const [selectedAsset, setSelectedAsset] = useState<AssetRow | null>(null);
+  const [datasheets, setDatasheets] = useState<EquipmentDatasheetResponse[]>([]);
+  const [datasheetsLoading, setDatasheetsLoading] = useState(false);
+  const [previewFile, setPreviewFile] = useState<EquipmentDatasheetResponse | null>(null);
+
+  useEffect(() => {
+    setDatasheets([]);
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken || !selectedAsset) return;
+    setDatasheetsLoading(true);
+    apiGetEquipmentUnitDatasheets(accessToken, selectedAsset.unitId)
+      .then(setDatasheets)
+      .catch(() => {})
+      .finally(() => setDatasheetsLoading(false));
+  }, [selectedAsset]);
+
+  const assetName = (a: AssetRow) => (lang === 'th' ? a.nameTh : a.nameEn);
 
   return (
     <div>
@@ -27,63 +148,178 @@ export function ContractsPage() {
         <div>
           <h1 className="page-title">{t('Contracts & Maintenance Agreements', 'สัญญาและข้อตกลงบำรุงรักษา')}</h1>
           <p className="page-sub">
-            {t('Your active MA, O&M and monitoring agreements with SiamEast Solutions.', 'สัญญา MA, O&M และมอนิเตอริ่งที่มีผลกับสยามอีสท์ โซลูชั่น')}
+            {t('Equipment under service with SiamEast Solutions, with data sheets for each asset.', 'อุปกรณ์ที่อยู่ในการดูแลของสยามอีสท์ โซลูชั่น พร้อม Data Sheet ของแต่ละรายการ')}
           </p>
         </div>
       </div>
 
-      {contracts.length === 0 ? (
+      {loading ? (
+        <div className="card text-center" style={{ padding: '60px 20px' }}>
+          <p className="muted">{t('Loading equipment…', 'กำลังโหลดข้อมูลอุปกรณ์…')}</p>
+        </div>
+      ) : assets.length === 0 ? (
         <EmptyState
           icon={<FileText size={24} />}
-          title={t('No contracts on this company profile', 'ไม่มีสัญญาในบริษัทนี้')}
+          title={t('No equipment on this company profile', 'ไม่มีอุปกรณ์ในบริษัทนี้')}
           body={t('Ask your account manager about maintenance agreements that fit your equipment.', 'สอบถามผู้จัดการฝ่ายลูกค้าเกี่ยวกับสัญญาบำรุงรักษาที่เหมาะกับอุปกรณ์ของคุณ')}
           action={<Link to="/portal/requests/new" className="btn btn-primary btn-sm">{t('Contact SE', 'ติดต่อ SE')}</Link>}
         />
       ) : (
-        <div className="grid-2">
-          {contracts.map((c) => {
-            const st = CONTRACT_STATUS[c.status];
-            const remaining = daysUntil(c.end);
-            return (
-              <button key={c.id} className="card" style={{ padding: 18, textAlign: 'left', cursor: 'pointer' }} onClick={() => navigate(`/portal/contracts/${c.id}`)}>
-                <div className="between" style={{ alignItems: 'flex-start' }}>
-                  <div>
-                    <div className="fw-600" style={{ fontSize: 15 }}>{lang === 'th' ? c.typeTh : c.type}</div>
-                    <div className="muted small">{c.id}</div>
-                  </div>
-                  <StatusBadge label={lang === 'th' ? st.th : st.en} tone={st.tone} />
-                </div>
-                <div className="stat-line" style={{ marginTop: 10 }}>
-                  <span className="k">{t('Term', 'ระยะเวลา')}</span>
-                  <span className="v">{fmtDate(c.start, lang)} – {fmtDate(c.end, lang)}</span>
-                </div>
-                <div className="stat-line">
-                  <span className="k">{t('Remaining', 'คงเหลือ')}</span>
-                  <span className="v">
-                    {remaining > 0
-                      ? t(`${remaining} days`, `${remaining} วัน`)
-                      : t(`Expired ${-remaining} days ago`, `หมดอายุมาแล้ว ${-remaining} วัน`)}
-                  </span>
-                </div>
-                <div className="stat-line">
-                  <span className="k">{t('PM visits used', 'จำนวนครั้ง PM ที่ใช้')}</span>
-                  <span className="v">{c.visitsUsed} / {c.visitsTotal}</span>
-                </div>
-                <div className="stat-line">
-                  <span className="k">{t('Covered assets', 'อุปกรณ์ในสัญญา')}</span>
-                  <span className="v">{c.assetIds.length}</span>
-                </div>
-                {c.status === 'expiring' && (
-                  <div className="alert-item a-amber" style={{ marginTop: 10 }}>
-                    <Calendar size={15} aria-hidden />
-                    <span className="small">{t(`Renewal recommended — expires in ${remaining} days.`, `แนะนำต่ออายุ — จะหมดอายุในอีก ${remaining} วัน`)}</span>
-                  </div>
-                )}
-              </button>
-            );
-          })}
+        <div className="card table-to-cards" style={{ overflow: 'hidden' }}>
+          <table className="se-table">
+            <thead>
+              <tr>
+                <th>{t('Item Code', 'รหัสสินค้า')}</th>
+                <th>{t('Category', 'หมวด')}</th>
+                <th>{t('Purchased', 'วันที่ซื้อ')}</th>
+                <th>{t('Installed', 'ติดตั้งเมื่อ')}</th>
+                <th>{t('Warranty', 'การรับประกัน')}</th>
+                <th>{t('Next PM', 'PM ถัดไป')}</th>
+                <th aria-label={t('Actions', 'การดำเนินการ')} />
+              </tr>
+            </thead>
+            <tbody>
+              {pagedAssets.map((a) => {
+                const warrantyToken = STATE_TO_WARRANTY[a.warrantyState];
+                const wa = WARRANTY_STATUS[warrantyToken];
+                return (
+                <tr key={a.key}>
+                  <td data-label={t('Item Code', 'รหัสสินค้า')}>
+                    <div className="fw-600">{a.id}</div>
+                    {a.assetCode && <div className="muted small">{a.assetCode}</div>}
+                  </td>
+                  <td data-label={t('Category', 'หมวด')}>{(lang === 'th' ? a.categoryTh : a.categoryEn) ?? '—'}</td>
+                  <td data-label={t('Purchased', 'วันที่ซื้อ')}>{a.purchaseDate ? fmtDate(a.purchaseDate, lang) : '—'}</td>
+                  <td data-label={t('Installed', 'ติดตั้งเมื่อ')}>{a.installDate ? fmtDate(a.installDate, lang) : '—'}</td>
+                  <td data-label={t('Warranty', 'การรับประกัน')}>
+                    {warrantyToken === 'none' ? (
+                      <span className="muted small">{t('No warranty', 'ไม่มีประกัน')}</span>
+                    ) : (
+                      <div>
+                        <StatusBadge label={lang === 'th' ? wa.th : wa.en} tone={wa.tone} />
+                        <div className="muted small" style={{ marginTop: 3 }}>
+                          {t('Expires:', 'หมดอายุ:')} {a.warrantyUntil ? fmtDate(a.warrantyUntil, lang) : '—'}
+                        </div>
+                      </div>
+                    )}
+                  </td>
+                  <td data-label={t('Next PM', 'PM ถัดไป')}>{a.nextDue ? fmtDate(a.nextDue, lang) : '—'}</td>
+                  <td data-label={t('Actions', 'การดำเนินการ')}>
+                    {a.datasheetCount > 0 && (
+                      <div className="flex" style={{ justifyContent: 'flex-end' }}>
+                        <button
+                          className="btn btn-outline btn-sm"
+                          onClick={() => setSelectedAsset(a)}
+                        >
+                          <FileText size={15} aria-hidden />
+                          {t('Datasheet', 'ดู Datasheet')} ({a.datasheetCount})
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
+
+      {!loading && assets.length > 0 && (
+        <div className="between" style={{ marginTop: 16 }}>
+          <span className="muted small">{t(`${assets.length} item(s)`, `ทั้งหมด ${assets.length} รายการ`)}</span>
+          <div className="flex" style={{ gap: 8 }}>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <ChevronLeft size={14} aria-hidden />
+              {t('Prev', 'ก่อนหน้า')}
+            </button>
+            <span className="muted small">{t(`Page ${page} / ${totalPages}`, `หน้า ${page} / ${totalPages}`)}</span>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              {t('Next', 'ถัดไป')}
+              <ChevronRight size={14} aria-hidden />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <Modal
+        open={selectedAsset !== null}
+        onClose={() => setSelectedAsset(null)}
+        title={selectedAsset ? `${t('Data Sheet', 'Data Sheet')} — ${assetName(selectedAsset)}` : t('Data Sheet', 'Data Sheet')}
+      >
+        {datasheetsLoading ? (
+          <p className="muted small" style={{ margin: 0 }}>{t('Loading…', 'กำลังโหลด…')}</p>
+        ) : datasheets.length === 0 ? (
+          <p className="muted small" style={{ margin: 0 }}>
+            {t('No data sheet uploaded yet.', 'ยังไม่มี Data Sheet สำหรับอุปกรณ์นี้')}
+          </p>
+        ) : (
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 8 }}>
+            {datasheets.map((f) => (
+              <li
+                key={f.attachmentId}
+                className="between"
+                style={{ alignItems: 'center', gap: 8, border: '1px solid var(--se-border)', borderRadius: 'var(--radius)', padding: '8px 10px' }}
+              >
+                <span className="flex" style={{ alignItems: 'center', gap: 8, minWidth: 0 }}>
+                  <FileText size={16} aria-hidden />
+                  <span className="fw-600 small" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.fileName}</span>
+                </span>
+                <span className="flex" style={{ gap: 6, flexShrink: 0 }}>
+                  <button
+                    className="btn btn-outline btn-sm"
+                    onClick={() => {
+                      setSelectedAsset(null);
+                      setPreviewFile(f);
+                    }}
+                  >
+                    <Eye size={15} aria-hidden />
+                    {t('Preview', 'ดูตัวอย่าง')}
+                  </button>
+                  <a className="btn btn-ghost btn-sm" href={f.url} target="_blank" rel="noreferrer">
+                    <Download size={15} aria-hidden />
+                    {t('Download', 'ดาวน์โหลด')}
+                  </a>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Modal>
+
+      <Modal
+        open={previewFile !== null}
+        onClose={() => setPreviewFile(null)}
+        large
+        title={previewFile?.fileName ?? t('Data Sheet', 'Data Sheet')}
+      >
+        {previewFile && (
+          previewFile.mimeType?.startsWith('application/pdf') ? (
+            <iframe
+              src={previewFile.url}
+              title={previewFile.fileName}
+              style={{ width: '100%', height: '75vh', border: 'none' }}
+            />
+          ) : previewFile.mimeType?.startsWith('image/') ? (
+            <img src={previewFile.url} alt={previewFile.fileName} style={{ maxWidth: '100%', display: 'block', margin: '0 auto' }} />
+          ) : (
+            <p className="muted small">
+              {t("Can't preview this file type in the browser.", 'ไม่สามารถแสดงตัวอย่างไฟล์นี้ในเบราว์เซอร์ได้')}{' '}
+              <a href={previewFile.url} target="_blank" rel="noreferrer">{t('Download instead', 'ดาวน์โหลดแทน')}</a>
+            </p>
+          )
+        )}
+      </Modal>
     </div>
   );
 }
@@ -96,7 +332,7 @@ export function ContractDetailPage() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [renewOpen, setRenewOpen] = useState(false);
-  const [openRecord, setOpenRecord] = useState<ServiceRecord | null>(null);
+  const [openTicketNo, setOpenTicketNo] = useState<string | null>(null);
 
   const contract = contractId ? getContract(contractId) : undefined;
 
@@ -239,9 +475,11 @@ export function ContractDetailPage() {
                 <div className="fw-600 small">{h.issue}</div>
                 <div className="muted small">{fmtDate(h.date, lang)} · {h.type} · {getAsset(h.assetId)?.name ?? h.assetId}</div>
               </div>
-              <button className="btn btn-outline btn-sm" onClick={() => setOpenRecord(h)}>
-                {t('View report', 'ดูรายงาน')} {h.reportId}
-              </button>
+              {h.ticketNo && (
+                <button className="btn btn-outline btn-sm" onClick={() => setOpenTicketNo(h.ticketNo!)}>
+                  {t('View report', 'ดูรายงาน')} {h.reportId}
+                </button>
+              )}
             </div>
           ))
         )}
@@ -266,7 +504,7 @@ export function ContractDetailPage() {
         </p>
       </Modal>
 
-      <ServiceReportModal record={openRecord} open={openRecord !== null} onClose={() => setOpenRecord(null)} />
+      <ServiceReportModal ticketNo={openTicketNo} open={openTicketNo !== null} onClose={() => setOpenTicketNo(null)} />
     </div>
   );
 }

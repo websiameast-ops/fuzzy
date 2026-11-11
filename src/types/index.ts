@@ -12,7 +12,6 @@ export interface ContactPerson {
   roleTh: string;
   phone: string;
   email: string;
-  line?: string;
 }
 
 export interface Company {
@@ -26,13 +25,7 @@ export interface Company {
 }
 
 export type WarrantyStatus = 'active' | 'expiring' | 'expired' | 'none';
-export type OperatingStatus =
-  | 'running'
-  | 'online'
-  | 'operating'
-  | 'maintenance'
-  | 'stopped'
-  | 'offline';
+export type OperatingStatus = 'Active' | 'UnderRepair' | 'Decommissioned';
 
 export interface MeterPhase {
   voltageV: number;
@@ -76,6 +69,7 @@ export interface AssetTimelineEvent {
   title: string;
   detail: string;
   reportId?: string;
+  ticketNo?: string;
 }
 
 export interface AssetDocument {
@@ -235,10 +229,66 @@ export interface ServiceRecord {
   result: string;
   approval: 'approved' | 'pending' | 'na';
   contractId?: string;
+  ticketNo?: string;
   report: ServiceReportDetail;
 }
 
+/** One captured photo from a job's procedure run — see ServiceReportModal /
+ * apiGetTicketReport (GET /tickets/{ticketNo}/report). */
+export interface ServiceReportPhoto {
+  attachmentId: string;
+  url: string;
+  fileName: string;
+  uploadedAt?: string;
+  labelTh?: string;
+}
+
+/** One recorded measurement from a job's procedure run — a
+ * ChecklistItem(kind='data') ⋈ DataReading row. */
+export interface ServiceReportReading {
+  itemId: string;
+  labelTh: string;
+  labelEn?: string;
+  unit?: string;
+  /** Decimal — serialized as a JSON string by the backend, not a number. */
+  value?: string;
+  valueText?: string;
+}
+
+/** One PhaseTemplate of a job's procedure run (e.g. "Before Remove",
+ * "Workshop Inspection", …), with its captured photos and recorded data
+ * readings — data-driven, not a fixed set of categories. */
+export interface ServiceReportPhase {
+  phaseId: string;
+  seq: number;
+  nameTh: string;
+  nameEn?: string;
+  photos: ServiceReportPhoto[];
+  readings: ServiceReportReading[];
+  status?: string;
+}
+
+/** Combined report for one ticket, as returned by GET /tickets/{ticketNo}/report. */
+export interface ServiceReport {
+  ticketNo: string;
+  type: string;
+  description?: string;
+  jobNo?: string;
+  startedAt?: string;
+  customerName?: string;
+  assetCode: string;
+  serialNo?: string;
+  site?: string;
+  engineerName?: string;
+  workSummary?: string;
+  rootCause?: string;
+  resolution?: string;
+  notes: string[];
+  phases: ServiceReportPhase[];
+}
+
 export type PMStatus = 'confirmed' | 'unconfirmed' | 'completed' | 'reschedule_requested';
+export type PMType = 'routine' | 'inspection' | 'lubrication' | 'calibration' | 'overhaul';
 
 export interface PMVisit {
   id: string;
@@ -251,7 +301,9 @@ export interface PMVisit {
   team: string;
   contact: string;
   status: PMStatus;
+  pmType: PMType;
   reportId?: string;
+  ticketNo?: string;
   checklist: { label: string; done: boolean }[];
 }
 
@@ -283,21 +335,6 @@ export interface SignoffJob {
   signedDate?: string;
   signComment?: string;
   rating?: ServiceRating;
-}
-
-export type NewsCategory = 'company' | 'products' | 'promotions' | 'tips' | 'sustainability';
-
-export interface NewsArticle {
-  id: string;
-  category: NewsCategory;
-  title: string;
-  titleTh: string;
-  summary: string;
-  date: string;
-  readMins: number;
-  featured?: boolean;
-  imageUrl?: string;
-  content: string[];
 }
 
 export type NotificationCategory =

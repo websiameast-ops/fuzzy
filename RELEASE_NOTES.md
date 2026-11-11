@@ -1,4 +1,20 @@
-# 🚀 Release Notes: SE-CONNEX Equipment Portal & Asset Management Update
+# 🚀 Release Notes
+
+## v2.2.0-preview — UI/UX sync with SE Connex portal
+
+**วันที่:** 11 พฤศจิกายน 2026
+
+* ปรับ Frontend ทั้งหมด (`src/`) ให้เหมือนโปรเจกต์ `se-connex` ทุกไฟล์: global/landing/equipment-portal CSS, layout (Sidebar, TopHeader, MobileBottomNav), ทุกหน้า และ component
+* ปิดหน้า IoT Monitoring และ Sign-off และซ่อนเมนู Digital Twin / Carbon / Materials / Parts จาก sidebar เหมือนต้นฉบับ
+* เพิ่มหน้า Forgot password / Verify email / Reset password
+* ไม่มี backend: `src/lib/apiClient.ts` เป็น mock client (ชื่อฟังก์ชันและ type เหมือนต้นฉบับ) อ่านข้อมูลจาก `src/data/mockApi.ts` และ `src/data/mockUnits.ts`
+* บัญชีทดลอง `demo@seconnex.co.th` / `demo123`
+* เพิ่ม dependency: react-leaflet, leaflet.markercluster, dompurify, jspdf, html2canvas
+* ลบไฟล์ legacy ที่ไม่ได้ใช้ (`App.jsx`, `main.jsx`, `styles.css`, `pages/equipment - Copy/` ฯลฯ)
+
+---
+
+# 🚀 Release Notes: SE-CONNEX Equipment Portal & Asset Management Update (v2.1.0-preview)
 
 **Version:** `v2.1.0-preview`  
 **Module:** Equipment Portal (`/portal/equipment`) & Asset List (`/portal/equipment/list`)  

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bell, KeyRound, MessageCircle, Plus, QrCode, Users } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
@@ -7,10 +7,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/contexts/ToastContext';
 import { NOTIF_CATEGORIES, useNotifications } from '@/contexts/NotificationContext';
-import { ContactSECard, Modal, StatusBadge, Switch } from '@/components/common';
+import { ContactSECard, LanguageSelector, Modal, StatusBadge, Switch } from '@/components/common';
 import { mockUsers } from '@/data/mockUsers';
-import { fmtDate, initials } from '@/utils/format';
+import { companyDisplayName, fmtDate, initials } from '@/utils/format';
 import type { NotificationPrefs, PortalRole, PortalUser } from '@/types';
+import { apiChangePassword, apiGetSEContacts, ApiError, type SEContactResponse } from '@/lib/apiClient';
+import { tokenStore } from '@/lib/tokenStore';
 
 const ROLES: PortalRole[] = ['Company administrator', 'Maintenance manager', 'Engineer', 'Procurement', 'Finance', 'Viewer'];
 
@@ -26,18 +28,37 @@ const ROLE_TH: Record<PortalRole, string> = {
 /* ---------------- Profile overview ---------------- */
 
 export function ProfilePage() {
-  const { lang, setLang, t } = useLang();
+  const { lang, t } = useLang();
   const { customerCode, company } = useCompany();
   const { user } = useAuth();
   const { showToast } = useToast();
 
   const me = mockUsers.find((u) => u.email === user?.email && u.customerCode === customerCode) ?? mockUsers[0]!;
 
+  const displayName = user?.name ?? me.name;
+  const displayEmail = user?.email ?? me.email;
+  const companyDisplayNameValue = companyDisplayName(user?.preName, user?.customerName, lang === 'th' ? company.nameTh : company.name);
+  const displayCustomerCode = user?.customerCode ?? customerCode;
+  const displaySiteList = user?.siteList ?? '';
+  const displayPhone = user?.phone ?? me.phone;
+  const displayDepartment = user?.department ?? '—';
+  const displayAccountExpires = user?.accountExpiresAt
+    ? fmtDate(user.accountExpiresAt, lang)
+    : t('Never expires', 'ไม่มีวันหมดอายุ');
+
   const [curPw, setCurPw] = useState('');
   const [newPw, setNewPw] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
+  const [savingPw, setSavingPw] = useState(false);
+  const [seContacts, setSeContacts] = useState<SEContactResponse[] | null>(null);
 
-  const changePw = () => {
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetSEContacts(accessToken).then(setSeContacts).catch(() => {});
+  }, []);
+
+  const changePw = async () => {
     if (!curPw || !newPw) {
       showToast(t('Please fill in the password fields.', 'กรุณากรอกช่องรหัสผ่าน'), 'error');
       return;
@@ -46,8 +67,22 @@ export function ProfilePage() {
       showToast(t('New passwords do not match.', 'รหัสผ่านใหม่ไม่ตรงกัน'), 'error');
       return;
     }
-    setCurPw(''); setNewPw(''); setConfirmPw('');
-    showToast(t('Password updated (demo).', 'เปลี่ยนรหัสผ่านแล้ว (เดโม)'), 'success');
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) {
+      showToast(t('Your session has expired. Please log in again.', 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'), 'error');
+      return;
+    }
+    setSavingPw(true);
+    try {
+      await apiChangePassword(accessToken, curPw, newPw, confirmPw);
+      setCurPw(''); setNewPw(''); setConfirmPw('');
+      showToast(t('Password updated.', 'เปลี่ยนรหัสผ่านแล้ว'), 'success');
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : t('Could not update password.', 'ไม่สามารถเปลี่ยนรหัสผ่านได้');
+      showToast(message, 'error');
+    } finally {
+      setSavingPw(false);
+    }
   };
 
   return (
@@ -73,23 +108,24 @@ export function ProfilePage() {
         <div style={{ display: 'grid', gap: 16 }}>
           <div className="card" style={{ padding: 18 }}>
             <div className="flex" style={{ gap: 14, marginBottom: 12 }}>
-              <span className="avatar" style={{ width: 52, height: 52, fontSize: 18 }}>{initials(me.name)}</span>
+              <span className="avatar" style={{ width: 52, height: 52, fontSize: 18 }}>{initials(displayName)}</span>
               <div>
-                <div className="fw-600" style={{ fontSize: 16 }}>{me.name}</div>
-                <div className="muted small">{me.jobTitle}</div>
+                <div className="fw-600" style={{ fontSize: 16 }}>{displayName}</div>
+                <div className="muted small">{displayDepartment}</div>
               </div>
             </div>
-            <div className="stat-line"><span className="k">{t('Email', 'อีเมล')}</span><span className="v">{me.email}</span></div>
-            <div className="stat-line"><span className="k">{t('Phone', 'โทรศัพท์')}</span><span className="v">{me.phone}</span></div>
+            <div className="stat-line"><span className="k">{t('Email', 'อีเมล')}</span><span className="v">{displayEmail}</span></div>
+            <div className="stat-line"><span className="k">{t('Phone', 'โทรศัพท์')}</span><span className="v">{displayPhone}</span></div>
             <div className="stat-line">
               <span className="k">{t('Role', 'บทบาท')}</span>
-              <span className="v"><StatusBadge label={lang === 'th' ? ROLE_TH[me.role] : me.role} tone="brand" /></span>
+              <span className="v"><StatusBadge label={user ? user.role : (lang === 'th' ? ROLE_TH[me.role] : me.role)} tone="brand" /></span>
             </div>
             <div className="stat-line">
               <span className="k">{t('Site access', 'สิทธิ์เข้าถึงไซต์')}</span>
-              <span className="v">{me.siteIds.map((s) => company.sites.find((x) => x.id === s)?.[lang === 'th' ? 'nameTh' : 'name'] ?? s).join(', ')}</span>
+              <span className="v">{displaySiteList}</span>
             </div>
-            <div className="stat-line"><span className="k">{t('Company', 'บริษัท')}</span><span className="v">{lang === 'th' ? company.nameTh : company.name} ({customerCode})</span></div>
+            <div className="stat-line"><span className="k">{t('Company', 'บริษัท')}</span><span className="v">{companyDisplayNameValue} ({displayCustomerCode})</span></div>
+            <div className="stat-line"><span className="k">{t('Account expires', 'บัญชีหมดอายุ')}</span><span className="v">{displayAccountExpires}</span></div>
           </div>
 
           <div className="card" style={{ padding: 18 }}>
@@ -97,10 +133,7 @@ export function ProfilePage() {
             <p className="muted small" style={{ marginTop: 0 }}>
               {t('Applies to the whole portal immediately.', 'มีผลกับพอร์ทัลทั้งหมดทันที')}
             </p>
-            <div className="seg" role="group" aria-label={t('Language', 'ภาษา')} style={{ width: 'fit-content' }}>
-              <button className={lang === 'th' ? 'active' : ''} onClick={() => setLang('th')} aria-pressed={lang === 'th'}>ไทย</button>
-              <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')} aria-pressed={lang === 'en'}>English</button>
-            </div>
+            <LanguageSelector />
           </div>
 
           <div className="card" style={{ padding: 18 }}>
@@ -119,12 +152,14 @@ export function ProfilePage() {
                 <input id="pw-conf" type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} autoComplete="new-password" />
               </div>
             </div>
-            <button className="btn btn-primary btn-sm" onClick={changePw}>{t('Update password', 'อัปเดตรหัสผ่าน')}</button>
+            <button className="btn btn-primary btn-sm" onClick={changePw} disabled={savingPw}>
+              {savingPw ? t('Updating…', 'กำลังอัปเดต…') : t('Update password', 'อัปเดตรหัสผ่าน')}
+            </button>
           </div>
         </div>
 
         <div style={{ display: 'grid', gap: 16 }}>
-          <div className="card" style={{ padding: 18 }}>
+          {/* <div className="card" style={{ padding: 18 }}>
             <h3 style={{ marginTop: 0 }}><MessageCircle size={17} aria-hidden style={{ verticalAlign: -3 }} /> {t('LINE Official Account', 'บัญชี LINE Official')}</h3>
             <div className="between" style={{ gap: 12, flexWrap: 'wrap' }}>
               <div>
@@ -139,26 +174,30 @@ export function ProfilePage() {
                 <span className="small muted">{t('Scan with LINE', 'สแกนด้วย LINE')}</span>
               </div>
             </div>
-          </div>
+          </div> */}
 
           <div className="card" style={{ padding: 18 }}>
             <h3 style={{ marginTop: 0 }}>{t('Your SE contacts', 'ผู้ติดต่อ SE ของคุณ')}</h3>
-            <div style={{ display: 'grid', gap: 10 }}>
-              <ContactSECard
-                name={company.accountManager.name}
-                role={lang === 'th' ? company.accountManager.roleTh : company.accountManager.role}
-                phone={company.accountManager.phone}
-                email={company.accountManager.email}
-                line={company.accountManager.line}
-              />
-              <ContactSECard
-                name={company.serviceCoordinator.name}
-                role={lang === 'th' ? company.serviceCoordinator.roleTh : company.serviceCoordinator.role}
-                phone={company.serviceCoordinator.phone}
-                email={company.serviceCoordinator.email}
-                line={company.serviceCoordinator.line}
-              />
-            </div>
+            {seContacts && seContacts.length === 0 ? (
+              <p className="muted small" style={{ margin: 0 }}>
+                {t('No SE contacts yet.', 'ยังไม่มีข้อมูลผู้ติดต่อ SE')}
+              </p>
+            ) : (
+              <div style={{ display: 'grid', gap: 10 }}>
+                {(seContacts ?? []).map((c) => (
+                  <ContactSECard
+                    key={c.id}
+                    name={c.salePerson
+                      ? `${(lang === 'th' ? c.salePerson.nameTh : c.salePerson.nameEn) ?? ''} ${(lang === 'th' ? c.salePerson.lastNameTh : c.salePerson.lastNameEn) ?? ''}`.trim()
+                      : t('Unknown contact', 'ไม่ทราบชื่อผู้ติดต่อ')}
+                    position={(lang === 'th' ? c.salePerson?.positionTh : c.salePerson?.positionEn) ?? ''}
+                    phone={c.salePerson?.phone ?? ''}
+                    email={c.salePerson?.email ?? ''}
+                    processes={c.processes.map((p) => (lang === 'th' ? p.labelTh : p.labelEn))}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

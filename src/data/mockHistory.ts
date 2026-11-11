@@ -4,6 +4,7 @@ export const mockHistory: ServiceRecord[] = [
   {
     id: 'H-131',
     reportId: 'SR-2026-00131',
+    ticketNo: 'TK-2026-0126',
     jobNo: 'JB-2026-0312',
     customerCode: 'CUS-00128',
     date: '2026-07-06',
@@ -38,6 +39,7 @@ export const mockHistory: ServiceRecord[] = [
   {
     id: 'H-126',
     reportId: 'SR-2026-00126',
+    ticketNo: 'TK-2026-0119',
     jobNo: 'JB-2026-0305',
     customerCode: 'CUS-00128',
     date: '2026-07-08',
@@ -72,6 +74,7 @@ export const mockHistory: ServiceRecord[] = [
   {
     id: 'H-124',
     reportId: 'SR-2026-00124',
+    ticketNo: 'TK-2026-0115',
     jobNo: 'JB-2026-0301',
     customerCode: 'CUS-00128',
     date: '2026-06-30',
@@ -105,6 +108,7 @@ export const mockHistory: ServiceRecord[] = [
   {
     id: 'H-119',
     reportId: 'SR-2026-00119',
+    ticketNo: 'TK-2026-0098',
     jobNo: 'JB-2026-0288',
     customerCode: 'CUS-00128',
     date: '2026-05-12',
@@ -139,6 +143,7 @@ export const mockHistory: ServiceRecord[] = [
   {
     id: 'H-110',
     reportId: 'SR-2026-00110',
+    ticketNo: 'TK-2026-0075',
     jobNo: 'JB-2026-0261',
     customerCode: 'CUS-00128',
     date: '2026-01-15',
@@ -172,6 +177,7 @@ export const mockHistory: ServiceRecord[] = [
   {
     id: 'H-098',
     reportId: 'SR-2025-00098',
+    ticketNo: 'TK-2025-0080',
     jobNo: 'JB-2025-0244',
     customerCode: 'CUS-00128',
     date: '2025-05-20',
@@ -200,6 +206,7 @@ export const mockHistory: ServiceRecord[] = [
   {
     id: 'H-204',
     reportId: 'SR-2026-00204',
+    ticketNo: 'TK-2026-0188',
     jobNo: 'JB-2026-0298',
     customerCode: 'CUS-00241',
     date: '2026-06-10',
@@ -233,6 +240,7 @@ export const mockHistory: ServiceRecord[] = [
   {
     id: 'H-171',
     reportId: 'SR-2025-00171',
+    ticketNo: 'TK-2025-0140',
     jobNo: 'JB-2025-0402',
     customerCode: 'CUS-00241',
     date: '2025-12-09',
@@ -262,8 +270,4 @@ export const mockHistory: ServiceRecord[] = [
 
 export function historyFor(customerCode: string): ServiceRecord[] {
   return mockHistory.filter((h) => h.customerCode === customerCode);
-}
-
-export function getReport(reportId: string): ServiceRecord | undefined {
-  return mockHistory.find((h) => h.reportId === reportId);
 }

@@ -1,49 +1,107 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { History as HistoryIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, History as HistoryIcon } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
-import { useCompany } from '@/contexts/CompanyContext';
 import { EmptyState, ExportButton, SearchBox, StatusBadge } from '@/components/common';
 import { ServiceReportModal } from '@/components/service/ServiceReportModal';
-import { historyFor, getReport } from '@/data/mockHistory';
 import { getAsset } from '@/data/mockAssets';
-import { siteName } from '@/data/mockCompanies';
 import { fmtDate } from '@/utils/format';
-import { APPROVAL_STATUS } from '@/utils/status';
+import { TICKET_STATUS } from '@/utils/status';
+import {
+  apiGetSites,
+  apiGetTicketHistory,
+  apiGetTicketTypes,
+  type ServiceHistoryResponse,
+  type ServiceHistorySummaryResponse,
+  type SiteResponse,
+  type TicketTypeResponse,
+} from '@/lib/apiClient';
+import { tokenStore } from '@/lib/tokenStore';
+
+const PAGE_SIZE = 20;
 
 export function HistoryPage() {
   const { lang, t } = useLang();
-  const { customerCode, company } = useCompany();
   const [params, setParams] = useSearchParams();
 
+  const [qInput, setQInput] = useState('');
   const [q, setQ] = useState('');
   const [site, setSite] = useState('');
   const [type, setType] = useState('');
   const [assetFilter, setAssetFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [sites, setSites] = useState<SiteResponse[] | null>(null);
+  const [types, setTypes] = useState<TicketTypeResponse[] | null>(null);
+  const [rows, setRows] = useState<ServiceHistoryResponse[]>([]);
+  const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState<ServiceHistorySummaryResponse | null>(null);
 
-  const records = useMemo(() => historyFor(customerCode), [customerCode]);
-  const types = [...new Set(records.map((r) => r.type))].sort();
-  const assetIds = [...new Set(records.map((r) => r.assetId))];
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetSites(accessToken).then(setSites).catch(() => {});
+    apiGetTicketTypes(accessToken).then(setTypes).catch(() => {});
+  }, []);
 
-  const filtered = useMemo(() => {
-    return records
-      .filter((r) => {
-        if (q) {
-          const asset = getAsset(r.assetId);
-          const hay = `${r.reportId} ${r.jobNo} ${r.issue} ${r.work} ${r.engineer} ${asset?.name ?? ''}`.toLowerCase();
-          if (!hay.includes(q.toLowerCase())) return false;
-        }
-        if (site && r.siteId !== site) return false;
-        if (type && r.type !== type) return false;
-        if (assetFilter && r.assetId !== assetFilter) return false;
-        return true;
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setQ(qInput.trim());
+      setPage(1);
+    }, 350);
+    return () => window.clearTimeout(id);
+  }, [qInput]);
+
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    let ignore = false;
+    apiGetTicketHistory(accessToken, {
+      q: q || undefined,
+      status: 'closed', // this page is scoped to completed jobs only — see RequestsPage for open/in-progress tickets
+      site: site || undefined,
+      type: type || undefined,
+      assetCode: assetFilter || undefined,
+      page,
+      size: PAGE_SIZE,
+    })
+      .then((res) => {
+        if (ignore) return;
+        setRows(res.items);
+        setTotal(res.total);
+        setSummary(res.summary);
       })
-      .sort((a, b) => (a.date < b.date ? 1 : -1));
-  }, [records, q, site, type, assetFilter]);
+      .catch(() => {});
+    return () => {
+      ignore = true;
+    };
+  }, [q, site, type, assetFilter, page]);
 
-  // Report modal driven by ?report= so browser back closes it
-  const reportId = params.get('report');
-  const openRecord = reportId ? getReport(reportId) ?? null : null;
+  const selectSite = (next: string) => {
+    setSite(next);
+    setPage(1);
+  };
+  const selectType = (next: string) => {
+    setType(next);
+    setPage(1);
+  };
+  const selectAsset = (next: string) => {
+    setAssetFilter(next);
+    setPage(1);
+  };
+  const clearFilters = () => {
+    setQInput('');
+    setQ('');
+    setSite('');
+    setType('');
+    setAssetFilter('');
+    setPage(1);
+  };
+
+  const assetCodes = summary?.assetCodes ?? [];
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // Report modal driven by ?report=<ticketNo> so browser back closes it
+  const openTicketNo = params.get('report');
 
   const openReport = (id: string) => {
     const next = new URLSearchParams(params);
@@ -72,34 +130,34 @@ export function HistoryPage() {
 
       <div className="card" style={{ padding: 14, marginBottom: 16 }}>
         <div className="filter-grid">
-          <SearchBox value={q} onChange={setQ} placeholder={t('Search report, job, issue, engineer…', 'ค้นหารายงาน งาน ปัญหา วิศวกร…')} />
-          <select value={site} onChange={(e) => setSite(e.target.value)} aria-label={t('Filter by site', 'กรองตามไซต์')}>
+          <SearchBox value={qInput} onChange={setQInput} placeholder={t('Search report, job, issue, engineer…', 'ค้นหารายงาน งาน ปัญหา วิศวกร…')} />
+          <select value={site} onChange={(e) => selectSite(e.target.value)} aria-label={t('Filter by site', 'กรองตามไซต์')}>
             <option value="">{t('All sites', 'ทุกไซต์')}</option>
-            {company.sites.map((s) => (
-              <option key={s.id} value={s.id}>{lang === 'th' ? s.nameTh : s.name}</option>
+            {(sites ?? []).map((s) => (
+              <option key={s.site} value={s.site}>{s.site}</option>
             ))}
           </select>
-          <select value={type} onChange={(e) => setType(e.target.value)} aria-label={t('Filter by service type', 'กรองตามประเภทงาน')}>
+          <select value={type} onChange={(e) => selectType(e.target.value)} aria-label={t('Filter by service type', 'กรองตามประเภทงาน')}>
             <option value="">{t('All service types', 'ทุกประเภทงาน')}</option>
-            {types.map((x) => <option key={x} value={x}>{x}</option>)}
+            {(types ?? []).map((x) => <option key={x.type} value={x.type}>{x.type}</option>)}
           </select>
-          <select value={assetFilter} onChange={(e) => setAssetFilter(e.target.value)} aria-label={t('Filter by equipment', 'กรองตามอุปกรณ์')}>
+          <select value={assetFilter} onChange={(e) => selectAsset(e.target.value)} aria-label={t('Filter by equipment', 'กรองตามอุปกรณ์')}>
             <option value="">{t('All equipment', 'ทุกอุปกรณ์')}</option>
-            {assetIds.map((id) => {
-              const a = getAsset(id);
-              return <option key={id} value={id}>{a ? a.name : id}</option>;
+            {assetCodes.map((code) => {
+              const a = getAsset(code);
+              return <option key={code} value={code}>{a ? a.name : code}</option>;
             })}
           </select>
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {rows.length === 0 ? (
         <EmptyState
           icon={<HistoryIcon size={24} />}
           title={t('No service records found', 'ไม่พบประวัติการบริการ')}
           body={t('Try removing a filter or a different search term.', 'ลองลดตัวกรองหรือเปลี่ยนคำค้น')}
           action={
-            <button className="btn btn-outline btn-sm" onClick={() => { setQ(''); setSite(''); setType(''); setAssetFilter(''); }}>
+            <button className="btn btn-outline btn-sm" onClick={clearFilters}>
               {t('Clear filters', 'ล้างตัวกรอง')}
             </button>
           }
@@ -119,26 +177,26 @@ export function HistoryPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r) => {
-                  const asset = getAsset(r.assetId);
-                  const ap = APPROVAL_STATUS[r.approval];
+                {rows.map((h) => {
+                  const asset = getAsset(h.assetCode);
+                  const ap = TICKET_STATUS[h.status];
                   return (
-                    <tr key={r.id} className="row-link" onClick={() => openReport(r.reportId)}>
-                      <td data-label={t('Date', 'วันที่')}>{fmtDate(r.date, lang)}</td>
+                    <tr key={h.ticketNo} className="row-link" onClick={() => openReport(h.ticketNo)}>
+                      <td data-label={t('Date', 'วันที่')}>{fmtDate(h.reportedAt, lang)}</td>
                       <td data-label={t('Report / Job', 'รายงาน / งาน')}>
-                        <button className="btn btn-ghost btn-sm" style={{ marginLeft: -8 }} onClick={(e) => { e.stopPropagation(); openReport(r.reportId); }}>
-                          {r.reportId}
+                        <button className="btn btn-ghost btn-sm" style={{ marginLeft: -8 }} onClick={(e) => { e.stopPropagation(); openReport(h.ticketNo); }}>
+                          {h.ticketNo}
                         </button>
-                        <div className="muted small">{r.jobNo}</div>
+                        <div className="muted small">{h.jobNo ?? ''}</div>
                       </td>
                       <td data-label={t('Equipment', 'อุปกรณ์')}>
-                        <div className="fw-600">{asset ? asset.name : r.assetId}</div>
-                        <div className="muted small">{siteName(customerCode, r.siteId, lang)}</div>
+                        <div className="fw-600">{asset ? asset.name : h.assetCode}</div>
+                        <div className="muted small">{h.site ?? ''}</div>
                       </td>
-                      <td data-label={t('Type', 'ประเภท')}>{r.type}</td>
+                      <td data-label={t('Type', 'ประเภท')}>{h.type}</td>
                       <td data-label={t('Result', 'ผลงาน')}>
-                        <div className="small">{r.issue}</div>
-                        <div className="muted small">{r.result}</div>
+                        <div className="small">{h.description}</div>
+                        <div className="muted small" />
                       </td>
                       <td data-label={t('Approval', 'การยืนยัน')}>
                         <StatusBadge label={lang === 'th' ? ap.th : ap.en} tone={ap.tone} />
@@ -152,14 +210,41 @@ export function HistoryPage() {
         </div>
       )}
 
+      {rows.length > 0 && (
+        <div className="between" style={{ marginTop: 16 }}>
+          <span className="muted small">{t(`${total} record(s)`, `ทั้งหมด ${total} รายการ`)}</span>
+          <div className="flex" style={{ gap: 8 }}>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <ChevronLeft size={14} aria-hidden />
+              {t('Prev', 'ก่อนหน้า')}
+            </button>
+            <span className="muted small">{t(`Page ${page} / ${totalPages}`, `หน้า ${page} / ${totalPages}`)}</span>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              {t('Next', 'ถัดไป')}
+              <ChevronRight size={14} aria-hidden />
+            </button>
+          </div>
+        </div>
+      )}
+
       <p className="muted small">
         {t(
-          `${filtered.length} record(s) shown. Open a row to read the full service report — your browser's back button closes it again.`,
-          `แสดง ${filtered.length} รายการ เปิดแถวเพื่ออ่านรายงานฉบับเต็ม — ปุ่มย้อนกลับของเบราว์เซอร์จะปิดรายงาน`,
+          `Open a row to read the full service report — your browser's back button closes it again.`,
+          `เปิดแถวเพื่ออ่านรายงานฉบับเต็ม — ปุ่มย้อนกลับของเบราว์เซอร์จะปิดรายงาน`,
         )}
       </p>
 
-      <ServiceReportModal record={openRecord} open={openRecord !== null} onClose={closeReport} />
+      <ServiceReportModal ticketNo={openTicketNo} open={openTicketNo !== null} onClose={closeReport} />
     </div>
   );
 }

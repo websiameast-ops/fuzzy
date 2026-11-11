@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Activity,
   Layers,
@@ -12,145 +12,69 @@ import {
   X,
 } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
-import { useCompany } from '@/contexts/CompanyContext';
 import { ExportButton, QRScannerMock } from '@/components/common';
-import { assetsFor } from '@/data/mockAssets';
+import { apiGetEquipment, apiGetSites, type EquipmentCategorySummaryResponse, type SiteResponse } from '@/lib/apiClient';
+import { tokenStore } from '@/lib/tokenStore';
 import { getAssetUrl } from '@/utils/assets';
 import { CategoryPortalCard, type CategorySummary } from './CategoryPortalCard';
 
-const CATEGORY_IMAGE_MAP: Record<string, string> = {
-  'Pump': getAssetUrl('assets/Pump.webp'),
-  'Pump / Pump System': getAssetUrl('assets/Pump.webp'),
-  'Mixer': getAssetUrl('assets/Mixer.webp'),
-  'Mixer / Agitator': getAssetUrl('assets/Mixer.webp'),
-  'Service': getAssetUrl('assets/Service.webp'),
-  'Service / Control': getAssetUrl('assets/Service.webp'),
-  'Spare Part': getAssetUrl('assets/Sparepart.webp'),
-  'Sparepart': getAssetUrl('assets/Sparepart.webp'),
-  'Spare Part / Kit': getAssetUrl('assets/Sparepart.webp'),
-  'Other': getAssetUrl('assets/Other.webp'),
-  'Other / Verify': getAssetUrl('assets/Other.webp'),
-  'Metering & Instrumentation': getAssetUrl('assets/Other.webp'),
-  'Monitoring & IoT': getAssetUrl('assets/Other.webp'),
-  'Solar & Energy': getAssetUrl('assets/Other.webp'),
-  'Valve': getAssetUrl('assets/Other.webp'),
-};
-
-const CATEGORY_META: Record<
-  string,
-  { displayName: string; th: string; subCategories: string[]; descEn: string; descTh: string }
-> = {
-  'Pump': {
-    displayName: 'PUMP / PUMP SYSTEM',
-    th: 'ระบบปั๊มและอุปกรณ์หมุน',
-    subCategories: ['Vertical Multistage', 'End-suction', 'Split-case', 'Submersible Pump'],
-    descEn: 'Vertical multistage, end-suction and split-case industrial pump systems.',
-    descTh: 'ระบบปั๊มอุตสาหกรรม ปั๊มน้ำหล่อเย็น และปั๊มเคมีแรงดันสูง',
-  },
-  'Mixer': {
-    displayName: 'MIXER / AGITATOR',
-    th: 'เครื่องกวนและถังกวนผสม',
-    subCategories: ['Top Entry Agitator', 'Side Entry Mixer', 'Static Mixer', 'Inline Blender'],
-    descEn: 'Top-entry agitators, high-shear mixers, and fluid blending systems.',
-    descTh: 'เครื่องกวนผสมแนวตั้ง มิกเซอร์ถังกวน และระบบผสมของเหลว',
-  },
-  'Service': {
-    displayName: 'SERVICE / CONTROL',
-    th: 'ระบบควบคุมและบริการบำรุงรักษา',
-    subCategories: ['Control Panel', 'PLC & SCADA', 'Overhaul Service', 'Field Calibration'],
-    descEn: 'Industrial control panels, automation systems, and scheduled service solutions.',
-    descTh: 'ตู้ควบคุมระบบไฟฟ้า PLC ระบบอัตโนมัติ และงานบริการซ่อมบำรุง',
-  },
-  'Spare Part': {
-    displayName: 'SPARE PART / KIT',
-    th: 'อะไหล่แท้และชุดอุปกรณ์ซ่อมบำรุง',
-    subCategories: ['Mechanical Seal', 'Impeller & Casing', 'Bearing Kit', 'Gasket & O-Ring'],
-    descEn: 'Original spare parts, seal kits, bearings, and replacement components.',
-    descTh: 'แมคคานิคอลซีล ใบพัดปั๊ม ตลับลูกปืน และชุดประเก็นโอริงแท้',
-  },
-  'Other': {
-    displayName: 'OTHER / VERIFY',
-    th: 'เครื่องมือตรวจสอบและอุปกรณ์อื่นๆ',
-    subCategories: ['Inspection Tool', 'Verification Kit', 'Power Quality Meter', 'Flow Verification'],
-    descEn: 'Inspection tools, verification equipment, and auxiliary industrial units.',
-    descTh: 'เครื่องมือตรวจสอบความถูกต้อง อุปกรณ์เฉพาะทาง และระบบเสริม',
-  },
-};
+const FALLBACK_IMAGE = getAssetUrl('assets/connect_every_pump_xn.webp');
 
 export function EquipmentPortalPage() {
-  const { lang, t } = useLang();
-  const { customerCode, company } = useCompany();
+  const { t } = useLang();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
 
-  const [q, setQ] = useState('');
-  const [site, setSite] = useState('');
+  const [q, setQ] = useState(() => params.get('q') ?? '');
+  const [qDebounced, setQDebounced] = useState(() => params.get('q') ?? '');
+  const [site, setSite] = useState(() => params.get('site') ?? '');
   const [selectedCatTab, setSelectedCatTab] = useState<string>('all');
   const [filterPreset, setFilterPreset] = useState<'all' | 'active' | 'attention' | 'expiring'>('all');
   const [scanOpen, setScanOpen] = useState(false);
 
-  const allAssets = useMemo(() => assetsFor(customerCode), [customerCode]);
+  const [sites, setSites] = useState<SiteResponse[]>([]);
+  const [equipment, setEquipment] = useState<EquipmentCategorySummaryResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  // Filter assets by site and search keyword
-  const filteredAssets = useMemo(() => {
-    return allAssets.filter((a) => {
-      if (site && a.siteId !== site) return false;
-      if (q) {
-        const hay = `${a.name} ${a.category} ${a.brand} ${a.model} ${a.serial} ${a.customerRef}`.toLowerCase();
-        if (!hay.includes(q.toLowerCase())) return false;
-      }
-      return true;
-    });
-  }, [allAssets, site, q]);
+  // Debounce the search box before it hits the API.
+  useEffect(() => {
+    const id = setTimeout(() => setQDebounced(q), 300);
+    return () => clearTimeout(id);
+  }, [q]);
 
-  // Aggregate by Category
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetSites(accessToken).then(setSites).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    setLoading(true);
+    setLoadError(false);
+    apiGetEquipment(accessToken, { site: site || undefined, q: qDebounced || undefined })
+      .then(setEquipment)
+      .catch(() => setLoadError(true))
+      .finally(() => setLoading(false));
+  }, [site, qDebounced]);
+
+  // Map API rows -> the shape CategoryPortalCard renders. `category` uses
+  // labelEn as the stable identity (tab selection, nav filter, React key),
+  // matching the previous mock-driven design.
   const categorySummaries = useMemo<CategorySummary[]>(() => {
-    const distinctCategories = [...new Set(allAssets.map((a) => a.category))].sort();
-
-    return distinctCategories
-      .map((cat) => {
-        const itemsInCat = filteredAssets.filter((a) => a.category === cat);
-
-        // If searching/filtering and no items in this category match, omit
-        if (itemsInCat.length === 0 && (q || site)) return null;
-
-        const total = itemsInCat.length;
-        const active = itemsInCat.filter((a) =>
-          ['running', 'online', 'operating'].includes(a.status)
-        ).length;
-        const inactive = itemsInCat.filter((a) =>
-          ['maintenance', 'stopped', 'offline'].includes(a.status)
-        ).length;
-        const underWarranty = itemsInCat.filter((a) => a.warranty === 'active').length;
-        const expiringSoon = itemsInCat.filter((a) => a.warranty === 'expiring').length;
-        const expired = itemsInCat.filter((a) => a.warranty === 'expired').length;
-
-        const meta = CATEGORY_META[cat] || {
-          displayName: cat,
-          th: cat,
-          subCategories: [...new Set(itemsInCat.map((i) => i.name))],
-          descEn: 'Industrial equipment and systems.',
-          descTh: 'อุปกรณ์และระบบอุตสาหกรรม',
-        };
-
-        const item: CategorySummary = {
-          category: cat,
-          categoryDisplayName: meta.displayName,
-          categoryLabelTh: meta.th,
-          subCategories: meta.subCategories,
-          descriptionEn: meta.descEn,
-          descriptionTh: meta.descTh,
-          imageUrl: CATEGORY_IMAGE_MAP[cat] || getAssetUrl('assets/Pump.webp'),
-          total,
-          active,
-          inactive,
-          underWarranty,
-          expiringSoon,
-          expired,
-        };
-        return item;
-      })
-      .filter((item): item is CategorySummary => item !== null);
-  }, [allAssets, filteredAssets, q, site]);
+    return equipment.map((row) => ({
+      category: row.labelEn,
+      imageUrl: row.imageUrl || FALLBACK_IMAGE,
+      total: row.unitCount,
+      active: row.workingCount,
+      inactive: row.unitCount - row.workingCount,
+      underWarranty: row.warranty.active,
+      expiringSoon: row.warranty.expiringSoon,
+      expired: row.warranty.expired,
+    }));
+  }, [equipment]);
 
   // Final category cards according to preset filters
   const displayedCategories = useMemo(() => {
@@ -163,23 +87,22 @@ export function EquipmentPortalPage() {
     });
   }, [categorySummaries, selectedCatTab, filterPreset]);
 
-  // Tab counts for filter presets
+  // Tab counts for filter presets — counted in units (AssetUnit), matching the
+  // telemetry ribbon above, not in categories.
   const tabCounts = useMemo(() => {
-    const all = categorySummaries.length;
-    const operational = categorySummaries.filter((c) => c.inactive === 0 && c.total > 0).length;
-    const attention = categorySummaries.filter((c) => c.inactive > 0).length;
-    const alert = categorySummaries.filter((c) => c.expiringSoon > 0 || c.expired > 0).length;
+    const all = categorySummaries.reduce((sum, c) => sum + c.total, 0);
+    const operational = categorySummaries.reduce((sum, c) => sum + c.active, 0);
+    const attention = categorySummaries.reduce((sum, c) => sum + c.inactive, 0);
+    const alert = categorySummaries.reduce((sum, c) => sum + c.expiringSoon + c.expired, 0);
     return { all, operational, attention, alert };
   }, [categorySummaries]);
 
   // Total metrics
-  const totalEquipment = filteredAssets.length;
+  const totalEquipment = categorySummaries.reduce((sum, c) => sum + c.total, 0);
   const totalCategories = categorySummaries.length;
-  const totalActive = filteredAssets.filter((a) =>
-    ['running', 'online', 'operating'].includes(a.status)
-  ).length;
-  const totalExpiring = filteredAssets.filter((a) => a.warranty === 'expiring').length;
-  const totalExpired = filteredAssets.filter((a) => a.warranty === 'expired').length;
+  const totalActive = categorySummaries.reduce((sum, c) => sum + c.active, 0);
+  const totalExpiring = categorySummaries.reduce((sum, c) => sum + c.expiringSoon, 0);
+  const totalExpired = categorySummaries.reduce((sum, c) => sum + c.expired, 0);
   const totalWarrantyAlerts = totalExpiring + totalExpired;
 
   // List view URL preserving active search & site
@@ -268,7 +191,7 @@ export function EquipmentPortalPage() {
               <span className="ribbon-total">{t('units', 'เครื่อง')}</span>
             </div>
             <span className="ribbon-sub">
-              {t(`Across ${company.sites.length} sites`, `ใน ${company.sites.length} ไซต์งาน`)}
+              {t(`Across ${sites.length} sites`, `ใน ${sites.length} ไซต์งาน`)}
             </span>
           </div>
         </div>
@@ -358,11 +281,11 @@ export function EquipmentPortalPage() {
               className="portal-site-select"
             >
               <option value="">
-                {t('All Sites', 'ทุกไซต์งาน')} ({company.sites.length})
+                {t('All Sites', 'ทุกไซต์งาน')} ({sites.length})
               </option>
-              {company.sites.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {lang === 'th' ? s.nameTh : s.name}
+              {sites.map((s) => (
+                <option key={s.site} value={s.site}>
+                  {s.site}
                 </option>
               ))}
             </select>
@@ -422,14 +345,26 @@ export function EquipmentPortalPage() {
           <div className="portal-count-badge">
             <i className="fa-solid fa-layer-group" style={{ fontSize: '11px', opacity: 0.7 }} aria-hidden="true" />
             <span>
-              {displayedCategories.length} {t('Categories', 'หมวดหมู่')} · {filteredAssets.length} {t('Assets', 'รายการ')}
+              {displayedCategories.length} {t('Categories', 'หมวดหมู่')} · {totalEquipment} {t('Assets', 'รายการ')}
             </span>
           </div>
         </div>
       </div>
 
       {/* 4. Category Grid Section */}
-      {displayedCategories.length === 0 ? (
+      {loading ? (
+        <div className="card text-center" style={{ padding: '60px 20px' }}>
+          <p className="muted">{t('Loading equipment…', 'กำลังโหลดข้อมูลอุปกรณ์…')}</p>
+        </div>
+      ) : loadError ? (
+        <div className="card text-center" style={{ padding: '60px 20px' }}>
+          <Package size={40} className="muted" style={{ margin: '0 auto 12px' }} />
+          <h3>{t('Could not load equipment', 'โหลดข้อมูลอุปกรณ์ไม่สำเร็จ')}</h3>
+          <p className="muted">
+            {t('Please try again in a moment.', 'กรุณาลองใหม่อีกครั้งในภายหลัง')}
+          </p>
+        </div>
+      ) : displayedCategories.length === 0 ? (
         <div className="card text-center" style={{ padding: '60px 20px' }}>
           <Package size={40} className="muted" style={{ margin: '0 auto 12px' }} />
           <h3>{t('No categories match the filter', 'ไม่พบกลุ่มสินค้าที่ตรงกับเงื่อนไข')}</h3>
@@ -480,4 +415,3 @@ export function EquipmentPortalPage() {
     </div>
   );
 }
-

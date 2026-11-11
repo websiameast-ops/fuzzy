@@ -76,7 +76,7 @@ export function CarbonPage() {
           value={`${num(data.monthlyKwh)} kWh`}
           label={t('Energy this month (est.)', 'พลังงานเดือนนี้ (ประมาณ)')}
           sub={t(`${savedVsBaseline}% below baseline`, `ต่ำกว่าเส้นฐาน ${savedVsBaseline}%`)}
-          to="/portal/equipment?warranty=active"
+          to="/portal/equipment/list?warranty=active"
         />
         <KpiCard
           icon={<Leaf size={22} />}

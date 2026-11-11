@@ -8,14 +8,17 @@ import { NotificationProvider } from '@/contexts/NotificationContext';
 import { DataProvider } from '@/contexts/DataContext';
 
 import { AppShell, RequireAuth } from '@/components/layout/AppShell';
+import { LandingPage } from '@/pages/landing/LandingPage';
 import { LoginPage, LogoutRoute } from '@/pages/auth/LoginPage';
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
+import { VerifyEmailPage, ResetPasswordPage } from '@/pages/auth/SetPasswordPage';
 import { DashboardPage } from '@/pages/dashboard/DashboardPage';
 import { NewsPage, NewsDetailPage } from '@/pages/news/NewsPage';
-import { EquipmentPage } from '@/pages/equipment/EquipmentPage';
 import { EquipmentPortalPage } from '@/pages/equipment/EquipmentPortalPage';
+import { EquipmentPage } from '@/pages/equipment/EquipmentPage';
 import { AssetDetailPage } from '@/pages/equipment/AssetDetailPage';
 import { SitesMapPage, SiteDetailPage } from '@/pages/sites/SitesMapPage';
-import { IoTMonitoringPage } from '@/pages/iot/IoTMonitoringPage';
+// import { IoTMonitoringPage } from '@/pages/iot/IoTMonitoringPage';
 import { DigitalTwinPage } from '@/pages/digitaltwin/DigitalTwinPage';
 import { HistoryPage } from '@/pages/history/HistoryPage';
 import { RequestsPage } from '@/pages/requests/RequestsPage';
@@ -23,13 +26,12 @@ import { NewRequestPage } from '@/pages/requests/NewRequestPage';
 import { TicketDetailPage } from '@/pages/requests/TicketDetailPage';
 import { ContractsPage, ContractDetailPage } from '@/pages/contracts/ContractsPage';
 import { PMPage } from '@/pages/pm/PMPage';
-import { SignOffPage, SignOffDetailPage } from '@/pages/signoff/SignOffPage';
+// import { SignOffPage, SignOffDetailPage } from '@/pages/signoff/SignOffPage';
 import { CarbonPage } from '@/pages/carbon/CarbonPage';
 import { MaterialsPage } from '@/pages/materials/MaterialsPage';
 import { PartsPage } from '@/pages/parts/PartsPage';
 import { ProfilePage, UsersPage, NotificationsPage } from '@/pages/profile/ProfilePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-import { LandingPage } from '@/pages/landing/LandingPage';
 
 function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -57,6 +59,9 @@ export function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/logout" element={<LogoutRoute />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           <Route
             path="/portal"
@@ -74,7 +79,7 @@ export function App() {
             <Route path="equipment/:assetId" element={<AssetDetailPage />} />
             <Route path="map" element={<SitesMapPage />} />
             <Route path="map/:siteId" element={<SiteDetailPage />} />
-            <Route path="iot" element={<IoTMonitoringPage />} />
+            {/* <Route path="iot" element={<IoTMonitoringPage />} /> */}
             <Route path="digital-twin" element={<DigitalTwinPage />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="requests" element={<RequestsPage />} />
@@ -83,8 +88,8 @@ export function App() {
             <Route path="contracts" element={<ContractsPage />} />
             <Route path="contracts/:contractId" element={<ContractDetailPage />} />
             <Route path="pm" element={<PMPage />} />
-            <Route path="sign-off" element={<SignOffPage />} />
-            <Route path="sign-off/:jobNo" element={<SignOffDetailPage />} />
+            {/* <Route path="sign-off" element={<SignOffPage />} />
+            <Route path="sign-off/:jobNo" element={<SignOffDetailPage />} /> */}
             <Route path="carbon" element={<CarbonPage />} />
             <Route path="materials" element={<MaterialsPage />} />
             <Route path="parts" element={<PartsPage />} />

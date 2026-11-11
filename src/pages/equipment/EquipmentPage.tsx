@@ -1,31 +1,104 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { MapPin, Package, QrCode, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Package, QrCode, SlidersHorizontal, X } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
-import { useCompany } from '@/contexts/CompanyContext';
 import { EmptyState, ExportButton, QRScannerMock, SearchBox, StatusBadge } from '@/components/common';
-import { assetsFor } from '@/data/mockAssets';
-import { siteName } from '@/data/mockCompanies';
-import { daysSince, fmtDate } from '@/utils/format';
+import { fmtDate, daysSince } from '@/utils/format';
 import { OPERATING_STATUS, WARRANTY_STATUS } from '@/utils/status';
 import type { WarrantyStatus } from '@/types';
+import {
+  apiGetEquipmentUnits,
+  apiGetPurchaseYears,
+  apiGetSites,
+  type EquipmentUnitResponse,
+  type PurchaseYearResponse,
+  type SiteResponse,
+} from '@/lib/apiClient';
+import { tokenStore } from '@/lib/tokenStore';
+
+// Backend returns vocab.WarrantyState tokens; the shared WARRANTY_STATUS
+// badge map (used across the portal) keys on the frontend's own
+// WarrantyStatus tokens — translate both ways at this page's boundary
+// rather than touching that shared file.
+const STATE_TO_WARRANTY: Record<EquipmentUnitResponse['warrantyState'], WarrantyStatus> = {
+  active: 'active',
+  expiringSoon: 'expiring',
+  expired: 'expired',
+  unknown: 'none',
+};
+const WARRANTY_TO_STATE: Record<Exclude<WarrantyStatus, ''>, EquipmentUnitResponse['warrantyState']> = {
+  active: 'active',
+  expiring: 'expiringSoon',
+  expired: 'expired',
+  none: 'unknown',
+};
+
+type SortKey = 'asset' | 'site' | 'category' | 'purchaseDate' | 'status' | 'warranty' | 'nextPm';
+type ColSort = { key: SortKey; dir: 'asc' | 'desc' };
+
+const STATUS_ORDER: Record<EquipmentUnitResponse['status'], number> = {
+  Active: 0,
+  UnderRepair: 1,
+  Decommissioned: 2,
+};
+
+// Value a column sorts on; null/empty sorts last in both directions.
+function sortValue(r: EquipmentUnitResponse, key: SortKey, lang: string): string | number | null {
+  switch (key) {
+    case 'asset': return (lang === 'th' ? r.nameTh : r.nameEn) || null;
+    case 'site': return r.site || null;
+    case 'category': return (lang === 'th' ? r.categoryTh : r.categoryEn) || null;
+    case 'purchaseDate': return r.purchaseDate ? Date.parse(r.purchaseDate) : null;
+    case 'status': return STATUS_ORDER[r.status];
+    case 'warranty': return r.warrantyUntil ? Date.parse(r.warrantyUntil) : null;
+    case 'nextPm': return r.nextDue ? Date.parse(r.nextDue) : null;
+  }
+}
 
 export function EquipmentPage() {
   const { lang, t } = useLang();
-  const { customerCode } = useCompany();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
 
   const [q, setQ] = useState(() => params.get('q') ?? '');
+  const [qDebounced, setQDebounced] = useState(q);
   const [site, setSite] = useState(() => params.get('site') ?? '');
   const [category, setCategory] = useState(() => params.get('category') ?? '');
   const [brand, setBrand] = useState('');
   const [status, setStatus] = useState('');
+  // "connected" (IoT) has no backing column anywhere in the DB — the
+  // dropdown/toggle stays in the UI per product decision, but it is never
+  // sent to the API and never filters real rows.
   const [connected, setConnected] = useState('');
   const [year, setYear] = useState('');
   const [sort, setSort] = useState('name');
+  // Column-header sort, applied client-side over the fetched rows; null keeps
+  // the server order chosen by the Sort dropdown.
+  const [colSort, setColSort] = useState<ColSort | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [sites, setSites] = useState<SiteResponse[] | null>(null);
+  const [purchaseYears, setPurchaseYears] = useState<PurchaseYearResponse[] | null>(null);
+
+  // Rows fetched with every filter EXCEPT warranty — the warranty chips and
+  // the Warranty Alert tile count from these, so selecting one chip doesn't
+  // zero out the others. `rows` (below) is this list narrowed by warranty.
+  const [baseRows, setBaseRows] = useState<EquipmentUnitResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetSites(accessToken).then(setSites).catch(() => {});
+    apiGetPurchaseYears(accessToken).then(setPurchaseYears).catch(() => {});
+  }, []);
+
+  // Debounce the search box before it hits the API.
+  useEffect(() => {
+    const id = setTimeout(() => setQDebounced(q), 300);
+    return () => clearTimeout(id);
+  }, [q]);
 
   const warranty = (params.get('warranty') ?? '') as WarrantyStatus | '';
   const setWarranty = (w: string) => {
@@ -35,41 +108,83 @@ export function EquipmentPage() {
     setParams(next, { replace: true });
   };
 
-  const all = useMemo(() => assetsFor(customerCode), [customerCode]);
-  const { company } = useCompany();
-  const categories = [...new Set(all.map((a) => a.category))].sort();
-  const brands = [...new Set(all.map((a) => a.brand))].sort();
-  const years = [...new Set(all.map((a) => a.installYear))].sort((a, b) => b - a);
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    setLoading(true);
+    setLoadError(false);
+    apiGetEquipmentUnits(accessToken, {
+      category: category || undefined,
+      site: site || undefined,
+      brand: brand || undefined,
+      status: status || undefined,
+      year: year ? Number(year) : undefined,
+      q: qDebounced || undefined,
+      sort: sort || undefined,
+    })
+      .then(setBaseRows)
+      .catch(() => setLoadError(true))
+      .finally(() => setLoading(false));
+  }, [category, site, brand, status, year, qDebounced, sort]);
 
-  const healthy = all.filter((a) => ['running', 'online', 'operating'].includes(a.status)).length;
-  const needsAttention = all.filter((a) => ['maintenance', 'stopped', 'offline'].includes(a.status)).length;
-  const connectedCount = all.filter((a) => a.connected).length;
-  const warrantyAttention = all.filter((a) => a.warranty === 'expiring' || a.warranty === 'expired').length;
+  const rows = useMemo(
+    () => (warranty ? baseRows.filter((r) => r.warrantyState === WARRANTY_TO_STATE[warranty]) : baseRows),
+    [baseRows, warranty],
+  );
 
-  const filtered = useMemo(() => {
-    const list = all.filter((a) => {
-      if (q) {
-        const hay = `${a.name} ${a.id} ${a.model} ${a.serial} ${a.customerRef} ${a.brand}`.toLowerCase();
-        if (!hay.includes(q.toLowerCase())) return false;
-      }
-      if (site && a.siteId !== site) return false;
-      if (category && a.category !== category) return false;
-      if (brand && a.brand !== brand) return false;
-      if (warranty && a.warranty !== warranty) return false;
-      if (status && a.status !== status) return false;
-      if (connected === 'yes' && !a.connected) return false;
-      if (connected === 'no' && a.connected) return false;
-      if (year && String(a.installYear) !== year) return false;
-      return true;
+  const sortedRows = useMemo(() => {
+    if (!colSort) return rows;
+    const sign = colSort.dir === 'asc' ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      const av = sortValue(a, colSort.key, lang);
+      const bv = sortValue(b, colSort.key, lang);
+      if (av === null && bv === null) return 0;
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      if (typeof av === 'string' && typeof bv === 'string') return sign * av.localeCompare(bv, lang);
+      return sign * ((av as number) - (bv as number));
     });
-    return list.sort((a, b) => {
-      if (sort === 'name') return a.name.localeCompare(b.name);
-      if (sort === 'newest') return b.installYear - a.installYear;
-      if (sort === 'oldest') return a.installYear - b.installYear;
-      if (sort === 'warranty') return a.warrantyEnd.localeCompare(b.warrantyEnd);
-      return 0;
+  }, [rows, colSort, lang]);
+
+  // asc -> desc -> back to server order.
+  const toggleColSort = (key: SortKey) =>
+    setColSort((cur) => {
+      if (cur?.key !== key) return { key, dir: 'asc' };
+      return cur.dir === 'asc' ? { key, dir: 'desc' } : null;
     });
-  }, [all, q, site, category, brand, warranty, status, connected, year, sort]);
+
+  const sortTh = (key: SortKey, label: string) => {
+    const active = colSort?.key === key ? colSort.dir : null;
+    const Icon = active === 'asc' ? ArrowUp : active === 'desc' ? ArrowDown : ArrowUpDown;
+    return (
+      <th aria-sort={active === 'asc' ? 'ascending' : active === 'desc' ? 'descending' : 'none'}>
+        <button type="button" className={`th-sort ${active ? 'active' : ''}`} onClick={() => toggleColSort(key)}>
+          {label}
+          <Icon size={13} aria-hidden />
+        </button>
+      </th>
+    );
+  };
+
+  // Category/brand dropdown options come from the currently-fetched rows
+  // (same pattern the page used against mock data) — no dedicated
+  // "distinct categories/brands" endpoint exists.
+  const categories = useMemo(
+    () => [...new Set(rows.map((r) => r.categoryEn).filter((c): c is string => !!c))].sort(),
+    [rows],
+  );
+  const brands = useMemo(
+    () => [...new Set(rows.map((r) => r.brandEn).filter((b): b is string => !!b))].sort(),
+    [rows],
+  );
+  const years = (purchaseYears ?? []).map((y) => y.purchaseYear);
+
+  // Telemetry counts reflect the currently-filtered rows (same design as
+  // the /portal/equipment ribbon).
+  const healthy = rows.filter((r) => r.status === 'Active').length;
+  const needsAttention = rows.filter((r) => r.status === 'UnderRepair' || r.status === 'Decommissioned').length;
+  const connectedCount = 0; // no IoT data backing this yet
+  const warrantyAttention = baseRows.filter((r) => r.warrantyState === 'expiringSoon' || r.warrantyState === 'expired').length;
 
   const clearAll = () => {
     setQ(''); setSite(''); setCategory(''); setBrand(''); setStatus(''); setConnected(''); setYear('');
@@ -105,19 +220,19 @@ export function EquipmentPage() {
           </div>
           <div>
             <div className="eq-telemetry-title">
-              <span className="eq-telemetry-count">{all.length}</span>
+              <span className="eq-telemetry-count">{rows.length}</span>
               <span className="eq-telemetry-unit">{t('ASSETS', 'อุปกรณ์')}</span>
             </div>
             <div className="eq-telemetry-sub">
-              {t(`Across ${company.sites.length} sites`, `ครอบคลุม ${company.sites.length} ไซต์งาน`)}
+              {t(`Across ${(sites ?? []).length} sites`, `ครอบคลุม ${(sites ?? []).length} ไซต์งาน`)}
             </div>
           </div>
         </div>
 
         <button
           type="button"
-          className={`eq-telemetry-item item-healthy ${status === 'running' ? 'active' : ''}`}
-          onClick={() => setStatus(status === 'running' ? '' : 'running')}
+          className={`eq-telemetry-item item-healthy ${status === 'Active' ? 'active' : ''}`}
+          onClick={() => setStatus(status === 'Active' ? '' : 'Active')}
           title={t('Click to filter running assets', 'คลิกเพื่อกรองเฉพาะอุปกรณ์ที่ทำงานปกติ')}
         >
           <div className="eq-item-head">
@@ -129,8 +244,8 @@ export function EquipmentPage() {
 
         <button
           type="button"
-          className={`eq-telemetry-item item-attention ${status === 'maintenance' || status === 'stopped' ? 'active' : ''}`}
-          onClick={() => setStatus(status === 'maintenance' ? '' : 'maintenance')}
+          className={`eq-telemetry-item item-attention ${status === 'UnderRepair' ? 'active' : ''}`}
+          onClick={() => setStatus(status === 'UnderRepair' ? '' : 'UnderRepair')}
           title={t('Click to filter assets needing maintenance', 'คลิกเพื่อกรองอุปกรณ์ที่ต้องดูแล')}
         >
           <div className="eq-item-head">
@@ -169,7 +284,7 @@ export function EquipmentPage() {
 
       {/* Engineer Filter & Toolbar Container */}
       <div className="eq-filter-container">
-        {/* Single Line Toolbar: Search -> Site -> Status -> More Filters -> Sort -> View Mode */}
+        {/* Single Line Toolbar: Search -> Site -> Status -> More Filters -> Sort */}
         <div className="eq-toolbar-single">
           <div className="eq-search-wrapper">
             <SearchBox value={q} onChange={setQ} placeholder={t('Search name, model, serial, tag…', 'ค้นหาชื่อ รุ่น ซีเรียล แท็ก…')} />
@@ -177,8 +292,8 @@ export function EquipmentPage() {
 
           <select value={site} onChange={(e) => setSite(e.target.value)} aria-label={t('Filter by site', 'กรองตามไซต์')} className="eq-select eq-site-select">
             <option value="">{t('All Sites', 'ทุกไซต์')}</option>
-            {company.sites.map((s) => (
-              <option key={s.id} value={s.id}>{lang === 'th' ? s.nameTh : s.name}</option>
+            {(sites ?? []).map((s) => (
+              <option key={s.site} value={s.site}>{s.site}</option>
             ))}
           </select>
 
@@ -199,7 +314,7 @@ export function EquipmentPage() {
             {advancedCount > 0 && <span className="filter-count-badge">{advancedCount}</span>}
           </button>
 
-          <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label={t('Sort', 'จัดเรียง')} className="eq-select eq-sort-select">
+          <select value={sort} onChange={(e) => { setSort(e.target.value); setColSort(null); }} aria-label={t('Sort', 'จัดเรียง')} className="eq-select eq-sort-select">
             <option value="name">{t('Sort: Name A–Z', 'เรียง: ชื่อ ก–ฮ')}</option>
             <option value="newest">{t('Sort: Newest Install', 'เรียง: ติดตั้งใหม่สุด')}</option>
             <option value="oldest">{t('Sort: Oldest Install', 'เรียง: ติดตั้งเก่าสุด')}</option>
@@ -237,9 +352,9 @@ export function EquipmentPage() {
               </div>
 
               <div className="eq-field">
-                <label className="eq-field-label">{t('Installation Year', 'ปีที่ติดตั้ง')}</label>
+                <label className="eq-field-label">{t('Purchase Year', 'ปีที่ซื้อ')}</label>
                 <select value={year} onChange={(e) => setYear(e.target.value)} className="eq-select">
-                  <option value="">{t('All Install Years', 'ทุกปีติดตั้ง')}</option>
+                  <option value="">{t('All Purchase Years', 'ทุกปีที่ซื้อ')}</option>
                   {years.map((y) => <option key={y} value={String(y)}>{y}</option>)}
                 </select>
               </div>
@@ -256,7 +371,7 @@ export function EquipmentPage() {
             </button>
             {(['active', 'expiring', 'expired'] as const).map((w) => {
               const meta = WARRANTY_STATUS[w];
-              const count = all.filter((a) => a.warranty === w).length;
+              const count = baseRows.filter((r) => r.warrantyState === WARRANTY_TO_STATE[w]).length;
               return (
                 <button key={w} className={`chip ${warranty === w ? 'active' : ''}`} onClick={() => setWarranty(w)} aria-pressed={warranty === w}>
                   {lang === 'th' ? meta.th : meta.en} ({count})
@@ -267,7 +382,9 @@ export function EquipmentPage() {
 
           <div className="eq-status-summary">
             <span className="muted small">
-              {t(`${filtered.length} of ${all.length} assets listed`, `แสดง ${filtered.length} จาก ${all.length} รายการ`)}
+              {loading
+                ? t('Loading…', 'กำลังโหลด…')
+                : t(`${rows.length} assets listed`, `แสดง ${rows.length} รายการ`)}
             </span>
             {hasFilters && (
               <button className="btn btn-ghost btn-sm btn-clear-filters" onClick={clearAll}>
@@ -279,7 +396,15 @@ export function EquipmentPage() {
         </div>
       </div>
 
-      {filtered.length === 0 && (
+      {loadError && (
+        <EmptyState
+          icon={<Package size={24} />}
+          title={t('Could not load equipment', 'โหลดข้อมูลอุปกรณ์ไม่สำเร็จ')}
+          body={t('Please try again in a moment.', 'กรุณาลองใหม่อีกครั้งในภายหลัง')}
+        />
+      )}
+
+      {!loadError && !loading && rows.length === 0 && (
         <EmptyState
           icon={<Package size={24} />}
           title={t('No equipment matches these filters', 'ไม่พบอุปกรณ์ตามตัวกรองนี้')}
@@ -288,58 +413,67 @@ export function EquipmentPage() {
         />
       )}
 
-      {filtered.length > 0 && (
+      {!loadError && rows.length > 0 && (
         <div className="card table-to-cards" style={{ overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
             <table className="se-table">
               <thead>
                 <tr>
-                  <th>{t('Asset', 'อุปกรณ์')}</th>
-                  <th>{t('Site', 'ไซต์')}</th>
-                  <th>{t('Category', 'หมวด')}</th>
-                  <th>{t('Purchase Date', 'วันที่ซื้อ')}</th>
-                  <th>{t('Status', 'สถานะ')}</th>
-                  <th>{t('Warranty', 'การรับประกัน')}</th>
-                  <th>{t('Next PM', 'PM ถัดไป')}</th>
+                  {sortTh('asset', t('Asset', 'อุปกรณ์'))}
+                  {sortTh('site', t('Site', 'ไซต์'))}
+                  {sortTh('category', t('Category', 'หมวด'))}
+                  {sortTh('purchaseDate', t('Purchase Date', 'วันที่ซื้อ'))}
+                  {sortTh('status', t('Status', 'สถานะ'))}
+                  {sortTh('warranty', t('Warranty', 'การรับประกัน'))}
+                  {sortTh('nextPm', t('Next PM', 'PM ถัดไป'))}
                   <th aria-label={t('Actions', 'การทำงาน')} />
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((a) => {
-                  const op = OPERATING_STATUS[a.status];
-                  const wa = WARRANTY_STATUS[a.warranty];
-                  const pDate = a.purchaseDate || a.events?.find((e) => e.type === 'sale')?.date || a.installDate || a.warrantyStart || '2024-01-15';
-                  const days = Math.max(1, daysSince(pDate));
+                {sortedRows.map((r) => {
+                  const op = OPERATING_STATUS[r.status];
+                  const warrantyToken = STATE_TO_WARRANTY[r.warrantyState];
+                  const wa = WARRANTY_STATUS[warrantyToken];
+                  const days = r.purchaseDate ? Math.max(1, daysSince(r.purchaseDate)) : null;
                   return (
-                    <tr key={a.id} className="row-link" onClick={() => navigate(`/portal/equipment/${a.id}`)}>
+                    <tr key={r.unitId} className="row-link" onClick={() => navigate(`/portal/equipment/${r.id}?unitId=${encodeURIComponent(r.unitId)}`)}>
                       <td data-label={t('Asset', 'อุปกรณ์')}>
-                        <div className="fw-600">{a.name}</div>
-                        <div className="muted small">{a.id} · {a.brand} {a.model}</div>
+                        <div className="fw-600">{lang === 'th' ? r.nameTh : r.nameEn}</div>
+                        {r.assetCode && <div className="muted small">{t('Asset Code', 'รหัสทรัพย์สิน')}: {r.assetCode}</div>}
+                        <div className="muted small">{t('Item Code', 'รหัสสินค้า')}: {r.id}</div>
+                        {r.serialNo && <div className="muted small">{t('Serial No.', 'หมายเลขเครื่อง')}: {r.serialNo}</div>}
+                        {r.description && <div className="muted small">{t('Description', 'รายละเอียด')}: {r.description}</div>}
                       </td>
-                      <td data-label={t('Site', 'ไซต์')}>{siteName(customerCode, a.siteId, lang)}</td>
-                      <td data-label={t('Category', 'หมวด')}>{a.category}</td>
+                      <td data-label={t('Site', 'ไซต์')}>{r.site ?? '—'}</td>
+                      <td data-label={t('Category', 'หมวด')}>{(lang === 'th' ? r.categoryTh : r.categoryEn) ?? '—'}</td>
                       <td data-label={t('Purchase Date', 'วันที่ซื้อ')}>
-                        <div className="fw-500">{fmtDate(pDate, lang)}</div>
-                        <div className="muted small" style={{ color: 'var(--se-text-secondary)' }}>
-                          {t(`Total ${days} days`, `รวม ${days} วัน`)}
-                        </div>
+                        {r.purchaseDate ? (
+                          <>
+                            <div className="fw-500">{fmtDate(r.purchaseDate, lang)}</div>
+                            <div className="muted small" style={{ color: 'var(--se-text-secondary)' }}>
+                              {t(`Total ${days} days`, `รวม ${days} วัน`)}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="muted small">—</span>
+                        )}
                       </td>
                       <td data-label={t('Status', 'สถานะ')}><StatusBadge label={lang === 'th' ? op.th : op.en} tone={op.tone} /></td>
                       <td data-label={t('Warranty', 'การรับประกัน')}>
-                        {a.warranty === 'none' ? (
+                        {warrantyToken === 'none' ? (
                           <span className="muted small">{t('No warranty', 'ไม่มีประกัน')}</span>
                         ) : (
                           <div>
                             <StatusBadge label={lang === 'th' ? wa.th : wa.en} tone={wa.tone} />
                             <div className="muted small" style={{ marginTop: 3 }}>
-                              {t('Expires:', 'หมดอายุ:')} {fmtDate(a.warrantyEnd, lang)}
+                              {t('Expires:', 'หมดอายุ:')} {r.warrantyUntil ? fmtDate(r.warrantyUntil, lang) : '—'}
                             </div>
                           </div>
                         )}
                       </td>
-                      <td data-label={t('Next PM', 'PM ถัดไป')}>{a.nextPM ? fmtDate(a.nextPM, lang) : '—'}</td>
+                      <td data-label={t('Next PM', 'PM ถัดไป')}>{r.nextDue ? fmtDate(r.nextDue, lang) : '—'}</td>
                       <td data-label={t('Actions', 'การทำงาน')}>
-                        <Link to={`/portal/requests/new?asset=${a.id}`} className="btn btn-soft btn-sm" onClick={(e) => e.stopPropagation()}>
+                        <Link to={`/portal/requests/new?asset=${r.id}`} className="btn btn-soft btn-sm" onClick={(e) => e.stopPropagation()}>
                           {t('Report', 'แจ้งปัญหา')}
                         </Link>
                       </td>

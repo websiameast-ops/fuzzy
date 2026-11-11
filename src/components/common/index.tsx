@@ -1,33 +1,48 @@
 import { useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, X, Star, Download, QrCode, Camera, Phone, Mail, MessageCircle } from 'lucide-react';
+import { Search, X, Star, Download, QrCode, Camera, Phone, Mail, MessageCircle, User } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
 import { useToast } from '@/contexts/ToastContext';
 import type { Tone } from '@/utils/status';
 
+/* ---------------- Logo ---------------- */
 const BASE = import.meta.env.BASE_URL;
+const LOGO_SOURCES = [
+  `${BASE}assets/logo-connex.svg`,
+  `${BASE}assets/logo-connex.png`,
+  `${BASE}logo-connex.svg`,
+  `${BASE}logo-connex.png`,
+];
 
-export function Logo({ height = 32, collapsed = false }: { height?: number; collapsed?: boolean }) {
+export function Logo({ height = 34, collapsed = false }: { height?: number; collapsed?: boolean }) {
+  const [idx, setIdx] = useState(0);
+  if (idx >= LOGO_SOURCES.length) {
+    return (
+      <span className="logo-placeholder" title="Place the official logo at public/assets/logo-connex.svg">
+        SE Connex logo asset required
+      </span>
+    );
+  }
   return (
-    <div className="logo" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+    <span className="logo">
       <img
-        src={`${BASE}assets/logo-connex.svg`}
+        src={LOGO_SOURCES[idx]}
         alt="SE Connex"
-        className="logo-img"
-        style={{ height, width: 'auto', display: 'block', flexShrink: 0 }}
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = `${BASE}assets/se-connex-logo.png`;
-        }}
+        style={{ height, width: 'auto', display: 'block', flexShrink: 0, borderRadius: '22%' }}
+        onError={() => setIdx((i) => i + 1)}
       />
       {!collapsed && (
         <span className="lo-brand">
           <span className="lo-se">SE</span> CONNEX
         </span>
       )}
-    </div>
+    </span>
   );
 }
+
+/* ---------------- Language switch (dropdown selector) ---------------- */
+export { LanguageSelector, SUPPORTED_LANGUAGES } from './LanguageSelector';
 
 /* ---------------- Status badge ---------------- */
 export function StatusBadge({ label, tone, dot = true }: { label: string; tone: Tone; dot?: boolean }) {
@@ -99,6 +114,7 @@ export function Modal({
   children,
   footer,
   large = false,
+  className,
 }: {
   open: boolean;
   onClose: () => void;
@@ -106,6 +122,9 @@ export function Modal({
   children: ReactNode;
   footer?: ReactNode;
   large?: boolean;
+  /** Extra class on the `.modal` div — e.g. a marker class a caller can hook
+   * `@media print` rules onto without affecting every other Modal instance. */
+  className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -130,7 +149,7 @@ export function Modal({
       }}
       role="presentation"
     >
-      <div className={`modal ${large ? 'modal-lg' : ''}`} role="dialog" aria-modal="true" ref={ref}>
+      <div className={`modal ${large ? 'modal-lg' : ''} ${className ?? ''}`.trim()} role="dialog" aria-modal="true" ref={ref}>
         <div className="modal-header">
           <h3 style={{ margin: 0 }}>{title}</h3>
           <button className="icon-btn" onClick={onClose} aria-label="Close dialog">
@@ -342,36 +361,49 @@ export function ImageUploadMock({
 /* ---------------- SE contact card ---------------- */
 export function ContactSECard({
   name,
-  role,
+  position,
   phone,
   email,
   line,
+  processes,
+  style,
 }: {
   name: string;
-  role: string;
+  position: string;
   phone: string;
   email: string;
   line?: string;
+  /** Sale-process labels (already language-resolved); empty/omitted when the contact has none. */
+  processes?: string[];
+  style?: CSSProperties;
 }) {
   return (
-    <div className="contact-card">
+    <div className="contact-card" style={style}>
+      {/* TODO: swap for a real photoUrl once KpiSalePerson gets a photo column — placeholder icon for now */}
       <div className="avatar" aria-hidden>
-        {name
-          .split(' ')
-          .map((p) => p[0])
-          .slice(0, 2)
-          .join('')}
+        <User size={20} />
       </div>
       <div style={{ minWidth: 0 }}>
         <div className="fw-600">{name}</div>
-        <div className="muted small">{role}</div>
+        <div className="muted small">{position}</div>
+        {processes && processes.length > 0 && (
+          <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {processes.map((p) => (
+              <span key={p} className="badge t-blue">{p}</span>
+            ))}
+          </div>
+        )}
         <div className="contact-links">
-          <a href={`tel:${phone.replace(/\s/g, '')}`} className="chip" aria-label={`Call ${name}`}>
-            <Phone size={13} aria-hidden /> {phone}
-          </a>
-          <a href={`mailto:${email}`} className="chip" aria-label={`Email ${name}`}>
-            <Mail size={13} aria-hidden /> {email}
-          </a>
+          {phone && (
+            <a href={`tel:${phone.replace(/\s/g, '')}`} className="chip" aria-label={`Call ${name}`}>
+              <Phone size={13} aria-hidden /> {phone}
+            </a>
+          )}
+          {email && (
+            <a href={`mailto:${email}`} className="chip" aria-label={`Email ${name}`}>
+              <Mail size={13} aria-hidden /> {email}
+            </a>
+          )}
           {line && (
             <span className="chip" aria-label={`LINE ${line}`}>
               <MessageCircle size={13} aria-hidden /> {line}
@@ -455,6 +487,3 @@ export function SignaturePadMock({ onChange }: { onChange: (hasInk: boolean) => 
     </div>
   );
 }
-
-export { LanguageSelector, SUPPORTED_LANGUAGES } from './LanguageSelector';
-

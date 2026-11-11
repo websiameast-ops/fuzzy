@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CalendarCheck, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -7,11 +7,23 @@ import { useToast } from '@/contexts/ToastContext';
 import { EmptyState, Modal, StatusBadge } from '@/components/common';
 import { ServiceReportModal } from '@/components/service/ServiceReportModal';
 import { getAsset } from '@/data/mockAssets';
-import { getReport } from '@/data/mockHistory';
 import { siteName } from '@/data/mockCompanies';
-import { fmtDate, fmtDateLong } from '@/utils/format';
-import { PM_STATUS } from '@/utils/status';
-import type { PMVisit, ServiceRecord } from '@/types';
+import { fmtDate, fmtDateLong, TODAY } from '@/utils/format';
+import { PM_SCHEDULE_STATE, PM_STATUS } from '@/utils/status';
+import type { PMVisit } from '@/types';
+import {
+  apiGetCompletedPmVisits,
+  apiGetPMSchedule,
+  apiGetPMTypes,
+  apiGetSites,
+  type PmTypeResponse,
+  type PMCompletedVisitResponse,
+  type PMScheduleItemResponse,
+  type SiteResponse,
+} from '@/lib/apiClient';
+import { tokenStore } from '@/lib/tokenStore';
+
+const COMPLETED_PAGE_SIZE = 10;
 
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const MONTHS_TH = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -21,6 +33,10 @@ const RESCHEDULE_REASONS = [
   { key: 'staff', en: 'Our staff unavailable', th: 'ทีมงานของเราไม่ว่าง' },
   { key: 'other', en: 'Other reason', th: 'เหตุผลอื่น' },
 ];
+
+function isoDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 function VisitCard({ v, onConfirm, onReschedule, onViewReport }: {
   v: PMVisit;
@@ -91,7 +107,7 @@ function VisitCard({ v, onConfirm, onReschedule, onViewReport }: {
         {v.status === 'reschedule_requested' && (
           <span className="muted small">{t('SE will contact you with new date options.', 'SE จะติดต่อกลับพร้อมตัวเลือกวันใหม่')}</span>
         )}
-        {v.status === 'completed' && v.reportId && (
+        {v.status === 'completed' && v.ticketNo && (
           <button className="btn btn-outline btn-sm" onClick={() => onViewReport(v)}>
             {t('View service report', 'ดูรายงานบริการ')} {v.reportId}
           </button>
@@ -103,36 +119,82 @@ function VisitCard({ v, onConfirm, onReschedule, onViewReport }: {
 
 export function PMPage() {
   const { lang, t } = useLang();
-  const { customerCode, company } = useCompany();
+  const { customerCode } = useCompany();
   const { pmVisits, confirmPM, requestReschedule } = useData();
   const { showToast } = useToast();
 
   const [view, setView] = useState<'calendar' | 'agenda'>('calendar');
-  const [month, setMonth] = useState(6); // July (0-based)
-  const [year, setYear] = useState(2026);
+  const [month, setMonth] = useState(new Date().getMonth());
+  const [year, setYear] = useState(new Date().getFullYear());
   const [site, setSite] = useState('');
-  const [status, setStatus] = useState('');
+  const [pmType, setPmType] = useState('');
   const [reschedVisit, setReschedVisit] = useState<PMVisit | null>(null);
   const [reschedDate, setReschedDate] = useState('');
   const [reschedTime, setReschedTime] = useState('morning');
   const [reschedReason, setReschedReason] = useState('production');
   const [reschedNotes, setReschedNotes] = useState('');
-  const [openRecord, setOpenRecord] = useState<ServiceRecord | null>(null);
+  const [openTicketNo, setOpenTicketNo] = useState<string | null>(null);
+  const [sites, setSites] = useState<SiteResponse[] | null>(null);
+  const [pmTypes, setPmTypes] = useState<PmTypeResponse[] | null>(null);
+  const [schedule, setSchedule] = useState<PMScheduleItemResponse[] | null>(null);
+  const [completedItems, setCompletedItems] = useState<PMCompletedVisitResponse[] | null>(null);
+  const [completedTotal, setCompletedTotal] = useState(0);
+  const [completedPage, setCompletedPage] = useState(1);
+
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetSites(accessToken).then(setSites).catch(() => {});
+    apiGetPMTypes(accessToken).then(setPmTypes).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetPMSchedule(accessToken, { site: site || undefined, pmType: pmType || undefined })
+      .then(setSchedule)
+      .catch(() => {});
+  }, [site, pmType]);
+
+  useEffect(() => {
+    setCompletedPage(1);
+  }, [site, pmType]);
+
+  useEffect(() => {
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetCompletedPmVisits(accessToken, {
+      site: site || undefined,
+      pmType: pmType || undefined,
+      page: completedPage,
+      size: COMPLETED_PAGE_SIZE,
+    })
+      .then(({ items, total }) => {
+        setCompletedItems(items);
+        setCompletedTotal(total);
+      })
+      .catch(() => {});
+  }, [site, pmType, completedPage]);
 
   const visits = useMemo(
     () =>
       pmVisits
         .filter((v) => v.customerCode === customerCode)
         .filter((v) => !site || v.siteId === site)
-        .filter((v) => !status || v.status === status)
+        .filter((v) => !pmType || v.pmType === pmType)
         .sort((a, b) => (a.date > b.date ? 1 : -1)),
-    [pmVisits, customerCode, site, status],
+    [pmVisits, customerCode, site, pmType],
   );
 
+  const todayStr = isoDate(TODAY);
+  const tomorrow = new Date(TODAY);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minReschedDate = isoDate(tomorrow);
+
   const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
-  const monthVisits = visits.filter((v) => v.date.startsWith(monthKey));
-  const upcoming = visits.filter((v) => v.date >= '2026-07-14' && v.status !== 'completed');
-  const past = visits.filter((v) => v.status === 'completed').sort((a, b) => (a.date < b.date ? 1 : -1));
+  const monthSchedule = (schedule ?? []).filter((s) => s.nextDue.startsWith(monthKey));
+  const upcoming = visits.filter((v) => v.date >= todayStr && v.status !== 'completed');
+  const completedTotalPages = Math.max(1, Math.ceil(completedTotal / COMPLETED_PAGE_SIZE));
 
   const firstDay = new Date(year, month, 1).getDay(); // 0 = Sunday
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -177,10 +239,7 @@ export function PMPage() {
   };
 
   const viewReport = (v: PMVisit) => {
-    if (v.reportId) {
-      const rec = getReport(v.reportId);
-      if (rec) setOpenRecord(rec);
-    }
+    if (v.ticketNo) setOpenTicketNo(v.ticketNo);
   };
 
   const weekdays = lang === 'th' ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -210,14 +269,14 @@ export function PMPage() {
         <div className="filter-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0,1fr))', maxWidth: 560 }}>
           <select value={site} onChange={(e) => setSite(e.target.value)} aria-label={t('Filter by site', 'กรองตามไซต์')}>
             <option value="">{t('All sites', 'ทุกไซต์')}</option>
-            {company.sites.map((s) => (
-              <option key={s.id} value={s.id}>{lang === 'th' ? s.nameTh : s.name}</option>
+            {(sites ?? []).map((s) => (
+              <option key={s.site} value={s.site}>{s.site}</option>
             ))}
           </select>
-          <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label={t('Filter by status', 'กรองตามสถานะ')}>
-            <option value="">{t('All statuses', 'ทุกสถานะ')}</option>
-            {Object.entries(PM_STATUS).map(([k, v]) => (
-              <option key={k} value={k}>{lang === 'th' ? v.th : v.en}</option>
+          <select value={pmType} onChange={(e) => setPmType(e.target.value)} aria-label={t('Filter by type', 'กรองตามประเภทงาน')}>
+            <option value="">{t('All types', 'ทุกประเภท')}</option>
+            {(pmTypes ?? []).map((p) => (
+              <option key={p.pmType} value={p.pmType}>{p.pmType}</option>
             ))}
           </select>
         </div>
@@ -243,16 +302,22 @@ export function PMPage() {
             {cells.map((day, i) => {
               if (day === null) return <div key={`e${i}`} className="pm-cal-cell empty" />;
               const dateStr = `${monthKey}-${String(day).padStart(2, '0')}`;
-              const dayVisits = monthVisits.filter((v) => v.date === dateStr);
-              const isToday = dateStr === '2026-07-14';
+              const daySchedule = monthSchedule.filter((s) => s.nextDue === dateStr);
+              const isToday = dateStr === isoDate(new Date());
               return (
                 <div key={dateStr} className={`pm-cal-cell ${isToday ? 'today' : ''}`}>
                   <div className="pm-cal-day">{day}</div>
-                  {dayVisits.map((v) => {
-                    const st = PM_STATUS[v.status];
+                  {daySchedule.map((s, i) => {
+                    const state = PM_SCHEDULE_STATE[s.pmState] ?? PM_SCHEDULE_STATE.scheduled;
+                    const stateLabel = lang === 'th' ? state.th : state.en;
                     return (
-                      <span key={v.id} className={`badge t-${st.tone}`} style={{ fontSize: 10.5, display: 'inline-flex', maxWidth: '100%' }} title={v.scope}>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.id.replace('PM-2026-', 'PM ')}</span>
+                      <span
+                        key={`${s.assetCode}-${i}`}
+                        className={`badge t-${state.tone}`}
+                        style={{ fontSize: 10.5, display: 'inline-flex', maxWidth: '100%' }}
+                        title={`${s.pmType} · ${stateLabel}`}
+                      >
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.assetCode} · {stateLabel}</span>
                       </span>
                     );
                   })}
@@ -261,14 +326,14 @@ export function PMPage() {
             })}
           </div>
           <p className="muted small" style={{ marginBottom: 0 }}>
-            {monthVisits.length > 0
-              ? t(`${monthVisits.length} visit(s) scheduled this month — details below.`, `เดือนนี้มีนัดหมาย ${monthVisits.length} รายการ — รายละเอียดด้านล่าง`)
-              : t('No visits scheduled in this month.', 'เดือนนี้ไม่มีนัดหมาย')}
+            {monthSchedule.length > 0
+              ? t(`${monthSchedule.length} PM schedule(s) due this month.`, `เดือนนี้มีกำหนด PM ${monthSchedule.length} รายการ`)
+              : t('No PM scheduled in this month.', 'เดือนนี้ไม่มีกำหนด PM')}
           </p>
         </div>
       )}
 
-      <h3 style={{ margin: '0 0 10px' }}>{t('Upcoming visits', 'นัดหมายที่กำลังจะถึง')}</h3>
+      {/* <h3 style={{ margin: '0 0 10px' }}>{t('Upcoming visits', 'นัดหมายที่กำลังจะถึง')}</h3>
       {upcoming.length === 0 ? (
         <EmptyState
           icon={<CalendarCheck size={24} />}
@@ -281,15 +346,64 @@ export function PMPage() {
             <VisitCard key={v.id} v={v} onConfirm={doConfirm} onReschedule={openResched} onViewReport={viewReport} />
           ))}
         </div>
-      )}
+      )} */}
 
       <h3 style={{ margin: '0 0 10px' }}>{t('Completed visits', 'นัดหมายที่เสร็จสิ้น')}</h3>
       <div style={{ display: 'grid', gap: 12 }}>
-        {past.map((v) => (
-          <VisitCard key={v.id} v={v} onConfirm={doConfirm} onReschedule={openResched} onViewReport={viewReport} />
+        {(completedItems ?? []).map((v) => (
+          <div key={v.ticketNo} className="card" style={{ padding: 16 }}>
+            <div className="between" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
+              <div>
+                <div className="fw-600">{v.completedAt ? fmtDate(v.completedAt, lang) : '—'}</div>
+                <div className="muted small">
+                  {v.ticketNo} · {v.assetCode}{v.site ? ` · ${v.site}` : ''}
+                </div>
+                <div className="small" style={{ marginTop: 4 }}>{v.description}</div>
+              </div>
+              <StatusBadge label={t('Completed', 'เสร็จสิ้น')} tone="green" />
+            </div>
+            <div className="flex" style={{ gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+              {v.pmType && <span className="chip">{v.pmType}</span>}
+              {v.engineerName && <span className="muted small">{t('Engineer', 'ช่างบริการ')}: {v.engineerName}</span>}
+            </div>
+            <div className="flex" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+              <button className="btn btn-outline btn-sm" onClick={() => setOpenTicketNo(v.ticketNo)}>
+                {t('View service report', 'ดูรายงานบริการ')}
+              </button>
+            </div>
+          </div>
         ))}
-        {past.length === 0 && <p className="muted">{t('No completed visits with the current filters.', 'ไม่มีนัดหมายที่เสร็จสิ้นตามตัวกรองปัจจุบัน')}</p>}
+        {(completedItems ?? []).length === 0 && (
+          <p className="muted">{t('No completed visits with the current filters.', 'ไม่มีนัดหมายที่เสร็จสิ้นตามตัวกรองปัจจุบัน')}</p>
+        )}
       </div>
+
+      {(completedItems ?? []).length > 0 && (
+        <div className="between" style={{ marginTop: 16 }}>
+          <span className="muted small">{t(`${completedTotal} visit(s)`, `ทั้งหมด ${completedTotal} รายการ`)}</span>
+          <div className="flex" style={{ gap: 8 }}>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              disabled={completedPage <= 1}
+              onClick={() => setCompletedPage((p) => p - 1)}
+            >
+              <ChevronLeft size={14} aria-hidden />
+              {t('Prev', 'ก่อนหน้า')}
+            </button>
+            <span className="muted small">{t(`Page ${completedPage} / ${completedTotalPages}`, `หน้า ${completedPage} / ${completedTotalPages}`)}</span>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              disabled={completedPage >= completedTotalPages}
+              onClick={() => setCompletedPage((p) => p + 1)}
+            >
+              {t('Next', 'ถัดไป')}
+              <ChevronRight size={14} aria-hidden />
+            </button>
+          </div>
+        </div>
+      )}
 
       <Modal
         open={reschedVisit !== null}
@@ -313,7 +427,7 @@ export function PMPage() {
             <div className="grid-2">
               <div className="field">
                 <label htmlFor="rs-date">{t('Preferred new date', 'วันใหม่ที่สะดวก')}</label>
-                <input id="rs-date" type="date" min="2026-07-15" value={reschedDate} onChange={(e) => setReschedDate(e.target.value)} />
+                <input id="rs-date" type="date" min={minReschedDate} value={reschedDate} onChange={(e) => setReschedDate(e.target.value)} />
               </div>
               <div className="field">
                 <label htmlFor="rs-time">{t('Preferred time', 'ช่วงเวลาที่สะดวก')}</label>
@@ -340,7 +454,7 @@ export function PMPage() {
         )}
       </Modal>
 
-      <ServiceReportModal record={openRecord} open={openRecord !== null} onClose={() => setOpenRecord(null)} />
+      <ServiceReportModal ticketNo={openTicketNo} open={openTicketNo !== null} onClose={() => setOpenTicketNo(null)} />
     </div>
   );
 }

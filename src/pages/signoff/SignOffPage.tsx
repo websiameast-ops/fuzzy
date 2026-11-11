@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Camera, CheckCircle2, FileSignature, FileText, Star } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, FileSignature, FileText, Star } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,9 +9,10 @@ import { useToast } from '@/contexts/ToastContext';
 import { EmptyState, SignaturePadMock, Stars, StatusBadge } from '@/components/common';
 import { ServiceReportModal } from '@/components/service/ServiceReportModal';
 import { getAsset } from '@/data/mockAssets';
-import { getReport } from '@/data/mockHistory';
 import { siteName } from '@/data/mockCompanies';
 import { daysSince, fmtDate } from '@/utils/format';
+import { apiGetTicketReport, type ServiceReportResponse } from '@/lib/apiClient';
+import { tokenStore } from '@/lib/tokenStore';
 import type { ServiceRating, SignoffJob } from '@/types';
 
 export function SignOffPage() {
@@ -149,6 +150,14 @@ export function SignOffDetailPage() {
   const [firstTimeFix, setFirstTimeFix] = useState<'yes' | 'partial' | 'no' | ''>('');
   const [ratingComments, setRatingComments] = useState('');
   const [allowContact, setAllowContact] = useState(true);
+  const [report, setReport] = useState<ServiceReportResponse | null>(null);
+
+  useEffect(() => {
+    if (!job?.ticketNo) return;
+    const accessToken = tokenStore.read()?.accessToken;
+    if (!accessToken) return;
+    apiGetTicketReport(accessToken, job.ticketNo).then(setReport).catch(() => {});
+  }, [job?.ticketNo]);
 
   if (!job) {
     return (
@@ -161,7 +170,7 @@ export function SignOffDetailPage() {
     );
   }
 
-  const record = getReport(job.reportId) ?? null;
+  const reportTicketNo = job.ticketNo ?? null;
   const asset = getAsset(job.assetId);
 
   /* Already signed → summary view */
@@ -190,10 +199,12 @@ export function SignOffDetailPage() {
             </div>
           )}
           <div className="flex" style={{ gap: 10, marginTop: 18 }}>
-            <button className="btn btn-outline" onClick={() => setReportOpen(true)}>
-              <FileText size={16} aria-hidden />
-              {t('View service report', 'ดูรายงานบริการ')}
-            </button>
+            {reportTicketNo && (
+              <button className="btn btn-outline" onClick={() => setReportOpen(true)}>
+                <FileText size={16} aria-hidden />
+                {t('View service report', 'ดูรายงานบริการ')}
+              </button>
+            )}
             {job.ticketNo && (
               <Link to={`/portal/requests/${job.ticketNo}`} className="btn btn-outline">
                 {t('View original request', 'ดูคำขอเดิม')}
@@ -201,7 +212,7 @@ export function SignOffDetailPage() {
             )}
           </div>
         </div>
-        <ServiceReportModal record={record} open={reportOpen} onClose={() => setReportOpen(false)} />
+        <ServiceReportModal ticketNo={reportTicketNo} open={reportOpen} onClose={() => setReportOpen(false)} />
       </div>
     );
   }
@@ -403,30 +414,38 @@ export function SignOffDetailPage() {
           <>
             <h3 style={{ marginTop: 0 }}>{t('2 · Read the service report', 'ขั้นตอนที่ 2 · อ่านรายงานบริการ')}</h3>
             <p className="muted">
-              {t('The engineer documented findings, root cause, parts used and test results. Please open and review it before signing.', 'วิศวกรได้บันทึกสิ่งที่ตรวจพบ สาเหตุ อะไหล่ที่ใช้ และผลทดสอบ กรุณาเปิดอ่านก่อนลงนาม')}
+              {t('The engineer documented findings, root cause and work performed. Please open and review it before signing.', 'วิศวกรได้บันทึกสิ่งที่ตรวจพบ สาเหตุ และงานที่ดำเนินการ กรุณาเปิดอ่านก่อนลงนาม')}
             </p>
-            <button className="btn btn-outline" onClick={() => setReportOpen(true)}>
-              <FileText size={16} aria-hidden />
-              {t('Open report', 'เปิดรายงาน')} {job.reportId}
-            </button>
+            {reportTicketNo && (
+              <button className="btn btn-outline" onClick={() => setReportOpen(true)}>
+                <FileText size={16} aria-hidden />
+                {t('Open report', 'เปิดรายงาน')} {job.reportId}
+              </button>
+            )}
           </>
         )}
 
-        {step === 2 && record && (
+        {step === 2 && report && (
           <>
-            <h3 style={{ marginTop: 0 }}>{t('3 · Before & after photos', 'ขั้นตอนที่ 3 · รูปก่อนและหลัง')}</h3>
-            <div className="fw-600 small" style={{ marginBottom: 6 }}>{t('Before', 'ก่อนดำเนินการ')}</div>
-            <div className="upload-grid">
-              {record.report.beforePhotos.map((p) => (
-                <div key={p} className="upload-thumb"><Camera size={20} aria-hidden /><span className="small">{p}</span></div>
-              ))}
-            </div>
-            <div className="fw-600 small" style={{ margin: '10px 0 6px' }}>{t('After', 'หลังดำเนินการ')}</div>
-            <div className="upload-grid">
-              {record.report.afterPhotos.map((p) => (
-                <div key={p} className="upload-thumb"><Camera size={20} aria-hidden /><span className="small">{p}</span></div>
-              ))}
-            </div>
+            <h3 style={{ marginTop: 0 }}>{t('3 · Work photos', 'ขั้นตอนที่ 3 · รูปการทำงาน')}</h3>
+            {report.phases.length === 0 ? (
+              <p className="muted">{t('No photos were captured for this job.', 'งานนี้ไม่มีรูปที่บันทึกไว้')}</p>
+            ) : (
+              report.phases.map((phase) => (
+                <div key={phase.phaseId} style={{ marginBottom: 12 }}>
+                  <div className="fw-600 small" style={{ marginBottom: 6 }}>
+                    {lang === 'th' ? phase.nameTh : phase.nameEn ?? phase.nameTh}
+                  </div>
+                  <div className="upload-grid">
+                    {phase.photos.map((p) => (
+                      <a key={p.attachmentId} href={p.url} target="_blank" rel="noreferrer" className="upload-thumb" title={p.fileName}>
+                        <img src={p.url} alt={p.fileName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
           </>
         )}
 
@@ -535,7 +554,7 @@ export function SignOffDetailPage() {
         </div>
       </div>
 
-      <ServiceReportModal record={record} open={reportOpen} onClose={() => setReportOpen(false)} />
+      <ServiceReportModal ticketNo={reportTicketNo} open={reportOpen} onClose={() => setReportOpen(false)} />
     </div>
   );
 }

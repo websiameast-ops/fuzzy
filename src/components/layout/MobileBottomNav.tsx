@@ -2,20 +2,21 @@ import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Home, Package, ClipboardList, MoreHorizontal, Plus, Newspaper, History, FileText, CalendarCheck, FileSignature, Leaf, UserCog, LogOut, X, MapPin, Wifi, Activity, Boxes, Wrench } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
+import { getNewsLastPath } from '@/utils/nav';
 
 export function MobileBottomNav() {
   const { t } = useLang();
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const MORE = [
-    { to: '/portal/news', icon: Newspaper, en: 'News & Updates', th: 'ข่าวสาร' },
+    { to: getNewsLastPath() ?? '/portal/news', icon: Newspaper, en: 'News & Updates', th: 'ข่าวสาร' },
     { to: '/portal/map', icon: MapPin, en: 'My Sites — Map', th: 'ไซต์ของฉัน — แผนที่' },
-    { to: '/portal/iot', icon: Wifi, en: 'Live Monitoring', th: 'มอนิเตอริ่งแบบเรียลไทม์' },
+    // { to: '/portal/iot', icon: Wifi, en: 'Live Monitoring', th: 'มอนิเตอริ่งแบบเรียลไทม์' },
     { to: '/portal/digital-twin', icon: Activity, en: 'Factory Digital Twin', th: 'ฝาแฝดดิจิทัลโรงงาน' },
     { to: '/portal/history', icon: History, en: 'Service History', th: 'ประวัติการซ่อมบำรุง' },
     { to: '/portal/contracts', icon: FileText, en: 'Contracts', th: 'สัญญาบริการ' },
     { to: '/portal/pm', icon: CalendarCheck, en: 'PM Schedule', th: 'แผนบำรุงรักษา' },
-    { to: '/portal/sign-off', icon: FileSignature, en: 'Work Sign-off', th: 'ยืนยันงาน' },
+    // { to: '/portal/sign-off', icon: FileSignature, en: 'Work Sign-off', th: 'ยืนยันงาน' },
     { to: '/portal/carbon', icon: Leaf, en: 'Energy & Carbon', th: 'พลังงานและคาร์บอน' },
     { to: '/portal/materials', icon: Boxes, en: 'Materials & Consumables', th: 'วัสดุสิ้นเปลือง' },
     { to: '/portal/parts', icon: Wrench, en: 'Parts & Orders', th: 'อะไหล่และคำสั่งซื้อ' },
