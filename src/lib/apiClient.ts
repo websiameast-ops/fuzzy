@@ -5,7 +5,7 @@
  */
 import type { TokenPair } from './tokenStore';
 import type { PmScheduleStateValue, SlaStatusValue, TicketPriorityValue, TicketStatusValue } from '@/utils/status';
-import { mockGet } from '@/data/mockApi';
+import { MOCK_ACCOUNTS, mockGet } from '@/data/mockApi';
 import packageJson from '../../package.json';
 
 /** Backend errors arrive as { code, message } (see app/core/errors.py). */
@@ -20,7 +20,6 @@ export class ApiError extends Error {
   }
 }
 
-const DEMO_EMAIL = 'demo@seconnex.co.th';
 // Held in memory only, so a "changed" password resets on reload — there is no server to keep it.
 let demoPassword = 'demo123';
 
@@ -54,7 +53,7 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   return delay(() => {
     switch (path) {
       case '/portal/auth/login':
-        if (b.email?.trim().toLowerCase() !== DEMO_EMAIL || b.password !== demoPassword) {
+        if (!((b.email ?? '').trim().toLowerCase() in MOCK_ACCOUNTS) || b.password !== demoPassword) {
           throw new ApiError('Invalid email or password.', 401, 'UNAUTHORIZED');
         }
         return issueTokens() as T;

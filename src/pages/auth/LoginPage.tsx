@@ -302,7 +302,7 @@ export function LoginPage() {
                     // Select the mock company that backs the rest of the (still mock-driven)
                     // app — the real customerCode from the API has no matching mock records,
                     // so passing it here would blank out Dashboard/Equipment/etc. after login.
-                    onClick={() => chooseCompany(companies[0]?.customerCode ?? 'CUS-00128')}
+                    onClick={() => chooseCompany(companies.find((c) => c.customerCode === companyStats.customerCode)?.customerCode ?? companies[0]?.customerCode ?? 'CUS-00128')}
                   >
                     <div className="flex" style={{ gap: 12 }}>
                       <span className="avatar" aria-hidden style={{ background: 'var(--se-charcoal)' }}>

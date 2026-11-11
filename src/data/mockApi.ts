@@ -33,8 +33,10 @@ import { mockHistory } from './mockHistory';
 import { mockNews } from './mockNews';
 import { mockPM } from './mockPM';
 import { mockRequests } from './mockRequests';
+import { assetsFor } from './mockAssets';
 import { mockUnits } from './mockUnits';
 import type { MockUnit } from './mockUnits';
+import { tokenStore } from '@/lib/tokenStore';
 import { mockUsers } from './mockUsers';
 
 /* ------------------------------------------------------------------ helpers */
@@ -42,12 +44,30 @@ import { mockUsers } from './mockUsers';
 const SELECTED_COMPANY_KEY = 'se_selected_company';
 const DEFAULT_COMPANY = 'CUS-00128';
 
+/** Demo accounts → the company each one belongs to (the real backend is 1 user → 1 company). */
+export const MOCK_ACCOUNTS: Record<string, string> = {
+  'demo@seconnex.co.th': 'CUS-00128',
+  'raiwin.nat@siameastsolutions.com': '210WWCUTIX',
+};
+
+const ACCOUNT_PROFILES: Record<string, { name: string; phone: string; department: string }> = {
+  'demo@seconnex.co.th': { name: 'Anan Ruangkit', phone: '+66 86 111 2233', department: 'Facility Engineer' },
+  'raiwin.nat@siameastsolutions.com': { name: 'Raiwin Nathathai', phone: '063-3935090', department: 'Maintenance Engineer' },
+};
+
+function accountEmail(): string {
+  return tokenStore.read()?.email.trim().toLowerCase() ?? 'demo@seconnex.co.th';
+}
+
+/** Company in use: the one picked at login, else the signed-in account's own company. */
 function currentCode(): string {
   try {
-    return localStorage.getItem(SELECTED_COMPANY_KEY) ?? DEFAULT_COMPANY;
+    const picked = localStorage.getItem(SELECTED_COMPANY_KEY);
+    if (picked) return picked;
   } catch {
-    return DEFAULT_COMPANY;
+    /* storage unavailable */
   }
+  return MOCK_ACCOUNTS[accountEmail()] ?? DEFAULT_COMPANY;
 }
 
 function currentCompany() {
@@ -81,8 +101,41 @@ function addDays(iso: string, days: number): string {
 
 const TODAY_ISO = isoDay(TODAY);
 
+const STATUS_FROM_ASSET: Record<string, MockUnit['status']> = {
+  Active: 'running',
+  UnderRepair: 'maintenance',
+  Decommissioned: 'offline',
+};
+
+/** Companies whose equipment lives in mockAssets (generated demo fleets) rather than mockUnits. */
+const ASSET_BACKED_COMPANIES = ['210WWCUTIX'];
+
+const assetBackedUnits: MockUnit[] = ASSET_BACKED_COMPANIES.flatMap((code) =>
+  assetsFor(code).map((a): MockUnit => ({
+    id: a.id,
+    customerCode: a.customerCode,
+    name: a.name,
+    category: (['Pump', 'Mixer', 'Service', 'Spare Part', 'Other'].includes(a.category) ? a.category : 'Other') as MockUnit['category'],
+    brand: a.brand,
+    model: a.model,
+    serial: a.serial,
+    customerRef: a.customerRef,
+    siteId: a.siteId,
+    location: a.location,
+    status: STATUS_FROM_ASSET[a.status] ?? 'running',
+    warranty: a.warranty === 'none' ? 'expired' : a.warranty,
+    warrantyEnd: a.warrantyEnd,
+    purchaseDate: a.purchaseDate,
+    installDate: a.installDate,
+    nextPM: a.nextPM,
+    installYear: a.installYear,
+  })),
+);
+
+const allUnits: MockUnit[] = [...mockUnits, ...assetBackedUnits];
+
 function unitsOf(code: string): MockUnit[] {
-  return mockUnits.filter((u) => u.customerCode === code);
+  return allUnits.filter((u) => u.customerCode === code);
 }
 
 const unitKey = (u: MockUnit) => `U-${u.id.replace(/^AST-/, '')}`;
@@ -141,7 +194,7 @@ function toUnit(u: MockUnit): EquipmentUnitResponse {
 }
 
 function findUnit(unitId: string): MockUnit | undefined {
-  return mockUnits.find((u) => unitKey(u) === unitId || u.id === unitId);
+  return allUnits.find((u) => unitKey(u) === unitId || u.id === unitId);
 }
 
 /* ------------------------------------------------------------------ tickets */
@@ -176,7 +229,7 @@ const requestType = (category: string) =>
 
 function assetCodeOf(assetId?: string): string {
   if (!assetId) return '—';
-  return mockUnits.find((u) => u.id === assetId)?.customerRef ?? assetId;
+  return allUnits.find((u) => u.id === assetId)?.customerRef ?? assetId;
 }
 
 function ticketsOf(code: string): ServiceHistoryResponse[] {
@@ -275,7 +328,7 @@ function ticketReport(ticketNo: string): ServiceReportResponse {
   const hist = mockHistory.find((h) => h.ticketNo === ticketNo);
   const req = mockRequests.find((r) => r.ticketNo === ticketNo);
   const company = currentCompany();
-  const unit = mockUnits.find((u) => u.id === (hist?.assetId ?? req?.assetId));
+  const unit = allUnits.find((u) => u.id === (hist?.assetId ?? req?.assetId));
 
   const base = {
     ticketNo,
@@ -479,6 +532,13 @@ const SITE_COORDS: Record<string, [number, number]> = {
   'S-CB': [13.3611, 100.9847],
   'S-CS': [13.6904, 101.0779],
   'S-MTP': [12.7185, 101.1539],
+  'S-01': [13.6904, 101.0779],
+  'S-02': [13.8133, 100.7355],
+  'S-03': [13.5236, 100.7117],
+  'S-04': [13.3611, 100.9847],
+  'S-05': [12.7003, 101.1474],
+  'S-06': [12.7185, 101.1539],
+  'S-07': [13.7208, 100.5287],
 };
 
 function mapSites(): MapSiteResponse[] {
@@ -662,18 +722,19 @@ function seContacts(): SEContactResponse[] {
 }
 
 function profile(): ProfileResponse {
-  const company = currentCompany();
-  const user = mockUsers.find((u) => u.customerCode === company.customerCode) ?? mockUsers[0]!;
+  const co = currentCompany();
+  const email = accountEmail();
+  const account = ACCOUNT_PROFILES[email] ?? ACCOUNT_PROFILES['demo@seconnex.co.th']!;
   return {
     preName: null,
-    customerName: company.name,
-    customerCode: company.customerCode,
-    siteList: company.sites.map((s) => s.name).join(', '),
-    name: user.name,
-    email: 'demo@seconnex.co.th',
-    role: user.role,
-    phone: user.phone,
-    department: user.jobTitle,
+    customerName: co.name,
+    customerCode: co.customerCode,
+    siteList: co.sites.map((x) => x.name).join(', '),
+    name: account.name,
+    email,
+    role: 'Company administrator',
+    phone: account.phone,
+    department: account.department,
     accountExpiresAt: '2027-12-31T00:00:00+07:00',
   };
 }
@@ -703,6 +764,7 @@ const NEWS_CATEGORY: Record<string, [string, string]> = {
   products: ['Products', 'ผลิตภัณฑ์'],
   sustainability: ['Sustainability', 'ความยั่งยืน'],
   company: ['Company News', 'ข่าวบริษัท'],
+  service: ['Service', 'บริการ'],
 };
 
 const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

@@ -12,6 +12,7 @@ export interface ContactPerson {
   roleTh: string;
   phone: string;
   email: string;
+  line?: string;
 }
 
 export interface Company {

@@ -8,7 +8,8 @@
 * ปิดหน้า IoT Monitoring และ Sign-off และซ่อนเมนู Digital Twin / Carbon / Materials / Parts จาก sidebar เหมือนต้นฉบับ
 * เพิ่มหน้า Forgot password / Verify email / Reset password
 * ไม่มี backend: `src/lib/apiClient.ts` เป็น mock client (ชื่อฟังก์ชันและ type เหมือนต้นฉบับ) อ่านข้อมูลจาก `src/data/mockApi.ts` และ `src/data/mockUnits.ts`
-* บัญชีทดลอง `demo@seconnex.co.th` / `demo123`
+* บัญชีทดลอง `demo@seconnex.co.th` (Demo Industrial) และ `raiwin.nat@siameastsolutions.com` (Unilever, 210WWCUTIX) รหัสผ่าน `demo123` ทั้งคู่ (เดิมบัญชีหลังรับรหัสผ่านอะไรก็ได้ ≥ 4 ตัว)
+* รวมงานจาก `151bb59`: ข้อมูล mock ของบริษัท Unilever (106 อุปกรณ์, 7 ไซต์), ข่าวและรูปใหม่ใน `public/assets/news/`, `setup.bat` / `start.bat`, dev port 5180 — ส่วน UI ของ Login, Dashboard, News, TopHeader, Sidebar ใช้เวอร์ชัน se-connex แทน
 * เพิ่ม dependency: react-leaflet, leaflet.markercluster, dompurify, jspdf, html2canvas
 * ลบไฟล์ legacy ที่ไม่ได้ใช้ (`App.jsx`, `main.jsx`, `styles.css`, `pages/equipment - Copy/` ฯลฯ)
 
