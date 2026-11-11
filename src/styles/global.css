@@ -2542,15 +2542,59 @@ input.invalid, textarea.invalid, select.invalid { border-color: var(--se-danger)
 }
 
 .news-sort-select {
-  padding: 6px 10px;
-  font-size: 12.5px;
-  font-weight: 600;
+  height: 38px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--se-text);
   background: var(--se-card-bg);
   border: 1px solid var(--se-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm, 8px);
   outline: none;
   cursor: pointer;
+  box-sizing: border-box;
+}
+
+.news-sort-select:hover {
+  border-color: var(--se-primary);
+}
+
+/* Dedicated view switcher for news toolbar — perfectly matching .news-sort-select 1:1 */
+.news-view-group {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  background: var(--se-card-bg);
+  border: 1px solid var(--se-border);
+  border-radius: var(--radius-sm, 8px);
+  overflow: hidden;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.news-view-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--se-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.news-view-btn.active {
+  color: var(--se-primary);
+  background: var(--se-primary-soft);
+}
+
+.news-view-btn:hover:not(.active) {
+  color: var(--se-text);
+  background: var(--se-grey-soft);
 }
 
 .view-btn-group {
@@ -2813,8 +2857,7 @@ input.invalid, textarea.invalid, select.invalid { border-color: var(--se-danger)
 .news-row:hover { background: var(--se-grey-soft); text-decoration: none; }
 .news-row-thumb { width: 52px; height: 52px; min-width: 52px; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
 
-/* Related-articles carousel (news detail page) */
-.related-nav-btn {
+/* Related-articles carousel (news detail page) */.related-nav-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2896,6 +2939,151 @@ input.invalid, textarea.invalid, select.invalid { border-color: var(--se-danger)
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ---------- Promotion Detail Layout ---------- */
+.promo-hero-banner {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 18px;
+  aspect-ratio: 16 / 5;
+  background: var(--se-grey-soft);
+}
+.promo-hero-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.promo-cat-badge {
+  display: inline-block;
+  background: var(--se-accent-soft);
+  color: var(--se-accent-hover);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+
+.promo-period-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+@media (max-width: 540px) {
+  .promo-period-grid { grid-template-columns: 1fr; }
+}
+
+.promo-period-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--se-grey-soft);
+  border: 1px solid var(--se-border);
+  border-radius: var(--radius-sm);
+}
+
+.promo-period-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--se-primary-soft);
+  color: var(--se-primary);
+  flex-shrink: 0;
+}
+
+.promo-period-label {
+  font-size: 11.5px;
+  color: var(--se-text-muted);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.promo-period-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--se-text);
+}
+
+.promo-section-title {
+  font-size: 15px;
+  font-weight: 800;
+  margin: 0 0 4px;
+  color: var(--se-text);
+}
+
+.promo-content {
+  line-height: 1.75;
+  border-top: 1px solid var(--se-border);
+  padding-top: 18px;
+  margin-top: 4px;
+}
+
+.promo-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+@media (max-width: 640px) {
+  .promo-gallery-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.promo-gallery-item {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--se-border);
+  background: var(--se-grey-soft);
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+}
+.promo-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s ease;
+}
+.promo-gallery-item:hover img { transform: scale(1.05); }
+
+.promo-pdf-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--se-surface);
+  border: 1px solid var(--se-border);
+  border-radius: var(--radius-sm);
+}
+
+.promo-pdf-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #fdedef;
+  color: var(--se-danger);
+  flex-shrink: 0;
+}
+
+.promo-pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ---------- Live monitoring — intense ---------- */
