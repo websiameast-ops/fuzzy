@@ -5227,7 +5227,8 @@ a.article-contact-val:hover {
 }
 
 .article-blog-img-wrap--top {
-  aspect-ratio: 16 / 7;
+  aspect-ratio: auto;
+  background: transparent;
 }
 
 .article-blog-img-wrap img {
@@ -5235,6 +5236,11 @@ a.article-contact-val:hover {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.article-blog-img-wrap--top img {
+  height: auto;
+  object-fit: contain;
 }
 
 .article-blog-heading {
@@ -5251,8 +5257,17 @@ a.article-contact-val:hover {
 
 .article-blog-text .news-content ul,
 .article-blog-text .news-content ol {
-  list-style-position: inside;
-  padding-left: 4px;
+  list-style-position: outside;
+  padding-left: 22px;
+  margin: 8px 0;
+}
+
+.article-blog-text .news-content li > p {
+  margin: 0;
+}
+
+.article-blog-text .news-content li > p + p {
+  margin-top: 4px;
 }
 
 .article-pdf-list {
