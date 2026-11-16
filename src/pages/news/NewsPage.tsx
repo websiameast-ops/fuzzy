@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import DOMPurify from 'dompurify';
-import { ArrowLeft, ArrowRight, Calendar, CalendarClock, ChevronDown, ChevronLeft, ChevronRight, Download, FileText, LayoutGrid, LayoutList, Leaf, Lightbulb, Megaphone, Newspaper, Package, Play, Search, Star, Tag, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, LayoutList, Leaf, Lightbulb, Megaphone, Newspaper, Package, Search, Star, Tag, Wrench, X } from 'lucide-react';
 import { useLang } from '@/contexts/LanguageContext';
-import { EmptyState, ContactSECard, Modal } from '@/components/common';
+import { EmptyState } from '@/components/common';
 import { fmtDate, newsExcerpt } from '@/utils/format';
-import { apiGetNewsFeed, apiGetSEContacts, ApiError, type NewsFeedItemResponse, type SEContactResponse } from '@/lib/apiClient';
+import { apiGetNewsFeed, ApiError, type NewsFeedItemResponse } from '@/lib/apiClient';
 import { tokenStore } from '@/lib/tokenStore';
 import type { Lang } from '@/types';
+import { ArticleDetailBody } from './ArticleDetailBody';
 
 const DEFAULT_CAT_STYLE = { icon: Newspaper, bg: 'linear-gradient(140deg, #2b3038, #171a1f)' };
 
@@ -16,9 +17,13 @@ const DEFAULT_CAT_STYLE = { icon: Newspaper, bg: 'linear-gradient(140deg, #2b303
 // Admin adds later that isn't in this map falls back to DEFAULT_CAT_STYLE.
 const CAT_STYLE: Record<string, { icon: typeof Newspaper; bg: string }> = {
   company: { icon: Megaphone, bg: 'linear-gradient(140deg, #2b3038, #171a1f)' },
+  news: { icon: Megaphone, bg: 'linear-gradient(140deg, #2b3038, #171a1f)' },
   products: { icon: Package, bg: 'linear-gradient(140deg, #1d4ed8, #172554)' },
   promotions: { icon: Tag, bg: 'linear-gradient(140deg, var(--se-primary), #0c3c69)' },
   tips: { icon: Lightbulb, bg: 'linear-gradient(140deg, #b06a00, #6b4400)' },
+  knowledge: { icon: Lightbulb, bg: 'linear-gradient(140deg, #b06a00, #6b4400)' },
+  events: { icon: Calendar, bg: 'linear-gradient(140deg, #0f766e, #134e4a)' },
+  service: { icon: Wrench, bg: 'linear-gradient(140deg, #0369a1, #0c4a6e)' },
   sustainability: { icon: Leaf, bg: 'linear-gradient(140deg, #15803d, #14532d)' },
 };
 
@@ -76,7 +81,7 @@ function useNewsFeed() {
  * articles — if nothing is flagged, NewsSidebar renders nothing (see its
  * `articles.length === 0` check below). */
 function pickSidebarArticles(items: NewsFeedItemResponse[], excludeIds: Set<string>, count = 4): NewsFeedItemResponse[] {
-  return items.filter((n) => n.isSidebar && !excludeIds.has(n.id)).slice(0, count);
+  return items.filter((n) => n.category === 'service' && n.isSidebar && !excludeIds.has(n.id)).slice(0, count);
 }
 
 /** Related-article picks for the detail page — Tag match first (ranked by
@@ -528,256 +533,12 @@ function sanitizeContent(html: string): string {
   return DOMPurify.sanitize(html, { ALLOWED_TAGS: CONTENT_TAGS, ALLOWED_ATTR: CONTENT_ATTR });
 }
 
-// ---------- Promotion Detail Layout ----------
-// Rendered when article.category === 'promotions'.
-// Strips the generic article shell and replaces it with a richer
-// promotional page: hero banner, validity grid, gallery, PDF downloads,
-// Contact Us box, and Related Articles carousel — matching the design reference.
-
-/** Derive a "promotion end date" for display.
- * We fall back through: a hypothetical endsAt field (not in schema yet) →
- * 30 days after startsAt → 30 days after createdAt. */
-function promoEndDate(article: NewsFeedItemResponse): string {
-  const base = article.startsAt ?? article.createdAt;
-  const d = new Date(base);
-  d.setDate(d.getDate() + 30);
-  return d.toISOString();
-}
-
-function PromotionDetailView({
-  article,
-  lang,
-  t,
-  seContacts,
-  relatedPool,
-  clampedRelatedIndex,
-  maxRelatedIndex,
-  setRelatedIndex,
-  sidebarArticles,
-}: {
-  article: NewsFeedItemResponse;
-  lang: Lang;
-  t: (en: string, th: string) => string;
-  seContacts: SEContactResponse[] | null;
-  relatedPool: NewsFeedItemResponse[];
-  clampedRelatedIndex: number;
-  maxRelatedIndex: number;
-  setRelatedIndex: (fn: (prev: number) => number) => void;
-  sidebarArticles: NewsFeedItemResponse[];
-}) {
-  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
-  const title = lang === 'th' ? article.titleTh : article.titleEn;
-  const content = lang === 'th' ? article.contentTh : article.contentEn;
-  const startDate = article.startsAt ?? article.createdAt;
-  const endDate = promoEndDate(article);
-  const visibleRelated = relatedPool.slice(clampedRelatedIndex, clampedRelatedIndex + 3);
-
-  // Parse content for gallery images (img tags) and PDF links (a[href$=.pdf])
-  const parser = typeof window !== 'undefined' ? new DOMParser() : null;
-  const doc = parser?.parseFromString(sanitizeContent(content), 'text/html');
-  const galleryImgs = Array.from(doc?.querySelectorAll('img') ?? []).map((el) => el.getAttribute('src') ?? '').filter(Boolean);
-  const pdfLinks = Array.from(doc?.querySelectorAll('a[href]') ?? [])
-    .filter((el) => el.getAttribute('href')?.toLowerCase().endsWith('.pdf'))
-    .map((el) => ({ href: el.getAttribute('href')!, label: el.textContent?.trim() || el.getAttribute('href')! }));
-
-  return (
-    <div>
-      <div className="news-layout" style={{ alignItems: 'start' }}>
-        {/* ── Main column ── */}
-        <div style={{ minWidth: 0 }}>
-
-          {/* Hero Banner */}
-          {article.imageUrl && (
-            <div className="promo-hero-banner">
-              <img src={article.imageUrl} alt={title} />
-            </div>
-          )}
-
-          {/* Main card */}
-          <div className="card" style={{ overflow: 'hidden', marginBottom: 18 }}>
-            <div style={{ padding: '24px 28px 28px' }}>
-
-              {/* Meta row */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
-                <span className="promo-cat-badge">
-                  {lang === 'th' ? article.categoryLabelTh : article.categoryLabelEn}
-                </span>
-                <span className="muted small">
-                  <Calendar size={13} style={{ marginRight: 4, verticalAlign: -1 }} />
-                  {fmtDate(newsDisplayDate(article), lang)}
-                </span>
-              </div>
-
-              {/* Title */}
-              <h1 style={{ margin: '0 0 20px', fontSize: 26, fontWeight: 800, lineHeight: 1.3 }}>{title}</h1>
-
-              {/* Validity period grid */}
-              <div className="promo-period-grid">
-                <div className="promo-period-card">
-                  <span className="promo-period-icon">
-                    <CalendarClock size={16} />
-                  </span>
-                  <div>
-                    <div className="promo-period-label">{t('Promotion Start Date', 'วันเริ่มต้นโปรโมชั่น')}</div>
-                    <div className="promo-period-value">{fmtDate(startDate, lang)}</div>
-                  </div>
-                </div>
-                <div className="promo-period-card">
-                  <span className="promo-period-icon">
-                    <CalendarClock size={16} />
-                  </span>
-                  <div>
-                    <div className="promo-period-label">{t('Promotion End Date', 'วันสิ้นสุดโปรโมชั่น')}</div>
-                    <div className="promo-period-value">{fmtDate(endDate, lang)}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Main rich-text content */}
-              <div className="news-content promo-content" dangerouslySetInnerHTML={{ __html: sanitizeContent(content) }} />
-
-              {/* Gallery — only if images found in content */}
-              {galleryImgs.length > 0 && (
-                <div style={{ marginTop: 28 }}>
-                  <h3 className="promo-section-title">
-                    {t('Gallery', 'รูปภาพและวิดีโอที่เกี่ยวข้อง')}
-                  </h3>
-                  <p className="muted small" style={{ marginBottom: 12 }}>
-                    {t('Related product images and media', 'สื่อประกอบสินค้าที่ร่วมรายการ')}
-                  </p>
-                  <div className="promo-gallery-grid">
-                    {galleryImgs.map((src, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        className="promo-gallery-item"
-                        onClick={() => setLightboxSrc(src)}
-                        aria-label={t('View image', 'ดูรูปภาพ')}
-                      >
-                        <img src={src} alt="" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* PDF References — only if PDF links found in content */}
-              {pdfLinks.length > 0 && (
-                <div style={{ marginTop: 28 }}>
-                  <h3 className="promo-section-title">
-                    {t('PDF References', 'เอกสารโปรโมชั่นพร้อมดาวน์โหลด')}
-                  </h3>
-                  <p className="muted small" style={{ marginBottom: 12 }}>
-                    {t('Download promotion documents and price lists', 'ดาวน์โหลดเอกสารโปรโมชั่นและรายการราคา')}
-                  </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {pdfLinks.map((pdf, i) => (
-                      <div key={i} className="promo-pdf-card">
-                        <span className="promo-pdf-icon">
-                          <FileText size={20} />
-                        </span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="fw-600" style={{ fontSize: 13.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pdf.label}</div>
-                          <div className="muted small">PDF</div>
-                        </div>
-                        <a href={pdf.href} download target="_blank" rel="noreferrer" className="btn btn-outline btn-sm promo-pdf-btn">
-                          <Download size={14} />
-                          {t('Download', 'ดาวน์โหลด')}
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Contact Us */}
-              {seContacts && seContacts.length > 0 && (
-                <div style={{ marginTop: 28 }}>
-                  <h3 className="promo-section-title">{t('Contact Us', 'ติดต่อสอบถาม')}</h3>
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {seContacts.map((c) => {
-                      const sp = c.salePerson;
-                      if (!sp) return null;
-                      const name = lang === 'th'
-                        ? `${sp.prefixTh ?? ''}${sp.nameTh ?? ''} ${sp.lastNameTh ?? ''}`.trim()
-                        : `${sp.prefixEn ?? ''}${sp.nameEn ?? ''} ${sp.lastNameEn ?? ''}`.trim();
-                      const position = lang === 'th' ? (sp.positionTh ?? '') : (sp.positionEn ?? '');
-                      const processes = c.processes.map((p) => lang === 'th' ? p.labelTh : p.labelEn);
-                      return (
-                        <ContactSECard
-                          key={c.id}
-                          name={name}
-                          position={position}
-                          phone={sp.phone ?? ''}
-                          email={sp.email ?? ''}
-                          processes={processes}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Related articles */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>
-              {t('Related articles', 'บทความที่เกี่ยวข้อง')}
-            </h3>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button className="related-nav-btn" onClick={() => setRelatedIndex((p) => Math.max(0, p - 1))} disabled={clampedRelatedIndex === 0} aria-label={t('Previous', 'ก่อนหน้า')}>
-                <ChevronLeft size={16} />
-              </button>
-              <button className="related-nav-btn" onClick={() => setRelatedIndex((p) => Math.min(maxRelatedIndex, p + 1))} disabled={clampedRelatedIndex >= maxRelatedIndex} aria-label={t('Next', 'ถัดไป')}>
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-          <div className="grid-3" style={{ marginBottom: 24 }}>
-            {visibleRelated.map((n) => (
-              <Link key={n.id} to={`/portal/news/${n.id}`} className="related-clean-card">
-                <div className="related-clean-header">
-                  <span className="related-clean-badge">{lang === 'th' ? n.categoryLabelTh : n.categoryLabelEn}</span>
-                  <span className="related-clean-date">
-                    <Calendar size={12} style={{ marginRight: 4, verticalAlign: -1 }} />
-                    {fmtDate(newsDisplayDate(n), lang)}
-                  </span>
-                </div>
-                <h4 className="related-clean-title">{lang === 'th' ? n.titleTh : n.titleEn}</h4>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Sidebar ── */}
-        <NewsSidebar articles={sidebarArticles} lang={lang} t={t} />
-      </div>
-
-      {/* Lightbox */}
-      {lightboxSrc && (
-        <Modal open onClose={() => setLightboxSrc(null)} title={t('Image', 'รูปภาพ')} large>
-          <img src={lightboxSrc} alt="" style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 8 }} />
-        </Modal>
-      )}
-    </div>
-  );
-}
-
 export function NewsDetailPage() {
   const { id } = useParams();
   const { lang, t } = useLang();
   const navigate = useNavigate();
   const { items } = useNewsFeed();
-  const [seContacts, setSeContacts] = useState<SEContactResponse[] | null>(null);
-  const [imgOpen, setImgOpen] = useState(false);
   const [relatedIndex, setRelatedIndex] = useState(0);
-
-  useEffect(() => {
-    const accessToken = tokenStore.read()?.accessToken;
-    if (!accessToken) return;
-    apiGetSEContacts(accessToken).then(setSeContacts).catch(() => {});
-  }, []);
 
   // Reset the related-articles carousel whenever the article itself changes
   // (NewsDetailPage doesn't remount between /news/:id navigations).
@@ -809,8 +570,8 @@ export function NewsDetailPage() {
   const maxRelatedIndex = Math.max(0, relatedPool.length - 3);
   const clampedRelatedIndex = Math.min(relatedIndex, maxRelatedIndex);
   const visibleRelated = relatedPool.slice(clampedRelatedIndex, clampedRelatedIndex + 3);
-  const Icon = catStyle(article.category).icon;
-  const content = lang === 'th' ? article.contentTh : article.contentEn;
+  const style = catStyle(article.category);
+  const Icon = style.icon;
   const sidebarArticles = pickSidebarArticles(items, new Set([article.id]));
 
   return (
@@ -820,104 +581,61 @@ export function NewsDetailPage() {
         {t('Back', 'กลับ')}
       </button>
 
-      {/* Route promotions to dedicated layout */}
-      {article.category === 'promotions' ? (
-        <PromotionDetailView
-          article={article}
-          lang={lang}
-          t={t}
-          seContacts={seContacts}
-          relatedPool={relatedPool}
-          clampedRelatedIndex={clampedRelatedIndex}
-          maxRelatedIndex={maxRelatedIndex}
-          setRelatedIndex={setRelatedIndex}
-          sidebarArticles={sidebarArticles}
-        />
-      ) : (
-        <div className="news-layout">
-          <div>
-            <div className="card" style={{ overflow: 'hidden', marginBottom: 18 }}>
-              <div className="news-thumb" style={{ background: catStyle(article.category).bg, height: 260 }} aria-hidden={!article.imageUrl}>
-                {article.imageUrl ? (
-                  <button
-                    type="button"
-                    onClick={() => setImgOpen(true)}
-                    aria-label={t('View image', 'ดูรูปภาพ')}
-                    style={{ border: 'none', background: 'none', padding: 0, width: '100%', height: '100%', cursor: 'pointer', display: 'block' }}
-                  >
-                    <img src={article.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </button>
-                ) : (
-                  <Icon size={56} strokeWidth={1.2} />
-                )}
-              </div>
-              <div style={{ padding: '28px 32px 32px' }}>
-                <div className="flex" style={{ gap: 10, marginBottom: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span className="badge t-grey" style={{ background: 'var(--se-grey-soft)', padding: '4px 10px', borderRadius: 4, fontWeight: 700 }}>
-                    {lang === 'th' ? article.categoryLabelTh : article.categoryLabelEn}
-                  </span>
-                  <span className="muted small" style={{ fontSize: 13 }}>
-                    <Calendar size={13} style={{ marginRight: 4, verticalAlign: -1 }} />
-                    {fmtDate(newsDisplayDate(article), lang)}
-                  </span>
-                </div>
-                <h1 style={{ margin: '0 0 14px', fontSize: 24, fontWeight: 800, lineHeight: 1.3 }}>{lang === 'th' ? article.titleTh : article.titleEn}</h1>
-                <div style={{ borderTop: '1px solid var(--se-border)', paddingTop: 18, marginTop: 18 }}>
-                  <div className="news-content" style={{ lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: sanitizeContent(content) }} />
-                </div>
-              </div>
-            </div>
+      <div className="news-layout" style={{ alignItems: 'start' }}>
+        <div style={{ minWidth: 0 }}>
+          <ArticleDetailBody
+            article={article}
+            lang={lang}
+            t={t}
+            displayDate={newsDisplayDate(article)}
+            catIcon={<Icon size={56} strokeWidth={1.2} />}
+            catBg={style.bg}
+            sanitizeContent={sanitizeContent}
+          />
 
-            {article.imageUrl && (
-              <Modal open={imgOpen} onClose={() => setImgOpen(false)} title={lang === 'th' ? article.titleTh : article.titleEn} large>
-                <img src={article.imageUrl} alt="" style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 8 }} />
-              </Modal>
-            )}
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>
-                {t('Related articles', 'บทความที่เกี่ยวข้อง')}
-              </h3>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <button
-                  className="related-nav-btn"
-                  onClick={() => setRelatedIndex((prev) => Math.max(0, prev - 1))}
-                  disabled={clampedRelatedIndex === 0}
-                  aria-label={t('Previous', 'ก่อนหน้า')}
-                  title={t('Previous', 'ก่อนหน้า')}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  className="related-nav-btn"
-                  onClick={() => setRelatedIndex((prev) => Math.min(maxRelatedIndex, prev + 1))}
-                  disabled={clampedRelatedIndex >= maxRelatedIndex}
-                  aria-label={t('Next', 'ถัดไป')}
-                  title={t('Next', 'ถัดไป')}
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            </div>
-            <div className="grid-3" style={{ marginBottom: 24 }}>
-              {visibleRelated.map((n) => (
-                <Link key={n.id} to={`/portal/news/${n.id}`} className="related-clean-card">
-                  <div className="related-clean-header">
-                    <span className="related-clean-badge">{lang === 'th' ? n.categoryLabelTh : n.categoryLabelEn}</span>
-                    <span className="related-clean-date">
-                      <Calendar size={12} style={{ marginRight: 4, verticalAlign: -1 }} />
-                      {fmtDate(newsDisplayDate(n), lang)}
-                    </span>
-                  </div>
-                  <h4 className="related-clean-title">{lang === 'th' ? n.titleTh : n.titleEn}</h4>
-                </Link>
-              ))}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>
+              {t('Related articles', 'บทความที่เกี่ยวข้อง')}
+            </h3>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                className="related-nav-btn"
+                onClick={() => setRelatedIndex((prev) => Math.max(0, prev - 1))}
+                disabled={clampedRelatedIndex === 0}
+                aria-label={t('Previous', 'ก่อนหน้า')}
+                title={t('Previous', 'ก่อนหน้า')}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                className="related-nav-btn"
+                onClick={() => setRelatedIndex((prev) => Math.min(maxRelatedIndex, prev + 1))}
+                disabled={clampedRelatedIndex >= maxRelatedIndex}
+                aria-label={t('Next', 'ถัดไป')}
+                title={t('Next', 'ถัดไป')}
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
-
-          <NewsSidebar articles={sidebarArticles} lang={lang} t={t} />
+          <div className="grid-3" style={{ marginBottom: 24 }}>
+            {visibleRelated.map((n) => (
+              <Link key={n.id} to={`/portal/news/${n.id}`} className="related-clean-card">
+                <div className="related-clean-header">
+                  <span className="related-clean-badge">{lang === 'th' ? n.categoryLabelTh : n.categoryLabelEn}</span>
+                  <span className="related-clean-date">
+                    <Calendar size={12} style={{ marginRight: 4, verticalAlign: -1 }} />
+                    {fmtDate(newsDisplayDate(n), lang)}
+                  </span>
+                </div>
+                <h4 className="related-clean-title">{lang === 'th' ? n.titleTh : n.titleEn}</h4>
+              </Link>
+            ))}
+          </div>
         </div>
-      )}
+
+        <NewsSidebar articles={sidebarArticles} lang={lang} t={t} />
+      </div>
     </div>
   );
 }

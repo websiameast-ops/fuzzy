@@ -1,7 +1,9 @@
+import type { NewsBlogBlock, NewsContactCard, NewsGalleryItem, NewsPdfFile } from '@/lib/apiClient';
+
 /** Seed articles for the mock news feed (see mockApi.ts::newsFeed). */
 export interface NewsArticle {
   id: string;
-  category: 'company' | 'products' | 'promotions' | 'sustainability' | 'tips' | string;
+  category: 'company' | 'products' | 'promotions' | 'sustainability' | 'tips' | 'events' | string;
   title: string;
   titleTh: string;
   summary: string;
@@ -10,6 +12,19 @@ export interface NewsArticle {
   featured?: boolean;
   imageUrl?: string;
   content: string[];
+  endsAt?: string;
+  productName?: string;
+  productModel?: string;
+  knowledgeTopic?: string;
+  relatedEquipment?: string;
+  newsSource?: string;
+  eventDateLabel?: string;
+  eventTime?: string;
+  eventLocation?: string;
+  blogBlocks?: NewsBlogBlock[];
+  pdfFiles?: NewsPdfFile[];
+  galleryItems?: NewsGalleryItem[];
+  extraContacts?: NewsContactCard[];
 }
 
 export const mockNews: NewsArticle[] = [
@@ -45,6 +60,8 @@ export const mockNews: NewsArticle[] = [
     readMins: 4,
     featured: true,
     imageUrl: '/assets/news/prd-01.jpg',
+    productName: 'Grundfos Industrial Pump Solutions',
+    productModel: 'CR / NB / NK Series',
     content: [
       'Grundfos is a global leader in the design, manufacture, and supply of high-quality pumping solutions for a wide range of industrial applications. Renowned for durability, reliability, and energy efficiency, Grundfos is committed to developing innovative solutions that meet the diverse demands of water and fluid management systems.',
       'Why Choose Grundfos for Industrial Applications?',
@@ -71,6 +88,8 @@ export const mockNews: NewsArticle[] = [
     readMins: 3,
     featured: false,
     imageUrl: '/assets/news/knw-04.jpg',
+    knowledgeTopic: 'Industrial Piping & Material Selection',
+    relatedEquipment: 'PP-R Piping · Cooling Loops · Chemical Transfer Lines',
     content: [
       'Industrial piping systems face aggressive chemical environments, thermal expansion, and pressure surges. Upgrading from conventional HDPE to PP-R (Polypropylene Random Copolymer) provides superior heat deflection and long-term chemical resistance.',
       'Key engineering advantages include smooth internal surfaces that lower pumping head losses, homogeneous fusion joints with zero leak points, and corrosion immunity against industrial cooling chemicals.',
@@ -210,6 +229,42 @@ export const mockNews: NewsArticle[] = [
     imageUrl: '/assets/Hero_Banner_xn(4).png',
     content: [
       'SE field engineers conduct NFPA 25 flow and churn testing using calibrated pitot arrays and ultrasonic flowmeters, providing certified performance curves for plant insurance underwriters.',
+    ],
+  },
+
+  // 12. Company News sample
+  {
+    id: 'NW-2026-035',
+    category: 'company',
+    title: 'SiamEast Solutions Expands Authorized Industrial Service Center',
+    titleTh: 'สยามอีสท์ โซลูชั่น ขยายศูนย์บริการอุตสาหกรรมครบวงจร',
+    summary:
+      'Expanding calibration, pump overhaul, and predictive maintenance capacity to support industrial customers across the Eastern Economic Corridor.',
+    date: '2026-08-12',
+    readMins: 3,
+    imageUrl: '/assets/news/prd-02.jpg',
+    newsSource: 'SE Press Release – example.com/press',
+    content: [
+      'SiamEast Solutions has expanded its Rayong industrial service center with upgraded hydraulic test benches and diagnostic equipment to shorten turnaround times for scheduled plant turnarounds.',
+    ],
+  },
+
+  // 13. Events sample
+  {
+    id: 'NW-2026-036',
+    category: 'events',
+    title: 'Industrial Energy & Pump Efficiency Technical Webinar',
+    titleTh: 'สัมมนาออนไลน์: เทคนิคการตรวจวัดพลังงานและเพิ่มประสิทธิภาพระบบปั๊ม',
+    summary:
+      'Join our engineering team for a practical session on pump system auditing, VFD optimization, and predictive monitoring.',
+    date: '2026-08-20',
+    readMins: 3,
+    imageUrl: '/assets/news/knw-02.jpg',
+    eventDateLabel: '26 – 27 Aug 2026',
+    eventTime: '13:30 – 16:00',
+    eventLocation: 'Online (Zoom)',
+    content: [
+      'Learn how to identify throttling losses, size VFD drives properly, and interpret real-time vibration and power-quality trends in industrial pumping systems.',
     ],
   },
 ];

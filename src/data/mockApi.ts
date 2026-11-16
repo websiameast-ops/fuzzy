@@ -759,11 +759,13 @@ function company(): CompanyResponse {
 /* ------------------------------------------------------------------ news */
 
 const NEWS_CATEGORY: Record<string, [string, string]> = {
-  tips: ['Tips & Know-how', 'เคล็ดลับและความรู้'],
+  tips: ['Knowledge', 'ความรู้และเคล็ดลับ'],
+  knowledge: ['Knowledge', 'ความรู้และเคล็ดลับ'],
   promotions: ['Promotions', 'โปรโมชั่น'],
   products: ['Products', 'ผลิตภัณฑ์'],
+  events: ['Events', 'กิจกรรมและสัมมนา'],
   sustainability: ['Sustainability', 'ความยั่งยืน'],
-  company: ['Company News', 'ข่าวบริษัท'],
+  company: ['News', 'ข่าวสาร'],
   service: ['Service', 'บริการ'],
 };
 
@@ -795,6 +797,19 @@ function newsFeed(): NewsFeedItemResponse[] {
         publishedAt: stamp,
         startsAt: stamp,
         createdAt: stamp,
+        endsAt: n.endsAt ?? null,
+        productName: n.productName ?? null,
+        productModel: n.productModel ?? null,
+        knowledgeTopic: n.knowledgeTopic ?? null,
+        relatedEquipment: n.relatedEquipment ?? null,
+        newsSource: n.newsSource ?? null,
+        eventDateLabel: n.eventDateLabel ?? null,
+        eventTime: n.eventTime ?? null,
+        eventLocation: n.eventLocation ?? null,
+        blogBlocks: n.blogBlocks ?? null,
+        pdfFiles: n.pdfFiles ?? null,
+        galleryItems: n.galleryItems ?? null,
+        extraContacts: n.extraContacts ?? null,
       };
     });
 }

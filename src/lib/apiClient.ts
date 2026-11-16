@@ -653,6 +653,40 @@ export interface NewsFeedTag {
   labelTh: string;
 }
 
+export interface NewsBlogBlock {
+  layout: 'image_left' | 'image_right' | 'image_top' | 'no_image';
+  titleEn?: string;
+  titleTh?: string;
+  contentEn?: string;
+  contentTh?: string;
+  imageUrl?: string | null;
+}
+
+export interface NewsPdfFile {
+  name: string;
+  url: string;
+  sizeLabel?: string;
+  source?: string;
+}
+
+export interface NewsGalleryItem {
+  type: 'image' | 'video';
+  url: string;
+  thumbnailUrl?: string;
+  captionEn?: string;
+  captionTh?: string;
+}
+
+export interface NewsContactCard {
+  subtitleEn?: string;
+  subtitleTh?: string;
+  titleEn: string;
+  titleTh: string;
+  phone?: string;
+  line?: string;
+  email?: string;
+}
+
 /** GET /news/feed — published, not-expired articles, newest first. Category
  * slug + bilingual label, and each article's tags, are embedded per item
  * (joined server-side), so no separate categories/tags call is needed (those
@@ -679,8 +713,35 @@ export interface NewsFeedItemResponse {
   // first" matches the same startsAt-first rule used for display.
   startsAt: string | null;
   createdAt: string;
+  // Optional structured template fields (per-category article layouts)
+  endsAt?: string | null;
+  productName?: string | null;
+  productModel?: string | null;
+  knowledgeTopic?: string | null;
+  relatedEquipment?: string | null;
+  newsSource?: string | null;
+  eventDateLabel?: string | null;
+  eventTime?: string | null;
+  eventLocation?: string | null;
+  blogBlocks?: NewsBlogBlock[] | null;
+  pdfFiles?: NewsPdfFile[] | null;
+  galleryItems?: NewsGalleryItem[] | null;
+  extraContacts?: NewsContactCard[] | null;
 }
 
-export function apiGetNewsFeed(accessToken: string): Promise<NewsFeedItemResponse[]> {
+const LOCAL_NEWS_API_BASE =
+  (import.meta as { env?: Record<string, string> }).env?.VITE_LOCAL_NEWS_API ?? 'http://localhost:4000/api';
+
+export async function apiGetNewsFeed(accessToken: string): Promise<NewsFeedItemResponse[]> {
+  try {
+    const res = await fetch(`${LOCAL_NEWS_API_BASE}/news/feed`, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+    });
+    if (res.ok) {
+      return (await res.json()) as NewsFeedItemResponse[];
+    }
+  } catch {
+    // Local news API not running — fall back to static mock data
+  }
   return getJson<NewsFeedItemResponse[]>('/news/feed', accessToken);
 }
