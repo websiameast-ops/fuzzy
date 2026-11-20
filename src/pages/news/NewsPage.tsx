@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { ArrowLeft, ArrowRight, Calendar, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, LayoutList, Leaf, Lightbulb, Megaphone, Newspaper, Package, Search, Star, Tag, Wrench, X } from 'lucide-react';
@@ -156,6 +156,7 @@ export function NewsPage() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(9);
   const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Admin-curated via NewsFeedItemResponse.isBanner (newest first — `items`
   // is already sorted by newsSortTime in useNewsFeed). Badge text is the
@@ -360,63 +361,42 @@ export function NewsPage() {
             </div>
 
             <div className="news-controls-right">
-              {/* Expandable search — right-aligned, expands to the left on
-                  hover/focus without pushing the sort/view controls. Reuses
-                  the page's existing q/setQ state (was previously a static
-                  SearchBox in the page header). */}
               <div
-                style={{ position: 'relative', display: 'flex', alignItems: 'center', height: 38, width: 24 }}
+                className={`news-search${searchOpen || q ? ' is-open' : ''}`}
                 onMouseEnter={() => setSearchOpen(true)}
                 onMouseLeave={() => { if (!q) setSearchOpen(false); }}
               >
-                <div
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    borderBottom: searchOpen || q ? '1px solid var(--se-primary)' : '1px solid transparent',
-                    paddingBottom: 2,
-                    transition: 'border-color 0.2s ease',
-                    background: searchOpen || q ? 'var(--se-surface)' : 'transparent',
-                    zIndex: 5,
-                  }}
-                >
-                  <span
-                    style={{ display: 'flex', color: searchOpen || q ? 'var(--se-primary)' : 'var(--se-text-muted)', flex: '0 0 auto', cursor: 'pointer' }}
-                    onClick={() => setSearchOpen(true)}
+                <div className="news-search-inner">
+                  <button
+                    type="button"
+                    className="news-search-trigger"
+                    onClick={() => {
+                      setSearchOpen(true);
+                      requestAnimationFrame(() => searchInputRef.current?.focus());
+                    }}
+                    aria-label={t('Search articles…', 'ค้นหาบทความ…')}
                     title={t('Search articles…', 'ค้นหาบทความ…')}
                   >
-                    <Search size={16} />
-                  </span>
+                    <Search size={16} aria-hidden />
+                  </button>
                   <input
+                    ref={searchInputRef}
                     type="text"
+                    className="news-search-input"
                     value={q}
                     onChange={(e) => { setQ(e.target.value); resetPaging(); }}
                     placeholder={t('Search articles…', 'ค้นหาบทความ…')}
                     onFocus={() => setSearchOpen(true)}
                     onBlur={() => { if (!q) setSearchOpen(false); }}
-                    style={{
-                      border: 'none',
-                      outline: 'none',
-                      background: 'transparent',
-                      color: 'var(--se-text)',
-                      fontSize: 13.5,
-                      width: searchOpen || q ? 140 : 0,
-                      opacity: searchOpen || q ? 1 : 0,
-                      padding: '2px 0',
-                      transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease',
-                      overflow: 'hidden',
-                    }}
                   />
                   {q && (
                     <button
+                      type="button"
+                      className="news-search-clear"
                       onClick={() => { setQ(''); setSearchOpen(false); }}
-                      style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 2, display: 'flex', color: 'var(--se-text-muted)' }}
                       aria-label={t('Clear search', 'ล้างคำค้นหา')}
                     >
-                      <X size={14} />
+                      <X size={14} aria-hidden />
                     </button>
                   )}
                 </div>
